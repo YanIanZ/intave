@@ -418,12 +418,14 @@ final class PlayerUser implements User {
 
   @Override
   public void sendMessage(String message) {
-    Synchronizer.synchronize(this, () -> {
-      Player myPlayer = player.get();
-      if (myPlayer != null) {
-        myPlayer.sendMessage(message);
-      }
-    });
+    if (!Bukkit.isPrimaryThread()) {
+      Synchronizer.synchronize(this, () -> sendMessage(message));
+      return;
+    }
+    Player myPlayer = player.get();
+    if (myPlayer != null) {
+      myPlayer.sendMessage(message);
+    }
   }
 
   @Override
