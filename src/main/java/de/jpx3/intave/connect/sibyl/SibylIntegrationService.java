@@ -11,6 +11,8 @@ import de.jpx3.intave.connect.sibyl.data.packet.*;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscriber;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
+import de.jpx3.intave.user.User;
+import de.jpx3.intave.user.UserRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
@@ -78,6 +80,7 @@ public final class SibylIntegrationService implements BukkitEventSubscriber {
     if (!encryptionAvailable()) {
       return;
     }
+    User user = UserRepository.userOf(player);
     if (!Arrays.equals(decryptRSA(packet.encryptedVerifyToken()), verifyToken)) {
       if (IntaveControl.SIBYL_DEBUG) {
         System.out.println("Sibyl: Invalid verify token for " + player.getName());
@@ -90,7 +93,7 @@ public final class SibylIntegrationService implements BukkitEventSubscriber {
         KEYS.put(player.getUniqueId(), new SecretKeySpec(keyBytes, "AES"));
       } catch (Exception exception) {
         exception.printStackTrace();
-        Synchronizer.synchronize(() -> {
+        Synchronizer.synchronize(user, () -> {
           player.kickPlayer(ChatColor.RED + "Error authenticating");
         });
       }
@@ -170,8 +173,9 @@ public final class SibylIntegrationService implements BukkitEventSubscriber {
   }
 
   public void sendTrustedPacket(Player player, SibylPacket packet) {
+    User user = UserRepository.userOf(player);
     if (!Bukkit.isPrimaryThread()) {
-      Synchronizer.synchronize(() -> sendTrustedPacket(player, packet));
+      Synchronizer.synchronize(user, () -> sendTrustedPacket(player, packet));
       return;
     }
     if (authentication.isAuthenticated(player)) {

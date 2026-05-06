@@ -124,21 +124,21 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
         double distance = clientEntityPosition.distance(serverEntityPosition);
 //        player.sendMessage(ChatColor.GOLD + "Server " + serverEntityPosition.format(12));
 //        player.sendMessage(ChatColor.GREEN + "Client " + clientEntityPosition.format(12));
-        player.sendMessage(ChatColor.YELLOW + " Server");
+        user.sendMessage(ChatColor.YELLOW + " Server");
         int i = 0;
         for (String positionChange : entity.positionChanges()) {
           if (i++ >= 5) {
-            player.sendMessage(ChatColor.YELLOW + positionChange);
+            user.sendMessage(ChatColor.YELLOW + positionChange);
           }
         }
         i = 0;
-        player.sendMessage(ChatColor.DARK_PURPLE + " Client");
+        user.sendMessage(ChatColor.DARK_PURPLE + " Client");
         for (String positionChange : stringsList) {
           if (i++ >= 5) {
-            player.sendMessage(ChatColor.DARK_PURPLE + positionChange);
+            user.sendMessage(ChatColor.DARK_PURPLE + positionChange);
           }
         }
-        player.sendMessage(ChatColor.RED + "Distance " + formatDouble(distance, 12));
+        user.sendMessage(ChatColor.RED + "Distance " + formatDouble(distance, 12));
       }
 
 //      player.sendMessage(String.valueOf(entity.position.toPosition()));
@@ -163,13 +163,9 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
       }
       if (user.receives(MessageChannel.DEBUG_PACKET_HOLD)) {
         if (resendLater) {
-          Synchronizer.synchronize(() -> {
-            player.sendMessage("%PH " + ChatColor.RED + "Await ATTACK at " + (System.currentTimeMillis() % 1000) + " since prelim ray failed");
-          });
+          user.sendMessage("%PH " + ChatColor.RED + "Await ATTACK at " + (System.currentTimeMillis() % 1000) + " since prelim ray failed");
         } else {
-          Synchronizer.synchronize(() -> {
-            player.sendMessage("%PH " + ChatColor.GREEN + "Allowing ATTACK without hold at " + (System.currentTimeMillis() % 1000));
-          });
+          user.sendMessage("%PH " + ChatColor.GREEN + "Allowing ATTACK without hold at " + (System.currentTimeMillis() % 1000));
         }
       }
       // Only add attack to queue if queue size is small enough
@@ -265,9 +261,7 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
 
         if (user.receives(MessageChannel.DEBUG_PACKET_HOLD)) {
           if (pendingAttack.shouldResend) {
-            Synchronizer.synchronize(() -> {
-              player.sendMessage("%PH " + ChatColor.YELLOW + "Processing ATTACK at " + (System.currentTimeMillis() % 1000));
-            });
+            user.sendMessage("%PH " + ChatColor.YELLOW + "Processing ATTACK at " + (System.currentTimeMillis() % 1000));
           }
         }
 

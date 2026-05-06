@@ -531,9 +531,7 @@ class BaseSimulator extends Simulator {
     if (IntaveControl.DEBUG_MOVEMENT_BLOCK_FALLEN_UPON) {
       if (block != null) {
         String name = block.name();
-        Synchronizer.synchronize(() -> {
-          player.sendMessage("Block fallen upon: " + name);
-        });
+        user.sendMessage("Block fallen upon: " + name);
       }
     }
 

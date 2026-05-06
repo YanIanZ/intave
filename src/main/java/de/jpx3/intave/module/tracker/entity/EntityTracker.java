@@ -440,9 +440,9 @@ public final class EntityTracker extends Module {
 
     connection.markForDeletion(entityId);
 
-    Synchronizer.synchronize(() -> {
+    Synchronizer.synchronize(user, () -> {
       user.tickFeedback(() -> {
-        Synchronizer.synchronize(() -> {
+        Synchronizer.synchronize(user, () -> {
           user.tickFeedback(() -> {
             connection.removeEntityIfMarked(entityId);
           }/*, APPEND_ON_OVERFLOW*/);
@@ -469,14 +469,7 @@ public final class EntityTracker extends Module {
     }
 
     if (IntaveControl.DEBUG_ENTITY_TRACKING) {
-      Synchronizer.synchronize(() -> {
-        Player target = user.player();
-        if (target == null || entity == null) {
-          return;
-        }
-        EntityTypeData typeData = entity.typeData();
-        target.sendMessage(ChatColor.RED + typeData.name() + "/" + typeData.typeId() + " as " + entity.entityId());
-      });
+      user.sendMessage(ChatColor.RED + entity.typeData().name() + "/" + entity.typeData().typeId() + " with id " + entity.entityId() + " got destroyed");
     }
   }
 
@@ -865,15 +858,9 @@ public final class EntityTracker extends Module {
     }
 
     if (IntaveControl.DEBUG_ENTITY_TRACKING) {
-      Synchronizer.synchronize(() -> {
-        Player target = user.player();
-        if (target == null) {
-          return;
-        }
-        HitboxSize size = entityTypeData.size();
-        String sizeToString = size == null ? "null" : "w:" + size.width() + " h:" + size.height();
-        target.sendMessage(ChatColor.GREEN + entityTypeData.name() + "/" + entityTypeData.typeId() + " as " + entityId + " with " + sizeToString);
-      });
+      HitboxSize size = entityTypeData.size();
+      String sizeToString = size == null ? "null" : "w:" + size.width() + " h:" + size.height();
+      user.sendMessage(ChatColor.GREEN + entityTypeData.name() + "/" + entityTypeData.typeId() + " as " + entityId + " with " + sizeToString);
     }
 
     return null;

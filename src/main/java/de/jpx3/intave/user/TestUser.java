@@ -279,6 +279,11 @@ final class TestUser implements User {
   }
 
   @Override
+  public void sendMessage(String message) {
+
+  }
+
+  @Override
   public int latency() {
     return (int) callback.apply("latency");
   }

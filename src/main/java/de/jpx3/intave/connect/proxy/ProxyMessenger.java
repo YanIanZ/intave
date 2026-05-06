@@ -13,6 +13,8 @@ import de.jpx3.intave.connect.proxy.protocol.IntavePacketSerializer;
 import de.jpx3.intave.connect.proxy.protocol.PacketRegister;
 import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
+import de.jpx3.intave.user.User;
+import de.jpx3.intave.user.UserRepository;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -107,7 +109,8 @@ public final class ProxyMessenger {
       byteOutput.writeInt(PacketRegister.getIdentifierOf(packet.getClass()));
       byteOutput.write(packetSerializer.serializeDataFrom(packet));
       byteOutput.writeUTF("IPC_END");
-      Synchronizer.synchronize(() -> player.sendPluginMessage(plugin, OUTGOING_CHANNEL, byteOutput.toByteArray()));
+      User user = UserRepository.userOf(player);
+      Synchronizer.synchronize(user, () -> player.sendPluginMessage(plugin, OUTGOING_CHANNEL, byteOutput.toByteArray()));
     });
   }
 

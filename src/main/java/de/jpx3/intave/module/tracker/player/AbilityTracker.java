@@ -127,7 +127,7 @@ public final class AbilityTracker extends Module {
         movementData.criticalFlyingDisallowStacks = 0;
       }
     } else if (movementData.criticalFlyingBlockMovementStacks > 0 && movementData.criticalTeleportRateLimiter.tryAcquire()) {
-      Synchronizer.synchronize(() -> {
+      Synchronizer.synchronize(user, () -> {
         player.teleport(player.getLocation());
       });
       if (user.receives(MessageChannel.DEBUG_TELEPORT)) {

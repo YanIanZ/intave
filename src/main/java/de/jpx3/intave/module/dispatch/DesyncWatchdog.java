@@ -80,14 +80,14 @@ public final class DesyncWatchdog extends Module {
 
         if (System.currentTimeMillis() - lastActionIssued > 10_000) {
           lastActionIssued = System.currentTimeMillis();
-          Synchronizer.synchronize(() -> {
+          Synchronizer.synchronize(user, () -> {
             Player player = user.player();
             Location location = player.getLocation().clone();
             while (BlockTypeAccess.typeAccess(location.getBlock(), player) != Material.AIR) {
               location.add(0, 1, 0);
             }
             if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
-              player.sendMessage(IntavePlugin.prefix() + "You were instructed to teleport to " + MathHelper.formatPosition(location) + " due to desync.");
+              user.sendMessage(IntavePlugin.prefix() + "You were instructed to teleport to " + MathHelper.formatPosition(location) + " due to desync.");
             }
             player.teleport(location);
           });

@@ -19,7 +19,7 @@ public final class MetadataBundle {
     this.attack = new AttackMetadata(player);
     this.connection = new ConnectionMetadata(player);
     this.effect = new EffectMetadata(player);
-    this.inventory = new InventoryMetadata(player);
+    this.inventory = new InventoryMetadata(player, user);
     this.movement = new MovementMetadata(player, user);
     this.protocol = new ProtocolMetadata(player, user);
     this.punishment = new PunishmentMetadata(player);

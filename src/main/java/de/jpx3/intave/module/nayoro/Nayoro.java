@@ -89,7 +89,7 @@ public final class Nayoro extends Module {
     localRecordingLock.lock();
     try {
       if (!Bukkit.isPrimaryThread()) {
-        Synchronizer.synchronize(() -> enableRecordingFor(user, classifier, mode));
+        Synchronizer.synchronize(user, () -> enableRecordingFor(user, classifier, mode));
         return;
       }
       if (recordingActiveFor(user)) {
@@ -111,7 +111,7 @@ public final class Nayoro extends Module {
     localRecordingLock.lock();
     try {
       if (!Bukkit.isPrimaryThread()) {
-        Synchronizer.synchronize(() -> pushSink(user, sink));
+        Synchronizer.synchronize(user, () -> pushSink(user, sink));
         return;
       }
       eventSinks.get(user).add(sink);
@@ -124,7 +124,7 @@ public final class Nayoro extends Module {
     localRecordingLock.lock();
     try {
       if (!Bukkit.isPrimaryThread()) {
-        Synchronizer.synchronize(() -> disableRecordingFor(user));
+        Synchronizer.synchronize(user, () -> disableRecordingFor(user));
         return;
       }
       if (!recordingActiveFor(user)) {
