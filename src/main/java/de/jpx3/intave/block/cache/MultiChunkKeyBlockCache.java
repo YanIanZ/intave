@@ -147,6 +147,7 @@ final class MultiChunkKeyBlockCache implements BlockCache {
       int posZ = blockPosition.getZ();
       if (sequenceNumber > seqReq) {
         if (IntaveControl.BLOCK_CACHE_DEBUG) {
+          User user = UserRepository.userOf(player);
           user.sendMessage(ChatColor.LIGHT_PURPLE + "SKIP APPLYING " + ChatColor.AQUA + blockState.type() + ChatColor.LIGHT_PURPLE + " at " + ChatColor.GRAY + blockPosition + " " + sequenceNumber + " > " + seqReq);
         }
         continue;
