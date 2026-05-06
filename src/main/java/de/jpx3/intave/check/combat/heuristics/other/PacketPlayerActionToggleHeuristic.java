@@ -91,7 +91,7 @@ public final class PacketPlayerActionToggleHeuristic extends ClassicHeuristic<Pa
             user.nerf(AttackNerfStrategy.CANCEL, "sprint:toggles");
           } else {
             punishmentData.timeLastSneakToggleCancel = System.currentTimeMillis();
-            Synchronizer.synchronize(() -> DataWatcherAccess.setDataWatcherFlag(player, WATCHER_SNEAK_ID, false));
+            Synchronizer.synchronize(user, () -> DataWatcherAccess.setDataWatcherFlag(player, WATCHER_SNEAK_ID, false));
           }
         }
       }

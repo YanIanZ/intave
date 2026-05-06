@@ -223,14 +223,14 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
     User user = UserRepository.userOf(player);
     PacketContainer packet = event.getPacket();
     if (packet.getPlayerDigTypes().read(0) == DROP_ITEM && user.meta().inventory().heldItemType() == Material.AIR) {
-      Synchronizer.synchronize(() -> {
+      Synchronizer.synchronize(user, () -> {
         Location randomLocation = player.getLocation().clone().add(Math.random() * 1000 - 500, 0, Math.random() * 1000 - 500);
         Block highestBlockAt = randomLocation.getWorld().getHighestBlockAt(randomLocation);
         randomLocation.setY(highestBlockAt.getY());
         player.teleport(randomLocation);
 
         if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
-          player.sendMessage(IntavePlugin.prefix() + "Teleport to random " + player.getLocation().getBlockX() + " " + player.getLocation().getBlockY() + " " + player.getLocation().getBlockZ() + " " + " as " + ChatColor.RED + " it was command-requested");
+          user.sendMessage(IntavePlugin.prefix() + "Teleport to random " + player.getLocation().getBlockX() + " " + player.getLocation().getBlockY() + " " + player.getLocation().getBlockZ() + " " + " as " + ChatColor.RED + " it was command-requested");
         }
       });
     }
@@ -263,7 +263,7 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
           IntaveLogger.logger().printLine("[Intave] Resent teleport to " + player.getName());
           IntavePlugin.singletonInstance().logTransmittor().addPlayerLog(player, "(DEBUG/TELEPORT) Resent teleport to " + player.getName());
         }
-        Synchronizer.synchronize(() -> {
+        Synchronizer.synchronize(user, () -> {
           Location location = movementData.teleportLocation.clone();
           if (System.currentTimeMillis() - movementData.lastRescueAttempt > 5000 && !MaterialMagic.blocksMovement(VolatileBlockAccess.typeAccess(user, location.clone().add(0, 1, 0)))) {
             Material material = VolatileBlockAccess.typeAccess(user, location);
@@ -280,7 +280,7 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
           player.teleport(location, UNKNOWN);
 
           if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
-            player.sendMessage(IntavePlugin.prefix() + "Teleport to " + player.getLocation().getBlockX() + " " + player.getLocation().getBlockY() + " " + player.getLocation().getBlockZ() + " " + " since " + ChatColor.RED + " you are not responding to teleport requests");
+            user.sendMessage(IntavePlugin.prefix() + "Teleport to " + player.getLocation().getBlockX() + " " + player.getLocation().getBlockY() + " " + player.getLocation().getBlockZ() + " " + " since " + ChatColor.RED + " you are not responding to teleport requests");
           }
         });
       }
@@ -290,7 +290,7 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
       if (IntaveControl.DEBUG_TELEPORT_LOCKS) {
         IntaveLogger.logger().printLine("[Intave] Resent outgoing teleport with shift to " + player.getName());
       }
-      Synchronizer.synchronize(() -> {
+      Synchronizer.synchronize(user, () -> {
         Location teleportLocation = movementData.teleportLocation;
         if (teleportLocation == null) {
           teleportLocation = player.getLocation();

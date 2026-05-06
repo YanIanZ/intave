@@ -281,7 +281,7 @@ public final class MovementMetadata implements SimulationEnvironment {
 
   public void setup() {
     if (player != null) {
-      Synchronizer.synchronize(() -> this.elytraFlying = flyingWithElytra(player));
+      Synchronizer.synchronize(user, () -> this.elytraFlying = flyingWithElytra(player));
     }
     applyPlayerStats();
     updateWorld();
@@ -1511,7 +1511,7 @@ public final class MovementMetadata implements SimulationEnvironment {
     }
     setVerifiedLocation(player.getLocation(), "Entity dismount location");
     if (positionReset) {
-      Synchronizer.synchronize(() -> {
+      Synchronizer.synchronize(user, () -> {
         // player.getLocation() is assumed to be correct
         player.teleport(player.getLocation());
         if (user.receives(MessageChannel.DEBUG_TELEPORT)) {

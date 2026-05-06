@@ -6,6 +6,7 @@ import com.mojang.authlib.GameProfile;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
+import de.jpx3.intave.cleanup.StartupTasks;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.klass.locate.MethodSearchBySignature;
 import io.netty.channel.*;
@@ -83,7 +84,7 @@ public class TinyProtocol {
       registerChannelHandler();
       registerPlayers(plugin);
     } catch (IllegalArgumentException exception) {
-      Synchronizer.synchronize(() -> {
+      StartupTasks.add(() -> {
         registerChannelHandler();
         registerPlayers(plugin);
       });

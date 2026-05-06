@@ -266,6 +266,11 @@ final class FallbackUser implements User {
   }
 
   @Override
+  public void sendMessage(String message) {
+
+  }
+
+  @Override
   public void removeChannelConstraint(MessageChannel channel) {
   }
 

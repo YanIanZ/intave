@@ -290,7 +290,7 @@ public final class InteractionEmulator implements EventProcessor {
         );
       }
       if (protocol.selfAcknowledgePlacements()) {
-        Synchronizer.synchronize(() -> {
+        Synchronizer.synchronize(user, () -> {
           user.tickFeedback(() ->
             user.blockCache().moveClientSpeculationsToOverride(player.getWorld(), sequenceNumber)
           );

@@ -277,7 +277,7 @@ public final class DiagnosticsStage extends CommandStage {
 
       @Override
       public void visit(BlockPlaceEvent event) {
-        Synchronizer.synchronize(() -> {
+        Synchronizer.synchronize(user, () -> {
           player.sendMessage("BlockPlaceEvent{");
           player.sendMessage("  " + event.placedBlock());
           player.sendMessage("  " + event.againstBlock());
@@ -319,7 +319,7 @@ public final class DiagnosticsStage extends CommandStage {
     }
     player.sendMessage("You are now in storage trace mode");
     storage.setDebugTag();
-    Synchronizer.synchronize(() -> {
+    Synchronizer.synchronize(user, () -> {
       player.sendMessage("Your storage-tag is " + storage.readTag());
     });
   }
@@ -337,7 +337,7 @@ public final class DiagnosticsStage extends CommandStage {
     PlaytimeStorage storage = targetUser.storageOf(PlaytimeStorage.class);
     long minutesPlayed = storage.minutesPlayed();
     long minutesAfk = storage.minutesAfk();
-    Synchronizer.synchronize(() -> {
+    Synchronizer.synchronize(user, () -> {
       player.sendMessage("The player " + targetPlayer.getName() + " has played for " + minutesPlayed + " minutes and was afk for " + minutesAfk + " minutes");
     });
   }
@@ -622,7 +622,7 @@ public final class DiagnosticsStage extends CommandStage {
         return;
       }
       boolean canFly = player.getAllowFlight();
-      Synchronizer.synchronizeDelayed(() -> player.setAllowFlight(!canFly), 40);
+      Synchronizer.synchronizeDelayed(user, () -> player.setAllowFlight(!canFly), 40);
       player.sendMessage(IntavePlugin.prefix() + "Flying will be " + ChatColor.RED + (!canFly ? "enabled" : "disabled") + ChatColor.GRAY + " in 2 seconds");
     }, 20, 20 * 10);
   }

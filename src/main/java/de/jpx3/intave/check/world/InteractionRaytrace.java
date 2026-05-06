@@ -280,13 +280,9 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
       //      }
       if (user.receives(MessageChannel.DEBUG_PACKET_HOLD)) {
         if (!event.isCancelled()) {
-          Synchronizer.synchronize(() -> {
-            player.sendMessage("%PH " + ChatColor.GREEN + "Allowing " + interaction.type().name() + " without hold at " + (System.currentTimeMillis() % 1000));
-          });
+          user.sendMessage("%PH " + ChatColor.GREEN + "Allowing " + interaction.type().name() + " without hold at " + (System.currentTimeMillis() % 1000));
         } else {
-          Synchronizer.synchronize(() -> {
-            player.sendMessage("%PH " + ChatColor.RED + "Awaiting " + interaction.type().name() + " packet at " + (System.currentTimeMillis() % 1000) + ": prelim->"+ result);
-          });
+          user.sendMessage("%PH " + ChatColor.RED + "Awaiting " + interaction.type().name() + " packet at " + (System.currentTimeMillis() % 1000) + ": prelim->"+ result);
         }
       }
     } finally {
@@ -411,13 +407,9 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     }
     if (user.receives(MessageChannel.DEBUG_PACKET_HOLD)) {
       if (!event.isCancelled()) {
-        Synchronizer.synchronize(() -> {
-          player.sendMessage("%PH " + ChatColor.GREEN + "Allowing " + interaction.type().name() + " without hold at " + (System.currentTimeMillis() % 1000));
-        });
+        user.sendMessage("%PH " + ChatColor.GREEN + "Allowing " + interaction.type().name() + " without hold at " + (System.currentTimeMillis() % 1000));
       } else {
-        Synchronizer.synchronize(() -> {
-          player.sendMessage("%PH " + ChatColor.RED + "Awaiting " + interaction.type().name() + " packet at " + (System.currentTimeMillis() % 1000) + ": prelim->"+ preprocess);
-        });
+        user.sendMessage("%PH " + ChatColor.RED + "Awaiting " + interaction.type().name() + " packet at " + (System.currentTimeMillis() % 1000) + ": prelim->"+ preprocess);
       }
     }
     if (breakBlock || playerDigType == ABORT_DESTROY_BLOCK) {
@@ -702,9 +694,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     }
 
     if (interaction.shouldSendPacket() && user.receives(MessageChannel.DEBUG_PACKET_HOLD)) {
-      Synchronizer.synchronize(() -> {
-        player.sendMessage("%PH " + ChatColor.YELLOW + "Processing " + interaction.type().name() + " packet at " + (System.currentTimeMillis() % 1000));
-      });
+      user.sendMessage("%PH " + ChatColor.YELLOW + "Processing " + interaction.type().name() + " packet at " + (System.currentTimeMillis() % 1000));
     }
 
     Pose currentPose = user.meta().movement().pose();
@@ -957,7 +947,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     ConnectionMetadata connection = user.meta().connection();
     RateLimiter refreshBlockRatelimit = connection.refreshBlockRatelimit;
     if (refreshBlockRatelimit.tryAcquire()) {
-      Synchronizer.synchronize(() -> {
+      Synchronizer.synchronize(user, () -> {
         if (IntaveControl.DEBUG_INTERACTION_REFRESHES) {
           player.sendMessage("Refreshed blocks around " + targetLocation);
         }
@@ -1150,8 +1140,9 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     boolean requireFeedbackTimedRemoval = trustChain.collapseState(blockPosition, !event.isCancelled());
     if (requireFeedbackTimedRemoval) {
       // next tick
-      Synchronizer.synchronize(() ->
-        user.tickFeedback(() -> trustChain.removeCollapsedState(blockPosition)));
+      Synchronizer.synchronize(user, () ->
+        user.tickFeedback(() -> trustChain.removeCollapsedState(blockPosition))
+      );
     }
   }
 

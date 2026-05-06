@@ -1104,8 +1104,7 @@ public final class Physics extends Check {
       }
       String finalDebug = debug;
       if (!anyDebugRequested) {
-        String finalFinalDebug = finalDebug;
-        Synchronizer.synchronize(() -> player.sendMessage(finalFinalDebug));
+        user.sendMessage(finalDebug);
       } else {
         finalDebug = ChatColor.stripColor(finalDebug);
         if (faultDebugRequested && violationLevelIncrease > 0) {
@@ -1125,7 +1124,7 @@ public final class Physics extends Check {
     BoundingBox box = BoundingBox.fromPosition(user, user.meta().movement(), x, y, z).grow(1.2);
     Player player = user.player();
     List<Position> positions = Collision.collectCollidingPositions(player, box, 16, Collectors.toList());
-    Synchronizer.synchronize(() -> {
+    Synchronizer.synchronize(user, () -> {
       for (Position position : positions) {
         refreshBlock(player, position.toLocation(player.getWorld()));
       }
@@ -1204,20 +1203,6 @@ public final class Physics extends Check {
           movementData.dealCustomFallDamage = false;
         }
       }
-    }
-  }
-
-  @BukkitEventSubscription
-  public void onEnderpearlTeleport(PlayerTeleportEvent teleport) {
-    Player player = teleport.getPlayer();
-    User user = UserRepository.userOf(player);
-    MovementMetadata movementData = user.meta().movement();
-    if (teleport.getCause() == ENDER_PEARL) {
-      Synchronizer.synchronize(() -> {
-        movementData.dealCustomFallDamage = true;
-//        fallDamageApplier.dealFallDamage(player, 8);
-        movementData.dealCustomFallDamage = false;
-      });
     }
   }
 

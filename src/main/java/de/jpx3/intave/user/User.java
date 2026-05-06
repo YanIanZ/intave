@@ -454,6 +454,8 @@ public interface User {
    */
   void nerfPermanently(AttackNerfStrategy strategy, String checkId);
 
+  void sendMessage(String message);
+
   /**
    * Retrieve a player's packet latency
    *
