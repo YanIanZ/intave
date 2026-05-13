@@ -1,4 +1,4 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 import com.comphenix.net.bytebuddy.description.ByteCodeElement;
 import com.comphenix.net.bytebuddy.description.modifier.ModifierContributor;

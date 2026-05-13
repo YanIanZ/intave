@@ -1,4 +1,4 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -9,5 +9,5 @@ import java.lang.annotation.RetentionPolicy;
  */
 
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Before {
+public @interface After {
 }

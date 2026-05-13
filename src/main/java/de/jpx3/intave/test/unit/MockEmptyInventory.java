@@ -1,4 +1,4 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 import com.google.common.collect.Maps;
 import org.bukkit.Location;

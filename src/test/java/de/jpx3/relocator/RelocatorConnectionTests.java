@@ -1,11 +1,9 @@
 package de.jpx3.relocator;
 
-import de.jpx3.intave.test.Test;
+import de.jpx3.intave.test.unit.UnitTest;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Scanner;
@@ -23,7 +21,7 @@ public final class RelocatorConnectionTests {
     }
   }
 
-  @Test
+  @UnitTest
   public void connect() throws IOException {
     String domain = "service.intave.de";
 

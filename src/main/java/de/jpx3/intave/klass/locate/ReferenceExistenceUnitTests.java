@@ -1,16 +1,16 @@
 package de.jpx3.intave.klass.locate;
 
 import de.jpx3.intave.IntaveLogger;
-import de.jpx3.intave.test.Severity;
-import de.jpx3.intave.test.Test;
-import de.jpx3.intave.test.Tests;
+import de.jpx3.intave.test.unit.Severity;
+import de.jpx3.intave.test.unit.UnitTest;
+import de.jpx3.intave.test.unit.UnitTests;
 
-public final class ReferenceExistenceTests extends Tests {
-  public ReferenceExistenceTests() {
+public final class ReferenceExistenceUnitTests extends UnitTests {
+  public ReferenceExistenceUnitTests() {
     super("RE");
   }
 
-  @Test(
+  @UnitTest(
     testCode = "A",
     severity = Severity.ERROR
   )
@@ -26,7 +26,7 @@ public final class ReferenceExistenceTests extends Tests {
     }
   }
 
-  @Test(
+  @UnitTest(
     testCode = "B",
     severity = Severity.ERROR
   )
@@ -43,7 +43,7 @@ public final class ReferenceExistenceTests extends Tests {
 
   }
 
-  @Test(
+  @UnitTest(
     testCode = "C",
     severity = Severity.ERROR
   )

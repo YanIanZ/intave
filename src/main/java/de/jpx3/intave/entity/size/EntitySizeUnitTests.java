@@ -1,20 +1,20 @@
 package de.jpx3.intave.entity.size;
 
 import de.jpx3.intave.reflect.access.ReflectiveHandleAccess;
-import de.jpx3.intave.test.Severity;
-import de.jpx3.intave.test.Test;
-import de.jpx3.intave.test.Tests;
+import de.jpx3.intave.test.unit.Severity;
+import de.jpx3.intave.test.unit.UnitTest;
+import de.jpx3.intave.test.unit.UnitTests;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Sheep;
 
-public final class EntitySizeTests extends Tests {
-  public EntitySizeTests() {
+public final class EntitySizeUnitTests extends UnitTests {
+  public EntitySizeUnitTests() {
     super("ES");
   }
 
-  @Test(
+  @UnitTest(
     severity = Severity.ERROR
   )
   public void testSheep() {

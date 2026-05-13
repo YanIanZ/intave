@@ -248,9 +248,6 @@ public final class Cloud {
         if (session.canSend(packet)) {
           session.send(packet);
           sent = true;
-          if (IntaveControl.AUTHENTICATION_DEBUG_MODE) {
-            IntaveLogger.logger().info("Sent packet " + packet.name() + " to " + session.shard());
-          }
           break;
         }
       }

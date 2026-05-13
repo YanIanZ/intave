@@ -1,35 +1,37 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 import com.google.common.base.Charsets;
+import de.jpx3.intave.IntaveBuildConfig;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.annotate.HighOrderService;
-import de.jpx3.intave.block.access.BlockAccessTests;
-import de.jpx3.intave.block.fluid.FluidTests;
-import de.jpx3.intave.block.shape.BlockShapeTests;
-import de.jpx3.intave.block.shape.resolve.BlockShapeDrillTests;
-import de.jpx3.intave.block.shape.resolve.BlockShapePipelineTests;
-import de.jpx3.intave.block.variant.BlockVariantTests;
+import de.jpx3.intave.block.access.BlockAccessUnitTests;
+import de.jpx3.intave.block.fluid.FluidUnitTests;
+import de.jpx3.intave.block.shape.BlockShapeUnitTests;
+import de.jpx3.intave.block.shape.resolve.BlockShapeDrillUnitTests;
+import de.jpx3.intave.block.shape.resolve.BlockShapePipelineUnitTests;
+import de.jpx3.intave.block.variant.BlockVariantUnitTests;
 import de.jpx3.intave.check.EventProcessor;
-import de.jpx3.intave.check.movement.physics.MovementConfigurationTests;
-import de.jpx3.intave.check.movement.physics.SimulatorBasicTests;
+import de.jpx3.intave.check.movement.physics.MovementConfigurationUnitTests;
+import de.jpx3.intave.check.movement.physics.SimulatorBasicUnitTests;
 import de.jpx3.intave.cleanup.ShutdownTasks;
-import de.jpx3.intave.entity.size.EntitySizeTests;
+import de.jpx3.intave.entity.size.EntitySizeUnitTests;
 import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
-import de.jpx3.intave.klass.locate.ReferenceExistenceTests;
+import de.jpx3.intave.klass.locate.ReferenceExistenceUnitTests;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Modules;
-import de.jpx3.intave.module.feedback.FeedbackTests;
+import de.jpx3.intave.module.feedback.FeedbackUnitTests;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
-import de.jpx3.intave.module.player.StorageTests;
-import de.jpx3.intave.packet.reader.ReaderTests;
+import de.jpx3.intave.module.player.StorageUnitTests;
+import de.jpx3.intave.packet.reader.ReaderUnitTests;
 import de.jpx3.intave.resource.Resource;
 import de.jpx3.intave.resource.Resources;
 import de.jpx3.intave.security.HWIDVerification;
 import de.jpx3.intave.security.HashAccess;
-import de.jpx3.intave.share.ShareTests;
+import de.jpx3.intave.share.ShareUnitTests;
+import de.jpx3.intave.test.TestCompletionLatch;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.world.WorldLoadEvent;
@@ -50,8 +52,8 @@ import java.util.stream.Collectors;
 import static de.jpx3.intave.IntaveControl.USE_DEBUG_LOCATE_RESOURCE;
 
 @HighOrderService
-public final class TestService implements EventProcessor {
-  private static final boolean IS_TEST_RUN = "shutdown".equalsIgnoreCase(System.getProperty("intave.test.success"));
+public final class UnitTestService implements EventProcessor {
+  private static final boolean IS_TEST_RUN = IntaveBuildConfig.TEST_BUILD;
   private static final Resource environmentHashResource = Resources.fileCache("environmentHashes");
   private static final Map<String, Long> supportedEnvironments =
     environmentHashResource.collectLines(
@@ -132,6 +134,7 @@ public final class TestService implements EventProcessor {
 
   public void setup() {
     if (IS_TEST_RUN) {
+      TestCompletionLatch.begunTest();
       ShutdownTasks.add(() -> {
         if (!testsWereRun) {
           System.err.println("Tests were not run, but this is a test run.");
@@ -143,7 +146,7 @@ public final class TestService implements EventProcessor {
     scheduleTestsForFifthTick();
   }
 
-  public void scheduleTestsForFifthTick() {
+  private void scheduleTestsForFifthTick() {
     if (!environmentKnown() || IS_TEST_RUN) {
       Modules.linker().bukkitEvents().registerEventsIn(this);
       Synchronizer.synchronizeDelayed(this::performTests, 5);
@@ -161,7 +164,7 @@ public final class TestService implements EventProcessor {
     }
   }
 
-  public void performTests() {
+  private void performTests() {
     if (Bukkit.getWorlds().isEmpty()) {
       IntaveLogger.logger().info("No worlds loaded, delaying self-tests");
       loadQueue.add(this::performTests);
@@ -176,24 +179,24 @@ public final class TestService implements EventProcessor {
       // we can assume all classes loaded
 
       // parts
-      performTest(BlockAccessTests.class);
-      performTest(BlockVariantTests.class);
-      performTest(BlockShapeDrillTests.class);
-      performTest(BlockShapePipelineTests.class);
-      performTest(BlockShapeTests.class);
-      performTest(EntitySizeTests.class);
-      performTest(StorageTests.class);
-      performTest(FeedbackTests.class);
-      performTest(ReaderTests.class);
-      performTest(FluidTests.class);
-      performTest(ShareTests.class);
-      performTest(MovementConfigurationTests.class);
+      performUnitTests(BlockAccessUnitTests.class);
+      performUnitTests(BlockVariantUnitTests.class);
+      performUnitTests(BlockShapeDrillUnitTests.class);
+      performUnitTests(BlockShapePipelineUnitTests.class);
+      performUnitTests(BlockShapeUnitTests.class);
+      performUnitTests(EntitySizeUnitTests.class);
+      performUnitTests(StorageUnitTests.class);
+      performUnitTests(FeedbackUnitTests.class);
+      performUnitTests(ReaderUnitTests.class);
+      performUnitTests(FluidUnitTests.class);
+      performUnitTests(ShareUnitTests.class);
+      performUnitTests(MovementConfigurationUnitTests.class);
 
       // checks
-      performTest(SimulatorBasicTests.class);
+      performUnitTests(SimulatorBasicUnitTests.class);
 
       // locate
-      performTest(ReferenceExistenceTests.class);
+      performUnitTests(ReferenceExistenceUnitTests.class);
 
     } catch (Throwable werfbares) {
       Throwable throwable = werfbares;
@@ -220,8 +223,7 @@ public final class TestService implements EventProcessor {
       IntaveLogger.logger().info("All self-tests completed successfully.");
     }
     if (IS_TEST_RUN) {
-      IntaveLogger.logger().info("Shutting down server due to test success");
-      Synchronizer.synchronizeDelayed(Bukkit::shutdown, 10);
+      TestCompletionLatch.finishTest();
     }
   }
 
@@ -243,8 +245,6 @@ public final class TestService implements EventProcessor {
   }
 
   public boolean environmentKnown() {
-//    System.out.println("Environment hash: " + environmentHash);
-//    System.out.println("Supported environments: " + supportedEnvironments);
     return supportedEnvironments.containsKey(environmentHash) && !IS_TEST_RUN && !USE_DEBUG_LOCATE_RESOURCE;
   }
 
@@ -263,7 +263,7 @@ public final class TestService implements EventProcessor {
 
   private static int testsInInstance = 0;
 
-  public void performTest(Class<? extends Tests> testsClass) {
+  public void performUnitTests(Class<? extends UnitTests> testsClass) {
     try {
       testsInInstance++;
       new Tester(testsClass).run();

@@ -1,4 +1,4 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 /**
  * Class generated using IntelliJ IDEA

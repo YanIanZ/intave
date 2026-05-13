@@ -1,4 +1,4 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
@@ -15,7 +15,7 @@ public final class Tester implements Runnable {
 
   private final List<Method> testMethods = new ArrayList<>();
 
-  public Tester(Class<? extends Tests> testClass) {
+  public Tester(Class<? extends UnitTests> testClass) {
     this.testClass = testClass;
   }
 
@@ -29,7 +29,7 @@ public final class Tester implements Runnable {
   private void prepare() {
     Method[] methods = testClass.getMethods();
     for (Method method : methods) {
-      if (method.getAnnotation(Test.class) != null) {
+      if (method.getAnnotation(UnitTest.class) != null) {
         testMethods.add(method);
       }
       if (method.getAnnotation(Before.class) != null) {
@@ -54,12 +54,12 @@ public final class Tester implements Runnable {
   }
 
   private void runTest(Method testMethod) {
-    Test annotation = testMethod.getAnnotation(Test.class);
+    UnitTest annotation = testMethod.getAnnotation(UnitTest.class);
     String testCode = annotation.testCode();
 
-    Tests test;
+    UnitTests test;
     try {
-      test = (Tests) testClass.newInstance();
+      test = (UnitTests) testClass.newInstance();
     } catch (Exception exception) {
       throw new RuntimeException("Failed to instantiate test", exception);
     }

@@ -23,7 +23,6 @@ repositories {
   maven { url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") }
   maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots") }
   maven { url = uri("https://oss.sonatype.org/content/repositories/central") }
-
 }
 
 dependencies {
@@ -54,9 +53,6 @@ dependencies {
   compileOnly("org.bytedeco:javacpp-presets:1.5.9")
 
   compileOnly("org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT")
-
-  // pcap
-//  compileOnly("org.pcap4j:pcap4j-core:1.8.0")
 }
 
 /*
@@ -124,74 +120,10 @@ bukkit {
  * Intave Gradle Tasks
  */
 
-tasks.register("production") {
-  group = "deploy"
+tasks.register("test_build") {
+  group = "build"
   dependsOn(tasks.build)
-  buildConfigFieldSafe("boolean", "PRODUCTION", "true")
-  dumpBuildConfig()
-}
-
-tasks.register<RunServer>("authtest") {
-  group = "intave"
-  dependsOn(tasks.build)
-  buildConfigFieldSafe("boolean", "PRODUCTION", "true")
-  buildConfigFieldSafe("boolean", "AUTHTEST", "true")
-  dumpBuildConfig()
-
-  pluginJars.from("build/libs/$simpleName.jar")
-  minecraftVersion("1.8.8")
-  runDirectory(File("runs/authtest"))
-  jvmArgs("-Dcom.mojang.eula.agree=true")
-//  jvmArgs("-Dintave.test.success=shutdown")
-  javaLauncher.set(
-    project.javaToolchains.launcherFor {
-      languageVersion.set(JavaLanguageVersion.of(17))
-    }
-  )
-}
-
-tasks.register<RunServer>("gommetest") {
-  group = "intave"
-  dependsOn(tasks.build)
-  buildConfigFieldSafe("boolean", "GOMME", "true")
-  dumpBuildConfig()
-
-  pluginJars.from("build/libs/$simpleName.jar")
-  minecraftVersion("1.8.8")
-  runDirectory(File("runs/gommetest"))
-  jvmArgs("-Dcom.mojang.eula.agree=true")
-//  jvmArgs("-Dintave.test.success=shutdown")
-  javaLauncher.set(
-    project.javaToolchains.launcherFor {
-      languageVersion.set(JavaLanguageVersion.of(8))
-    }
-  )
-}
-
-
-tasks.register<RunServer>("authtest_1.20.1") {
-  group = "intave"
-  dependsOn(tasks.build)
-  buildConfigFieldSafe("boolean", "PRODUCTION", "true")
-  buildConfigFieldSafe("boolean", "AUTHTEST", "true")
-  dumpBuildConfig()
-
-  pluginJars.from("build/libs/$simpleName.jar")
-  minecraftVersion("1.20.1")
-  runDirectory(File("runs/authtest_1.20.1"))
-  jvmArgs("-Dcom.mojang.eula.agree=true")
-//  jvmArgs("-Dintave.test.success=shutdown")
-  javaLauncher.set(
-    project.javaToolchains.launcherFor {
-      languageVersion.set(JavaLanguageVersion.of(17))
-    }
-  )
-}
-
-tasks.register("gomme") {
-  group = "deploy"
-  dependsOn(tasks.build)
-  buildConfigFieldSafe("boolean", "GOMME", "true")
+  buildConfigFieldSafe("boolean", "TEST_BUILD", "true")
   dumpBuildConfig()
 }
 
@@ -204,8 +136,7 @@ buildConfig {
   useJavaOutput()
 
   buildConfigFieldSafe("boolean", "PRODUCTION", "false");
-  buildConfigFieldSafe("boolean", "AUTHTEST", "false");
-  buildConfigFieldSafe("boolean", "GOMME", "false")
+  buildConfigFieldSafe("boolean", "TEST_BUILD", "false");
   buildConfigFieldSafe("String", "VERSION", "\"${rootProject.version}\"")
 }
 
@@ -262,7 +193,7 @@ run {
 fun registerPaperTestTask(serverVersion: String, javaVersion: Int) {
   tasks.register<RunServer>("test_${serverVersion}") {
     group = simpleName
-    dependsOn("build")
+    dependsOn("test_build")
     pluginJars.from("build/libs/$simpleName.jar")
     minecraftVersion(serverVersion)
     // Minecraft 1.8.8 requires special patches to work with Java 17

@@ -38,16 +38,10 @@ public final class DomainCache {
   }
 
   public String serviceDomain() {
-    if (IntaveControl.AUTHENTICATION_DEBUG_MODE) {
-      return "service.intave.de";
-    }
     return selectedServiceDomain;
   }
 
   public List<String> serviceDomains() {
-    if (IntaveControl.AUTHENTICATION_DEBUG_MODE) {
-      return Collections.singletonList(serviceDomain());
-    }
     return sortedServiceDomains;
   }
 

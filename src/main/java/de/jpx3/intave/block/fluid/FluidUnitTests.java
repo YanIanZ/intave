@@ -3,10 +3,10 @@ package de.jpx3.intave.block.fluid;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.block.cache.BlockCache;
 import de.jpx3.intave.block.cache.BlockCaches;
-import de.jpx3.intave.test.BlockStorage;
-import de.jpx3.intave.test.FakePlayerFactory;
-import de.jpx3.intave.test.Test;
-import de.jpx3.intave.test.Tests;
+import de.jpx3.intave.test.unit.BlockStorage;
+import de.jpx3.intave.test.unit.FakePlayerFactory;
+import de.jpx3.intave.test.unit.UnitTest;
+import de.jpx3.intave.test.unit.UnitTests;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserFactory;
 import org.bukkit.Bukkit;
@@ -17,18 +17,18 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
 
-import static de.jpx3.intave.test.Severity.ERROR;
+import static de.jpx3.intave.test.unit.Severity.ERROR;
 import static org.bukkit.Material.LAVA;
 import static org.bukkit.Material.WATER;
 
-public final class FluidTests extends Tests {
+public final class FluidUnitTests extends UnitTests {
   private BlockStorage blockStorage;
 
-  public FluidTests() {
+  public FluidUnitTests() {
     super("FLD");
   }
 
-  @Test(
+  @UnitTest(
     testCode = "BASIC",
     severity = ERROR
   )
@@ -48,7 +48,7 @@ public final class FluidTests extends Tests {
     }
   }
 
-  @Test(
+  @UnitTest(
     testCode = "level",
     severity = ERROR
   )

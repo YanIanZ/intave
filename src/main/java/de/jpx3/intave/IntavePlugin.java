@@ -63,7 +63,9 @@ import de.jpx3.intave.resource.legacy.EncryptedLegacyResource;
 import de.jpx3.intave.security.PlayerListService;
 import de.jpx3.intave.share.FriendlyByteBuf;
 import de.jpx3.intave.share.link.WrapperConverter;
-import de.jpx3.intave.test.TestService;
+import de.jpx3.intave.test.TestCompletionLatch;
+import de.jpx3.intave.test.client.ClientTestService;
+import de.jpx3.intave.test.unit.UnitTestService;
 import de.jpx3.intave.trustfactor.TrustFactorService;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.storage.LongTermViolationStorage;
@@ -80,6 +82,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.units.qual.C;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -130,7 +133,8 @@ public final class IntavePlugin extends JavaPlugin {
   private ScheduledUploadService uploadService; // module candidate
   private Analytics analytics; // module candidate
   private Metrics metrics;
-  private TestService testService;
+  private UnitTestService unitTestService;
+  private ClientTestService clientTestService;
 
   public IntavePlugin() {
     // stage 2
@@ -339,8 +343,11 @@ public final class IntavePlugin extends JavaPlugin {
       fakePlayerEventService = new FakePlayerEventService(this);
       proxyMessenger = new ProxyMessenger(this);
       sibylIntegrationService = new SibylIntegrationService(this);
-      testService = new TestService();
-      testService.setup();
+      unitTestService = new UnitTestService();
+      unitTestService.setup();
+      clientTestService = new ClientTestService();
+      clientTestService.setup();
+
       uploadService = new ScheduledUploadService();
       uploadService.enable();
 
@@ -439,6 +446,13 @@ public final class IntavePlugin extends JavaPlugin {
 
       StartupTasks.runAll();
     });
+
+    if (IntaveBuildConfig.TEST_BUILD) {
+      TestCompletionLatch.onComplete(() -> {
+        IntaveLogger.logger().info("All tests completed, shutting down..");
+        Synchronizer.synchronizeDelayed(Bukkit::shutdown, 20);
+      });
+    }
   }
 
   public void createDataFolder() {

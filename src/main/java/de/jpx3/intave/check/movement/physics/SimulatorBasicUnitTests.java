@@ -7,7 +7,7 @@ import de.jpx3.intave.player.collider.Colliders;
 import de.jpx3.intave.player.collider.complex.Collider;
 import de.jpx3.intave.player.collider.simple.SimpleCollider;
 import de.jpx3.intave.share.Motion;
-import de.jpx3.intave.test.*;
+import de.jpx3.intave.test.unit.*;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserFactory;
 import de.jpx3.intave.user.UserRepository;
@@ -18,7 +18,7 @@ import org.bukkit.inventory.PlayerInventory;
 import java.util.Collections;
 import java.util.UUID;
 
-public final class SimulatorBasicTests extends Tests {
+public final class SimulatorBasicUnitTests extends UnitTests {
   private static final UUID EMPTY_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   private User testUser;
@@ -28,7 +28,7 @@ public final class SimulatorBasicTests extends Tests {
   private final SimpleCollider simpleCollider = Colliders.anySimpleCollider();
   private final PlayerInventory inventory = new MockEmptyInventory();
 
-  public SimulatorBasicTests() {
+  public SimulatorBasicUnitTests() {
     super("SB");
   }
 
@@ -70,7 +70,7 @@ public final class SimulatorBasicTests extends Tests {
     UserRepository.manuallyRegisterUser(player, testUser);
   }
 
-  @Test(
+  @UnitTest(
     testCode = "A",
     severity = Severity.ERROR
   )

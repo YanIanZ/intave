@@ -1,11 +1,11 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 import java.util.Set;
 
-public abstract class Tests {
+public abstract class UnitTests {
   private final String testCode;
 
-  public Tests(String testCode) {
+  public UnitTests(String testCode) {
     this.testCode = testCode;
   }
 
@@ -83,6 +83,6 @@ public abstract class Tests {
 
   @Override
   protected final void finalize() {
-    TestService.testClearedByGC(testCode);
+    UnitTestService.testClearedByGC(testCode);
   }
 }

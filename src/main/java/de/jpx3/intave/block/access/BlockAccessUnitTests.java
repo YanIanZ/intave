@@ -2,7 +2,7 @@ package de.jpx3.intave.block.access;
 
 import com.comphenix.protocol.wrappers.BlockPosition;
 import de.jpx3.intave.block.type.MaterialSearch;
-import de.jpx3.intave.test.*;
+import de.jpx3.intave.test.unit.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -11,12 +11,12 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Set;
 
-public final class BlockAccessTests extends Tests {
+public final class BlockAccessUnitTests extends UnitTests {
   private Block block, blockBelow;
   private BlockStorage priorMaterial, priorMaterialBelow;
   private final Set<Material> blacklistedMaterials = MaterialSearch.materialsThatContain("REDSTONE", "BED", "SOIL", "GRASS_PATH", "EGG", "SCULK");
 
-  public BlockAccessTests() {
+  public BlockAccessUnitTests() {
     super("BA");
   }
 
@@ -31,7 +31,7 @@ public final class BlockAccessTests extends Tests {
     blockBelow.setType(Material.BEDROCK);
   }
 
-  @Test(
+  @UnitTest(
     testCode = "A",
     severity = Severity.ERROR
   )

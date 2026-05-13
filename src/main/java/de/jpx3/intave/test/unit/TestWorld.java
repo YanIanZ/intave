@@ -1,4 +1,4 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 import org.bukkit.*;
 import org.bukkit.generator.ChunkGenerator;

@@ -68,17 +68,15 @@ public final class IntaveControl {
   public static final boolean DEBUG_VELOCITY_RECEIVE = false;
   public static final boolean DEBUG_PLACE_AND_BREAK_PERMISSIONS = false;
   public static final boolean DEBUG_SERVER_VERSION = false;
-  public static final boolean CLOUD_LOCALHOST_MASTER_SHARD = !PRODUCTION && !GOMME;
+  public static final boolean CLOUD_LOCALHOST_MASTER_SHARD = !PRODUCTION;
   public static final boolean REPLACE_JOAP_SETBACK_WITH_CM = true;
   public static final boolean DISALLOW_ALL_BLOCK_PLACEMENTS = false;
   public static final boolean DISALLOW_ALL_BLOCK_PLACEMENTS_WITH_EVENT = false;
   public static final boolean ENABLE_MOVEMENT_DEBUGGER_COLLECTOR = false;
   public static final boolean MOVEMENT_DEBUGGER_COLLECTOR_POSTTICK_OUTPUT = false;
-  public static final boolean AUTHENTICATION_DEBUG_MODE = AUTHTEST;
   public static final boolean CLIENT_KEEP_ALIVE_NETTY_CHECK = false;
   public static final boolean NOTIFY_MISSING_PACKET_FLUSHES = false;
-
-  public static final OperationalMode SAMPLE_OPERATIONAL_MODE = GOMME ? /*GOMME_UPLOAD*/CLOUD_STORAGE : (PRODUCTION ? CLOUD_STORAGE : LOCAL_STORAGE);
+	public static final OperationalMode SAMPLE_OPERATIONAL_MODE = PRODUCTION ? CLOUD_STORAGE : LOCAL_STORAGE;
 
   public static final boolean USE_EXTERNAL_CONFIGURATION_FILE = !PRODUCTION;
   public static final boolean DEBUG = false;

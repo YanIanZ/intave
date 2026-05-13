@@ -1,6 +1,6 @@
 package de.jpx3.intave.block.variant;
 
-import de.jpx3.intave.test.*;
+import de.jpx3.intave.test.unit.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -8,11 +8,11 @@ import org.bukkit.block.Block;
 
 import java.util.*;
 
-public final class BlockVariantTests extends Tests {
+public final class BlockVariantUnitTests extends UnitTests {
   private Block block, blockBelow;
   private BlockStorage priorMaterial, priorMaterialBelow;
 
-  public BlockVariantTests() {
+  public BlockVariantUnitTests() {
     super("BV");
   }
 
@@ -27,7 +27,7 @@ public final class BlockVariantTests extends Tests {
     blockBelow.setType(Material.BEDROCK);
   }
 
-  @Test(
+  @UnitTest(
     testCode = "A",
     severity = Severity.ERROR
   )

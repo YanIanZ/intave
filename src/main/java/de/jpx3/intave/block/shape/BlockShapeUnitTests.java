@@ -1,16 +1,16 @@
 package de.jpx3.intave.block.shape;
 
 import de.jpx3.intave.share.BoundingBox;
-import de.jpx3.intave.test.Severity;
-import de.jpx3.intave.test.Test;
-import de.jpx3.intave.test.Tests;
+import de.jpx3.intave.test.unit.Severity;
+import de.jpx3.intave.test.unit.UnitTest;
+import de.jpx3.intave.test.unit.UnitTests;
 
-public final class BlockShapeTests extends Tests {
-  public BlockShapeTests() {
+public final class BlockShapeUnitTests extends UnitTests {
+  public BlockShapeUnitTests() {
     super("BS");
   }
 
-  @Test(
+  @UnitTest(
     testCode = "A",
     severity = Severity.ERROR
   )
@@ -20,7 +20,7 @@ public final class BlockShapeTests extends Tests {
     assertFalse(empty.isCubic());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "B",
     severity = Severity.ERROR
   )
@@ -30,7 +30,7 @@ public final class BlockShapeTests extends Tests {
     assertTrue(array.isEmpty());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "C",
     severity = Severity.ERROR
   )
@@ -41,7 +41,7 @@ public final class BlockShapeTests extends Tests {
     assertFalse(array.isEmpty());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "D",
     severity = Severity.ERROR
   )
@@ -52,7 +52,7 @@ public final class BlockShapeTests extends Tests {
     assertTrue(blockShape.isCubic());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "E",
     severity = Severity.ERROR
   )
@@ -63,7 +63,7 @@ public final class BlockShapeTests extends Tests {
     assertTrue(blockShape.isCubic());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "F",
     severity = Severity.ERROR
   )
@@ -76,7 +76,7 @@ public final class BlockShapeTests extends Tests {
     assertTrue(blockShape.isCubic());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "G",
     severity = Severity.ERROR
   )
@@ -89,7 +89,7 @@ public final class BlockShapeTests extends Tests {
     assertTrue(blockShape.isCubic());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "H",
     severity = Severity.ERROR
   )
@@ -110,7 +110,7 @@ public final class BlockShapeTests extends Tests {
     }
   }
 
-  @Test(
+  @UnitTest(
     testCode = "I",
     severity = Severity.ERROR
   )

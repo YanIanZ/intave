@@ -5,7 +5,7 @@ import com.google.common.io.ByteArrayDataOutput;
 import de.jpx3.intave.access.player.storage.MemoryStorageGateway;
 import de.jpx3.intave.access.player.storage.StorageGateway;
 import de.jpx3.intave.module.Modules;
-import de.jpx3.intave.test.*;
+import de.jpx3.intave.test.unit.*;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserFactory;
 import de.jpx3.intave.user.UserRepository;
@@ -19,7 +19,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
-public final class StorageTests extends Tests {
+public final class StorageUnitTests extends UnitTests {
   private static final UUID ZERO_UUID = new UUID(0, 0);
   private static final UUID ONE_UUID = new UUID(1, 1);
   private static final String EXAMPLE_TEXT = generateExampleText();
@@ -44,7 +44,7 @@ public final class StorageTests extends Tests {
   private Player player;
   private StorageGateway exampleGateway;
 
-  public StorageTests() {
+  public StorageUnitTests() {
     super("ST");
   }
 
@@ -59,7 +59,7 @@ public final class StorageTests extends Tests {
 
   private ByteBuffer gateawayReturn;
 
-  @Test(
+  @UnitTest(
     testCode = "A",
     severity = Severity.ERROR
   )
@@ -92,7 +92,7 @@ public final class StorageTests extends Tests {
 
   private ByteBuffer returnA, returnB;
 
-  @Test(
+  @UnitTest(
     testCode = "B",
     severity = Severity.ERROR
   )
@@ -142,7 +142,7 @@ public final class StorageTests extends Tests {
     return true;
   }
 
-  @Test(
+  @UnitTest(
     testCode = "C",
     severity = Severity.ERROR
   )
@@ -155,7 +155,7 @@ public final class StorageTests extends Tests {
     assertEquals(mockStorage.data(), 5);
   }
 
-  @Test(
+  @UnitTest(
     testCode = "D",
     severity = Severity.ERROR
   )

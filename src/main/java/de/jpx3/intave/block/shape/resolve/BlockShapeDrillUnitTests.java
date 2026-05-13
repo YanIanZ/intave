@@ -2,7 +2,7 @@ package de.jpx3.intave.block.shape.resolve;
 
 import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.block.shape.ShapeResolverPipeline;
-import de.jpx3.intave.test.*;
+import de.jpx3.intave.test.unit.*;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserFactory;
 import de.jpx3.intave.user.UserRepository;
@@ -12,14 +12,14 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
-public final class BlockShapeDrillTests extends Tests {
+public final class BlockShapeDrillUnitTests extends UnitTests {
   private Block block;
   private Player player;
   private User user;
   private BlockStorage priorMaterial;
   private ShapeResolverPipeline drill;
 
-  public BlockShapeDrillTests() {
+  public BlockShapeDrillUnitTests() {
     super("BSD");
   }
 
@@ -35,7 +35,7 @@ public final class BlockShapeDrillTests extends Tests {
     block.setType(Material.AIR);
   }
 
-  @Test(
+  @UnitTest(
     testCode = "A",
     severity = Severity.ERROR
   )
@@ -45,7 +45,7 @@ public final class BlockShapeDrillTests extends Tests {
     assertTrue(blockShape.isCubic());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "B",
     severity = Severity.ERROR
   )
@@ -55,7 +55,7 @@ public final class BlockShapeDrillTests extends Tests {
     assertTrue(blockShape.isCubic());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "C",
     severity = Severity.ERROR
   )
@@ -81,7 +81,7 @@ public final class BlockShapeDrillTests extends Tests {
 //    assertTrue(blockShape.isEmpty());
 //  }
 
-  @Test(
+  @UnitTest(
     testCode = "E",
     severity = Severity.ERROR
   )
@@ -91,7 +91,7 @@ public final class BlockShapeDrillTests extends Tests {
     assertTrue(blockShape.isCubic());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "F",
     severity = Severity.WARNING
   )
@@ -101,7 +101,7 @@ public final class BlockShapeDrillTests extends Tests {
     assertTrue(blockShape.isCubic());
   }
 
-  @Test(
+  @UnitTest(
     testCode = "G",
     severity = Severity.ERROR
   )

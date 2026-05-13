@@ -1,4 +1,4 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 import de.jpx3.intave.block.access.BlockAccess;
 import org.bukkit.Bukkit;
@@ -6,11 +6,11 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
-public final class ExampleTests extends Tests {
+public final class ExampleUnitUnitTests extends UnitTests {
   private Block targetBlock;
   private Material priorMaterial;
 
-  public ExampleTests() {
+  public ExampleUnitUnitTests() {
     super("EX");
   }
 
@@ -21,7 +21,7 @@ public final class ExampleTests extends Tests {
     priorMaterial = targetBlock.getType();
   }
 
-  @Test(
+  @UnitTest(
     testCode = "MAT_CMP",
     severity = Severity.ERROR
   )
@@ -31,7 +31,7 @@ public final class ExampleTests extends Tests {
     assertEquals(Material.DIAMOND_BLOCK, resolvedType);
   }
 
-  @Test(
+  @UnitTest(
     testCode = "MAT2_CMP",
     severity = Severity.ERROR
   )

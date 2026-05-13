@@ -1,17 +1,17 @@
 package de.jpx3.intave.check.movement.physics;
 
-import de.jpx3.intave.test.Severity;
-import de.jpx3.intave.test.Test;
-import de.jpx3.intave.test.Tests;
+import de.jpx3.intave.test.unit.Severity;
+import de.jpx3.intave.test.unit.UnitTest;
+import de.jpx3.intave.test.unit.UnitTests;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class MovementConfigurationTests extends Tests {
-  public MovementConfigurationTests() {
+public final class MovementConfigurationUnitTests extends UnitTests {
+  public MovementConfigurationUnitTests() {
     super("MC");
   }
 
-  @Test(
+  @UnitTest(
     severity = Severity.ERROR
   )
   public void testKeys() {
@@ -30,7 +30,7 @@ public final class MovementConfigurationTests extends Tests {
     assertFalse(conf.isSprinting());
   }
 
-  @Test(
+  @UnitTest(
     severity = Severity.ERROR
   )
   public void testSprint() {
@@ -84,7 +84,7 @@ public final class MovementConfigurationTests extends Tests {
     }
   }
 
-  @Test(
+  @UnitTest(
     severity = Severity.ERROR
   )
   public void testReduce() {

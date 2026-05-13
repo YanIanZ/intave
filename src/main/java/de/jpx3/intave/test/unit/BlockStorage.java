@@ -1,4 +1,4 @@
-package de.jpx3.intave.test;
+package de.jpx3.intave.test.unit;
 
 import de.jpx3.intave.block.access.BlockAccess;
 import org.bukkit.Material;

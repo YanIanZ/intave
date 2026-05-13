@@ -1,15 +1,15 @@
 package de.jpx3.intave.share;
 
-import de.jpx3.intave.test.Severity;
-import de.jpx3.intave.test.Test;
-import de.jpx3.intave.test.Tests;
+import de.jpx3.intave.test.unit.Severity;
+import de.jpx3.intave.test.unit.UnitTest;
+import de.jpx3.intave.test.unit.UnitTests;
 
-public final class ShareTests extends Tests {
-  public ShareTests() {
+public final class ShareUnitTests extends UnitTests {
+  public ShareUnitTests() {
     super("SHR");
   }
 
-  @Test(severity = Severity.ERROR)
+  @UnitTest(severity = Severity.ERROR)
   public void testHistoryWindow() {
     HistoryWindow<Integer> historyWindow = new HistoryWindow<>(10);
     for (int i = 0; i <= 40; i++) {

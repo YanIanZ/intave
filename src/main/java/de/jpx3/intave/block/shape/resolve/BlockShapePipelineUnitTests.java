@@ -5,7 +5,7 @@ import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.block.shape.BlockShapes;
 import de.jpx3.intave.block.shape.ShapeResolverPipeline;
 import de.jpx3.intave.share.BoundingBox;
-import de.jpx3.intave.test.*;
+import de.jpx3.intave.test.unit.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public final class BlockShapePipelineTests extends Tests {
+public final class BlockShapePipelineUnitTests extends UnitTests {
   private Player player;
   private SimpleDrill drill;
   private ShapeResolverPipeline head;
@@ -25,7 +25,7 @@ public final class BlockShapePipelineTests extends Tests {
   private Block block;
   private BlockStorage previousMaterialData;
 
-  public BlockShapePipelineTests() {
+  public BlockShapePipelineUnitTests() {
     super("BSP");
   }
 
@@ -37,7 +37,7 @@ public final class BlockShapePipelineTests extends Tests {
     player = FakePlayerFactory.createPlayer();
   }
 
-  @Test(
+  @UnitTest(
     testCode = "A",
     severity = Severity.WARNING
   )
