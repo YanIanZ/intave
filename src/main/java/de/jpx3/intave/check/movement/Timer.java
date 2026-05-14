@@ -1,7 +1,6 @@
 package de.jpx3.intave.check.movement;
 
 import com.comphenix.protocol.events.PacketEvent;
-import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.check.Check;
 import de.jpx3.intave.check.CheckConfiguration.CheckSettings;
 import de.jpx3.intave.check.CheckViolationLevelDecrementer;
@@ -42,9 +41,9 @@ public final class Timer extends Check {
     detectPulseBlink = settings.boolBy("block-pulse-blink", lowTolerance);
 
     this.playerTime = new PlayerTime(this);
-    appendCheckPart(playerTime);
-
     this.microBlink = new MicroBlink(this);
+
+    appendCheckPart(playerTime);
     appendCheckPart(microBlink);
   }
 
