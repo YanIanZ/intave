@@ -3,12 +3,12 @@ package de.jpx3.intave.module.player;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
-import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.player.storage.EmptyStorageGateway;
 import de.jpx3.intave.access.player.storage.StorageGateway;
 import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Task;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.packet.PacketSender;
@@ -34,21 +34,23 @@ public final class StorageLoader extends Module {
   private StorageGateway storageGateway = new EmptyStorageGateway();
   private static final long AUTO_REFRESH = MINUTES.toMillis(20);
 
+  private Task refreshTask;
+
   @Override
   public void enable() {
     Bukkit.getOnlinePlayers().forEach(this::requestStorageFor);
-    int taskId = Bukkit.getScheduler().scheduleAsyncRepeatingTask(
-      IntavePlugin.singletonInstance(),
+    refreshTask = Tasks.periodic(
       () -> Bukkit.getOnlinePlayers().forEach(this::saveStorageFor),
-      AUTO_REFRESH / 50,
-      AUTO_REFRESH / 50
-    );
-    TaskTracker.begun(taskId);
+      AUTO_REFRESH, AUTO_REFRESH
+    ).startAsync();
   }
 
   @Override
   public void disable() {
     Bukkit.getOnlinePlayers().forEach(this::saveStorageFor);
+    if (refreshTask != null) {
+      refreshTask.cancel();
+    }
   }
 
   @BukkitEventSubscription(priority = EventPriority.HIGHEST)

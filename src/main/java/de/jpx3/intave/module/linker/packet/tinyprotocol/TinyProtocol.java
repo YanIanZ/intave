@@ -7,7 +7,6 @@ import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.cleanup.StartupTasks;
-import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.klass.locate.MethodSearchBySignature;
 import io.netty.channel.*;
 import org.bukkit.Bukkit;

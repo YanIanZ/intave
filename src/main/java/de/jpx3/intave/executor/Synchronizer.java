@@ -1,10 +1,10 @@
 package de.jpx3.intave.executor;
 
-import de.jpx3.classloader.ClassLoader;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.UnsupportedFallbackOperationException;
 import de.jpx3.intave.diagnostic.timings.Timings;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.klass.Lookup;
 import de.jpx3.intave.user.User;
 import org.bukkit.Bukkit;
@@ -14,13 +14,14 @@ import java.util.Queue;
 import java.util.concurrent.Executor;
 
 public final class Synchronizer {
-  private static final boolean IS_FOLIA_SERVER = classExists("io.papermc.paper.threadedregions.RegionizedServer");
-
   private static final BukkitScheduler scheduler = Bukkit.getScheduler();
+  private static final boolean isFolia = isFoliaServer();
   private static Executor globalSynchronizationExecutor;
 
-
   public static void setup() {
+    if (isFolia) {
+      return;
+    }
     try {
       Class<?> minecraftServerClass = Lookup.serverClass("MinecraftServer");
       Object minecraftServer = minecraftServerClass.getMethod("getServer").invoke(null);
@@ -37,22 +38,31 @@ public final class Synchronizer {
 
   @Deprecated
   public static void synchronize(Runnable runnable) {
-    globalSynchronizationExecutor.execute(wrapped(runnable));
+    if (isFolia) {
+      Tasks.delayedNamed("Synchronizer.synchronize", wrapped(runnable), 0).startSync();
+    } else {
+      globalSynchronizationExecutor.execute(wrapped(runnable));
+    }
   }
 
   public static void synchronize(User user, Runnable runnable) {
-    globalSynchronizationExecutor.execute(wrapped(runnable));
+    if (isFolia) {
+//      Thread.dumpStack();
+      Tasks.delayedNamed("Synchronizer.synchronize", wrapped(runnable), 0).startUserSync(user);
+    } else {
+      globalSynchronizationExecutor.execute(wrapped(runnable));
+    }
   }
 
   @Deprecated
   public static void synchronizeDelayed(Runnable runnable, int ticks) {
     runnable = wrapped(runnable);
-    scheduler.runTaskLater(IntavePlugin.singletonInstance(), runnable, ticks);
+    Tasks.delayed(runnable, ticks).startSync();
   }
 
   public static void synchronizeDelayed(User user, Runnable runnable, int ticks) {
     runnable = wrapped(runnable);
-    scheduler.runTaskLater(IntavePlugin.singletonInstance(), runnable, ticks);
+    Tasks.delayed(runnable, ticks).startUserSync(user);
   }
 
   private static Runnable wrapped(Runnable runnable) {
@@ -71,13 +81,14 @@ public final class Synchronizer {
     };
   }
 
-  private static boolean classExists(
-    String classpath
-  ) {
+  private static boolean isFoliaServer() {
+    // This is the officially correct way to check for Folia!
+    // https://docs.papermc.io/paper/dev/folia-support/
     try {
-      Class.forName(classpath);
+      Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
       return true;
-    } catch (ClassNotFoundException exception) {}
-    return false;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
   }
 }

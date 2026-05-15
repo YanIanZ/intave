@@ -5,7 +5,8 @@ import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.diagnostic.ConsoleOutput;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Task;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.linker.packet.PacketId;
@@ -14,7 +15,6 @@ import de.jpx3.intave.player.FaultKicks;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.ConnectionMetadata;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -22,23 +22,27 @@ import java.util.Map;
 
 public final class ConnectionTracker extends Module {
   private static final long TIMEOUT_DURATION = 1000 * 30;
+  private Task periodicTask;
 
   @Override
   public void enable() {
-    int taskId = this.plugin.getServer().getScheduler().scheduleAsyncRepeatingTask(plugin, () -> {
-      for (Player player : Bukkit.getOnlinePlayers()) {
-        User user = UserRepository.userOf(player);
-        long dur = System.currentTimeMillis() - lastKeepAliveResponse(user);
-        if (dur > TIMEOUT_DURATION && FaultKicks.IGNORING_KEEP_ALIVE) {
-          IntaveLogger.logger().printLine("[Intave] " + player.getName() + " is not responding to keep-alive packets");
-          user.kick("Not responding to keep-alive packets");
-          if (IntaveControl.NETTY_DUMP_ON_TIMEOUT) {
-            dumpNettyThreads();
-          }
+    periodicTask = Tasks.periodicNamed("ConnectionTracker.checkNettyDump", () -> UserRepository.applyOnAll(user -> {
+      long dur = System.currentTimeMillis() - lastKeepAliveResponse(user);
+      if (dur > TIMEOUT_DURATION && FaultKicks.IGNORING_KEEP_ALIVE) {
+        IntaveLogger.logger().printLine("[Intave] " + user.player().getName() + " is not responding to keep-alive packets");
+        user.kick("Not responding to keep-alive packets");
+        if (IntaveControl.NETTY_DUMP_ON_TIMEOUT) {
+          dumpNettyThreads();
         }
       }
-    }, 0, (TIMEOUT_DURATION / 50) / 2);
-    TaskTracker.begun(taskId);
+    }), 0, (TIMEOUT_DURATION / 50) / 2).startAsync();
+  }
+
+  @Override
+  public void disable() {
+    if (periodicTask != null) {
+      periodicTask.cancel();
+    }
   }
 
   private void dumpNettyThreads() {

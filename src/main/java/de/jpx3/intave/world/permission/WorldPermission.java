@@ -2,7 +2,6 @@ package de.jpx3.intave.world.permission;
 
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.access.player.event.BucketAction;
-import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;

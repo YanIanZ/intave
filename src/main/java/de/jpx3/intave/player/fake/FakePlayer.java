@@ -6,7 +6,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.executor.Synchronizer;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Task;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.player.fake.action.*;
 import de.jpx3.intave.player.fake.movement.FloatingMovement;
 import de.jpx3.intave.player.fake.movement.Movement;
@@ -45,7 +46,7 @@ public final class FakePlayer extends FakePlayerBody {
   private final Consumer<FakePlayer> attackSubscriber;
   public double killAuraVL = 0;
   public long lastPingPacketSent;
-  private int taskId;
+  private Task tickTask;
   private int previousLatency = 0, ticks = 0;
   private long lastHurtAction;
 
@@ -94,13 +95,11 @@ public final class FakePlayer extends FakePlayerBody {
   }
 
   public void startTicking() {
-    this.taskId = Bukkit.getScheduler().scheduleAsyncRepeatingTask(plugin, this::tick, 0, 1);
-    TaskTracker.begun(taskId);
+    tickTask = Tasks.periodic(this::tick, 0, 1).startAsync();
   }
 
   public void stopTicking() {
-    Bukkit.getScheduler().cancelTask(taskId);
-    TaskTracker.stopped(taskId);
+    tickTask.cancel();
   }
 
   public void create(Location spawn) {

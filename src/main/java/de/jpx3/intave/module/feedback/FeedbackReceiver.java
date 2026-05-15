@@ -4,11 +4,10 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntaveLogger;
-import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.adapter.ViaVersionAdapter;
 import de.jpx3.intave.diagnostic.LatencyStudy;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
@@ -36,21 +35,13 @@ public final class FeedbackReceiver extends Module {
   private static final long TIMEOUT_KICK = TimeUnit.SECONDS.toMillis(40);
   private static final long CHECK_TIMEOUT_KICK = TIMEOUT_KICK / 4;
 
-  public FeedbackReceiver(IntavePlugin plugin) {
-    int taskId = plugin.getServer().getScheduler()
-      .scheduleAsyncRepeatingTask(plugin, this::checkTransactionTimeout, CHECK_TIMEOUT_KICK, CHECK_TIMEOUT_KICK);
-    TaskTracker.begun(taskId);
-
-    int taskId2 = plugin.getServer().getScheduler()
-      .scheduleAsyncRepeatingTask(plugin, this::decreaseTAKAVL, 20 * 60, 20 * 60);
-    TaskTracker.begun(taskId2);
+  public FeedbackReceiver() {
+    Tasks.periodic(
+      this::checkTransactionTimeout,
+      CHECK_TIMEOUT_KICK, CHECK_TIMEOUT_KICK
+    ).startAsync();
   }
 
-  private void decreaseTAKAVL() {
-    UserRepository.applyOnAll(user -> {
-      user.meta().connection().transactionKeepAliveInvalidOrderVL = Math.max(0, user.meta().connection().transactionKeepAliveInvalidOrderVL - 1);
-    });
-  }
 
   private void checkTransactionTimeout() {
     for (Player player : Bukkit.getOnlinePlayers()) {
@@ -224,23 +215,6 @@ public final class FeedbackReceiver extends Module {
     FeedbackRequest<?> poll = feedbackQueue.poll();
     if (poll != response) {
       throw new IllegalStateException("Polling from feedback queue did not return the expected request");
-    }
-
-    if (IntaveControl.CLIENT_KEEP_ALIVE_NETTY_CHECK) {
-      if (!response.preThreadInjectionPassed() && !MinecraftVersions.VER1_12_0.atOrAbove() && !user.meta().protocol().affectedByLevitation()) {
-        if (connection.transactionKeepAliveInvalidOrderVL++ > 10) {
-//          Violation violation = Violation.builderFor(ProtocolScanner.class)
-//            .forPlayer(user.player())
-//            .withMessage("invalid transaction/keepalive order")
-//            .withDetails("player version: " + user.meta().protocol().versionString())
-//            .withVL(1)
-//            .build();
-//          Modules.violationProcessor().processViolation(violation);
-          if (connection.transactionKeepAliveInvalidOrderVL > 20) {
-            connection.transactionKeepAliveInvalidOrderVL = 10;
-          }
-        }
-      }
     }
 
     receiveRequest(user, response);

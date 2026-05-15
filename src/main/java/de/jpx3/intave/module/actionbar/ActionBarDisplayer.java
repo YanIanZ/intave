@@ -5,7 +5,8 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import de.jpx3.intave.adapter.MinecraftVersions;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Task;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
@@ -13,7 +14,6 @@ import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.packet.PacketSender;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -88,16 +88,16 @@ public final class ActionBarDisplayer extends Module {
       return;
     }
     UUID target = receiver.actionTarget();
+
     int[] counter = {0};
-    int[] taskId = new int[1];
-    taskId[0] = Bukkit.getScheduler().scheduleAsyncRepeatingTask(plugin, () -> {
+    Task[] task = new Task[1];
+
+    task[0] = Tasks.periodic(() -> {
       boolean cancelTask = counter[0]++ >= 20 * 60 * 15 || !receiver.hasPlayer() || !receiver.player().isOnline() || !inSubscription(receiver) || receiver.actionTarget() != target;
       User targetUser = UserRepository.userOf(target);
       cancelTask |= !targetUser.hasPlayer() || !targetUser.player().isOnline() || !targetUser.anyActionSubscriptions();
       if (cancelTask) {
-//        System.out.println("CANCELLED " + counter[0] + " " + !receiver.hasPlayer() + " " + !receiver.player().isOnline() + " " + !inSubscription(receiver) + " " + (receiver.actionTarget() != target) + " " + !targetUser.hasPlayer() + " " + !targetUser.player().isOnline() + " " + !targetUser.anyActionSubscriptions());
-        Bukkit.getScheduler().cancelTask(taskId[0]);
-        TaskTracker.stopped(taskId[0]);
+        task[0].cancel();
         unsubscribe(receiver);
         return;
       }
@@ -105,8 +105,7 @@ public final class ActionBarDisplayer extends Module {
       if (text != null) {
         sendActionBar(receiver.player(), text);
       }
-    }, 1, 1);
-    TaskTracker.begun(taskId[0]);
+    }, 1, 1).startAsync();
   }
 
   private static final boolean TYPE_AS_GAME_INFO = MinecraftVersions.VER1_12_0.atOrAbove();
