@@ -38,6 +38,10 @@ public final class Motion {
     return new Motion(velocity.getX(), velocity.getY(), velocity.getZ());
   }
 
+	public static Motion empty() {
+		return new Motion(0.0, 0.0, 0.0);
+	}
+
   public void setTo(double x, double y, double z) {
     this.motionX = x;
     this.motionY = y;

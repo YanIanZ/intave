@@ -9,7 +9,6 @@ import com.comphenix.protocol.injector.PacketFilterManager;
 import com.comphenix.protocol.utility.MinecraftVersion;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.adapter.MinecraftVersions;
@@ -38,6 +37,9 @@ import de.jpx3.intave.resource.Resource;
 import de.jpx3.intave.resource.ResourceRegistry;
 import de.jpx3.intave.security.HashAccess;
 import de.jpx3.intave.share.BoundingBox;
+import de.jpx3.intave.test.client.ClientTestService;
+import de.jpx3.intave.test.client.GameTest;
+import de.jpx3.intave.test.client.Replay;
 import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
@@ -45,6 +47,7 @@ import de.jpx3.intave.user.meta.ConnectionMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import de.jpx3.intave.user.meta.PunishmentMetadata;
 import de.jpx3.intave.user.storage.PlaytimeStorage;
+import de.jpx3.intave.world.TemporaryWorld;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -63,15 +66,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
@@ -79,17 +74,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -944,5 +929,49 @@ public final class DiagnosticsStage extends CommandStage {
       return;
     }
     provider.openLootChestCommand(user.player());
+  }
+
+  @SubCommand(
+    selectors = "testworld",
+    usage = "",
+    description = "Create a test world and teleport to it",
+    permission = "intave.command.diagnostics.performance"
+  )
+  public void testWorld(User user) {
+    if (!user.player().isOp()) {
+      user.player().sendMessage(ChatColor.RED + "For security reasons, this command is only available to operator player");
+    }
+    TemporaryWorld temporaryWorld = TemporaryWorld.createTemporaryWorld();
+    user.player().teleport(temporaryWorld.bukkitWorld().getSpawnLocation());
+  }
+
+  @SubCommand(
+    selectors = "test",
+    usage = "<name>",
+    description = "Run a test on your client",
+    permission = "intave.command.diagnostics.performance"
+  )
+  public void runTest(User user, String testName) {
+    ClientTestService service = IntavePlugin.singletonInstance().clientTestService();
+
+    if (testName.contains(".") || !testName.contains("/")) {
+      user.player().sendMessage(ChatColor.RED + "/intave diagnostics test <check>/<test_name>");
+      return;
+    }
+
+    File file = new File("../../tests/" + testName + ".json");
+    if (!file.exists()) {
+      user.player().sendMessage(ChatColor.RED + "Test not found at " + file.getAbsolutePath());
+      return;
+    }
+
+	  try {
+		  Replay replay = Replay.from(file);
+      GameTest gameTest = new GameTest(testName, replay);
+      service.queueTest(gameTest);
+      user.player().sendMessage(ChatColor.GREEN + "Test " + testName + " queued, it will run as soon as possible");
+    } catch (IOException e) {
+		  throw new RuntimeException(e);
+	  }
   }
 }

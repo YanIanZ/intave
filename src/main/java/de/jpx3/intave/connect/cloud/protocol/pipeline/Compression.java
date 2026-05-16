@@ -1,5 +1,6 @@
 package de.jpx3.intave.connect.cloud.protocol.pipeline;
 
+import de.jpx3.intave.codec.VarInt;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -20,12 +21,12 @@ public final class Compression extends MessageToByteEncoder<ByteBuf> {
   protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) {
     int i = msg.readableBytes();
     if (i < this.threshold) {
-      writeVarInt(out, 0);
+      VarInt.writeTo(out, 0);
       out.writeBytes(msg);
     } else {
       byte[] bytes = new byte[i];
       msg.readBytes(bytes);
-      writeVarInt(out, bytes.length);
+      VarInt.writeTo(out, bytes.length);
       deflater.setInput(bytes, 0, i);
       deflater.finish();
       while (!deflater.finished()) {
@@ -33,17 +34,6 @@ public final class Compression extends MessageToByteEncoder<ByteBuf> {
         out.writeBytes(buffer, 0, compressedSize);
       }
       deflater.reset();
-    }
-  }
-
-  private void writeVarInt(ByteBuf out, int paramInt) {
-    while (true) {
-      if ((paramInt & 0xFFFFFF80) == 0) {
-        out.writeByte(paramInt);
-        return;
-      }
-      out.writeByte(paramInt & 0x7F | 0x80);
-      paramInt >>>= 7;
     }
   }
 }

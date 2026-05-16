@@ -5,6 +5,8 @@ import de.jpx3.intave.codec.StreamCodec;
 import de.jpx3.intave.packet.Relative;
 import de.jpx3.intave.packet.converter.PosMoveRotConverter;
 import io.netty.buffer.ByteBuf;
+import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.util.Set;
 
@@ -40,6 +42,19 @@ public final class PositionMoveRotation {
 
   public Rotation rotation() {
     return rotation;
+  }
+
+  public Location toLocationIn(
+    World world
+  ) {
+    return new Location(
+      world,
+      position.getX(),
+      position.getY(),
+      position.getZ(),
+      rotation.yaw(),
+      rotation.pitch()
+    );
   }
 
   public static PositionMoveRotation firstFrom(

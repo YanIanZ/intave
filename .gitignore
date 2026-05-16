@@ -7,6 +7,7 @@
 !gradle/
 !libs/
 !src/
+!tests/
 !libs/servers/
 !.gitignore
 !build.gradle.kts

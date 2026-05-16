@@ -34,4 +34,13 @@ public final class MaterialSearch {
     }
     return materials;
   }
+
+	public static Material firstOf(String... searches) {
+    for (String name : searches) {
+      try {
+        return Material.valueOf(name);
+      } catch (IllegalArgumentException ignored) {}
+    }
+    return Material.STONE;
+	}
 }

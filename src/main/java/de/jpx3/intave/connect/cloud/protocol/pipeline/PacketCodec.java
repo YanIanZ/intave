@@ -1,5 +1,6 @@
 package de.jpx3.intave.connect.cloud.protocol.pipeline;
 
+import de.jpx3.intave.codec.VarInt;
 import de.jpx3.intave.connect.cloud.protocol.Direction;
 import de.jpx3.intave.connect.cloud.protocol.Packet;
 import de.jpx3.intave.connect.cloud.protocol.ProtocolSpecification;
@@ -71,26 +72,10 @@ public final class PacketCodec extends ByteToMessageCodec<Packet<?>> {
   }
 
   private String readString(ByteBuf byteBuf) {
-    int length = readVarInt(byteBuf);
+    int length = VarInt.readFrom(byteBuf);
     byte[] bytes = new byte[length];
     byteBuf.readBytes(bytes);
     return new String(bytes);
-  }
-
-  private int readVarInt(ByteBuf in) {
-    int i = 0;
-    int bytePosition = 0;
-    while (true) {
-      int nextByte = in.readByte();
-      i |= (nextByte & 0b1111111) << bytePosition++ * 7;
-      if (bytePosition > 5) {
-        throw new RuntimeException("VarInt too big");
-      }
-      if ((nextByte & 0b10000000) != 0b10000000) {
-        break;
-      }
-    }
-    return i;
   }
 
   private void writeVarInt(ByteBuf out, int paramInt) {

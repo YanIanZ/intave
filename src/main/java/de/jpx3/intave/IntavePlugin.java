@@ -82,7 +82,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -754,6 +753,10 @@ public final class IntavePlugin extends JavaPlugin {
 
   public IntaveVersionList versions() {
     return versions;
+  }
+
+  public ClientTestService clientTestService() {
+    return clientTestService;
   }
 
   public static String version() {
