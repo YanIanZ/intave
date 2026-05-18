@@ -34,7 +34,6 @@ import de.jpx3.intave.diagnostic.timings.Timings;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Modules;
-import de.jpx3.intave.module.feedback.Superposition;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.tracker.entity.Entity;
@@ -528,9 +527,6 @@ public final class Physics extends Check {
     }
     if (distance > 0.001) {
       movementData.suspiciousMovement = true;
-      for (Superposition<?> superposition : movementData.superpositions()) {
-        superposition.collapseVariation(0);
-      }
       Simulation otherSimulation;
       if (IntaveControl.SETBACK_WITH_PRESSED_KEYS) {
         otherSimulation = simulationProcessor.simulateWithKeyPress(user, selectSimulator(user), movementData.keyForward, movementData.keyStrafe, false);

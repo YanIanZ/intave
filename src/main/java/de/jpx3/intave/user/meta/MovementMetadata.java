@@ -6,7 +6,6 @@ import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.WrappedAttribute;
 import com.comphenix.protocol.wrappers.WrappedAttributeModifier;
-import com.google.common.collect.ImmutableList;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
@@ -17,11 +16,13 @@ import de.jpx3.intave.block.collision.Collision;
 import de.jpx3.intave.block.fluid.Fluid;
 import de.jpx3.intave.block.fluid.Fluids;
 import de.jpx3.intave.block.physics.BlockProperties;
+import de.jpx3.intave.block.physics.MaterialMagic;
 import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.block.tick.ShulkerBox;
 import de.jpx3.intave.block.type.BlockTypeAccess;
-import de.jpx3.intave.check.movement.Physics;
 import de.jpx3.intave.check.movement.physics.*;
+import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
+import de.jpx3.intave.check.movement.physics.environment.UnmodifiableSimulationEnvironmentView;
 import de.jpx3.intave.check.world.interaction.BlockTrustChain;
 import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.entity.datawatcher.DataWatcherAccess;
@@ -29,15 +30,14 @@ import de.jpx3.intave.executor.RateLimiter;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Modules;
-import de.jpx3.intave.module.dispatch.MovementDispatcher;
-import de.jpx3.intave.module.feedback.Superposition;
 import de.jpx3.intave.module.tracker.entity.Entity;
 import de.jpx3.intave.module.tracker.player.PacketLogging;
 import de.jpx3.intave.packet.Relative;
 import de.jpx3.intave.player.Effects;
 import de.jpx3.intave.player.ItemProperties;
-import de.jpx3.intave.share.Rotation;
+import de.jpx3.intave.player.collider.complex.ColliderResult;
 import de.jpx3.intave.share.*;
+import de.jpx3.intave.share.Rotation;
 import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
@@ -65,9 +65,6 @@ public final class MovementMetadata implements SimulationEnvironment {
   private static final boolean ELYTRA_ENABLED = MinecraftVersions.VER1_9_0.atOrAbove();
   private final Player player;
   private final User user;
-  // superposition
-  private final Superposition<Motion> velocitySuperposition;
-  private final List<Superposition<?>> superpositions;
   public final BlockTrustChain placementTrustChain = new BlockTrustChain();
   public final Map<String, Double> serverMovementDebugValues = new HashMap<>();
   public final Map<String, Double> clientMovementDebugValues = new HashMap<>();
@@ -263,20 +260,6 @@ public final class MovementMetadata implements SimulationEnvironment {
   public MovementMetadata(Player player, User user) {
     this.player = player;
     this.user = user;
-    this.velocitySuperposition = Superposition
-      .builderFor(Motion.class)
-      .apply(MovementDispatcher::applyVelocitySuperposition)
-      .collapse(MovementDispatcher::collapseVelocitySuperposition)
-      .reset(MovementDispatcher::resetVelocitySuperposition)
-      .overrideMerge()
-      .user(user)
-      .timeout(1)
-      .build();
-    if (Physics.USE_SUPERPOSITIONS) {
-      superpositions = ImmutableList.of(velocitySuperposition);
-    } else {
-      superpositions = ImmutableList.of();
-    }
   }
 
   public void setup() {
@@ -1023,14 +1006,6 @@ public final class MovementMetadata implements SimulationEnvironment {
 //      player.sendMessage(ChatColor.RED + "Removed Sprinting Modifier");
       movementSpeedModifiers.remove(SPRINTING_MODIFIER);
     }
-  }
-
-  public Superposition<Motion> velocitySuperposition() {
-    return velocitySuperposition;
-  }
-
-  public List<Superposition<?>> superpositions() {
-    return superpositions;
   }
 
   public ShulkerBox shulkerBoxAt(int posX, int posY, int posZ) {

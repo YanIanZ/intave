@@ -31,7 +31,6 @@ import de.jpx3.intave.math.Hypot;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.Modules;
-import de.jpx3.intave.module.feedback.Superposition;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.linker.packet.Engine;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
@@ -432,13 +431,6 @@ public final class MovementDispatcher extends Module {
       drawDebugBoxes(user, boundingBoxes);
     }
 
-    for (Superposition<?> superposition : movementData.superpositions()) {
-      superposition.beginTick();
-    }
-    for (Superposition<?> superposition : movementData.superpositions()) {
-      superposition.computeVariations();
-    }
-
     if (movementData.awaitTeleport || movementData.awaitOutgoingTeleport) {
       if (DEBUG_MOVEMENT_IGNORE) {
         System.out.println("[Intave] Teleport movement ignore " + movementData.awaitTeleport + " " + movementData.awaitOutgoingTeleport);
@@ -707,10 +699,6 @@ public final class MovementDispatcher extends Module {
     boolean hasMovement = vehicleMove || packet.getBooleans().read(containsCollision ? 2 : 1);
     boolean hasRotation = vehicleMove || packet.getBooleans().read(containsCollision ? 3 : 2);
     boolean claimsToBeOnGround = vehicleMove ? player.isOnGround() : packet.getBooleans().read(0);
-
-    for (Superposition<?> superposition : movement.superpositions()) {
-      superposition.completeTick();
-    }
 
     if (player.isDead() || movement.awaitTeleport) {
       return;
