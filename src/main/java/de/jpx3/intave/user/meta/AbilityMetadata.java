@@ -85,7 +85,7 @@ public final class AbilityMetadata {
     setupAttribute("generic.maxHealth", 20.0D);
     setupAttribute("generic.knockbackResistance", 0.0D);
     setupAttribute("generic.attackDamage", 1.0D);
-    if (MinecraftVersions.VER1_19.atOrAbove()) {
+    if (MinecraftVersions.VER1_21.atOrAbove()) {
       setupAttribute("player.sneaking_speed", 0.3D);
     }
     if (MinecraftVersions.VER1_21.atOrAbove()) {

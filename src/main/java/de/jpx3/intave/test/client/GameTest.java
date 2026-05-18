@@ -3,6 +3,7 @@ package de.jpx3.intave.test.client;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.executor.Synchronizer;
+import de.jpx3.intave.module.violation.Violation;
 import de.jpx3.intave.share.Position;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.world.TemporaryWorld;
@@ -66,9 +67,32 @@ public final class GameTest {
 			System.out.println("Teleporting player " + player.getName() + " to start position " + replay.start.posMoveRot);
 			startingLocation = player.getLocation();
 			player.teleport(replay.start.posMoveRot.toLocationIn(world));
-			UserRepository.userOf(player).tickFeedback(() ->
-				Synchronizer.synchronizeDelayed(callback, 40)
-			);
+			UserRepository.userOf(player).tickFeedback(() -> {
+				ClientTestTraps.registerTrap(player, new ClientTestTrap() {
+					@Override
+					public void onMovementFault(Player player) {
+						System.out.println("Player " + player.getName() + " triggered movement fault trap, teleporting back to starting location");
+						Synchronizer.synchronizeDelayed(() -> {
+							player.teleport(startingLocation);
+							if (exit()) {
+								Synchronizer.synchronizeDelayed(callback, 10);
+							}
+						}, 40);
+					}
+
+					@Override
+					public void onViolation(Player player, Violation violation) {
+						System.out.println("Player " + player.getName() + " triggered violation trap for violation " + violation + ", teleporting back to starting location");
+						Synchronizer.synchronizeDelayed(() -> {
+							player.teleport(startingLocation);
+							if (exit()) {
+								Synchronizer.synchronizeDelayed(callback, 10);
+							}
+						}, 40);
+					}
+				});
+				Synchronizer.synchronizeDelayed(callback, 40);
+			});
 		}, 10);
 	}
 
@@ -120,6 +144,7 @@ public final class GameTest {
 		if (wasStopped) {
 			return false;
 		}
+		ClientTestTraps.unregisterTrap(player);
 		wasStopped = true;
 		player.teleport(startingLocation);
 		Synchronizer.synchronizeDelayed(temporaryWorld::destroy, 40);

@@ -3,6 +3,7 @@ package de.jpx3.intave.block.fluid;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.block.cache.BlockCache;
 import de.jpx3.intave.block.cache.BlockCaches;
+import de.jpx3.intave.block.type.MaterialSearch;
 import de.jpx3.intave.test.unit.BlockStorage;
 import de.jpx3.intave.test.unit.FakePlayerFactory;
 import de.jpx3.intave.test.unit.UnitTest;
@@ -97,5 +98,40 @@ public final class FluidUnitTests extends UnitTests {
       fail("Water level is not 3, expected 3");
     }
     blockStorage.restore();
+  }
+
+  @UnitTest
+  public void testBubbleColumn() {
+    World world = Bukkit.getWorlds().get(0);
+    Block block = world.getBlockAt(0, 4, 0);
+    blockStorage = BlockStorage.store(block);
+    Material bubbleColumn = MaterialSearch.firstOf("BUBBLE_COLUMN");
+    if (bubbleColumn == null) {
+      // test not conductable
+      blockStorage.restore();
+      return;
+    }
+    block.setType(bubbleColumn, false);
+
+    Player player = FakePlayerFactory.createPlayer((s, objects) -> {
+      if (s.equals("getWorld")) {
+        return world;
+      }
+      return null;
+    });
+    BlockCache blockStateCache = BlockCaches.passthroughCacheWithNativeDrill(player);
+    User user = UserFactory.createTestUserFor(player, s -> {
+      if (s.equals("protocolVersion")) {
+        return 477;
+      }
+      if (s.equals("blockCache")) {
+        return blockStateCache;
+      }
+      return null;
+    });
+    Fluid fluid = Fluids.fluidAt(user, block.getLocation());
+    if (!fluid.isOfWater()) {
+      fail("Bubble column is not a liquid?");
+    }
   }
 }

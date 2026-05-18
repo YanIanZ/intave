@@ -27,7 +27,6 @@ import de.jpx3.intave.check.CheckViolationLevelDecrementer;
 import de.jpx3.intave.check.movement.physics.*;
 import de.jpx3.intave.check.movement.physics.eval.EvaluationTag;
 import de.jpx3.intave.connect.sibyl.SibylBroadcast;
-import de.jpx3.intave.connect.upload.RealtimedataUplink;
 import de.jpx3.intave.diagnostic.message.DebugBroadcast;
 import de.jpx3.intave.diagnostic.message.MessageSeverity;
 import de.jpx3.intave.diagnostic.timings.Timings;
@@ -49,6 +48,7 @@ import de.jpx3.intave.player.collider.simple.SimpleColliderResult;
 import de.jpx3.intave.share.BoundingBox;
 import de.jpx3.intave.share.Motion;
 import de.jpx3.intave.share.Position;
+import de.jpx3.intave.test.client.ClientTestTraps;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.*;
@@ -869,6 +869,11 @@ public final class Physics extends Check {
     GlobalStatisticsRecorder recorder = plugin.analytics().recorderOf(GlobalStatisticsRecorder.class);
 //    recorder.recordMovement();
 //    recorder.recordBlockMoved(Hypot.fast(movementData.motionX(), movementData.motionZ()));
+
+
+    if (violationLevelIncrease > 0 && violationLevelData.physicsVL > 10) {
+      ClientTestTraps.onMovementFault(player);
+    }
 
     boolean faultDebugRequested = DebugBroadcast.anyoneListeningTo(SIMFLT, player);
     boolean fullDebugRequested = DebugBroadcast.anyoneListeningTo(SIMFUL, player);

@@ -112,6 +112,16 @@ public final class Violation {
     return granular;
   }
 
+  @Override
+  public String toString() {
+    return "Violation{" +
+      ", id=" + id +
+      ", baseMessage='" + baseMessage + '\'' +
+      ", details='" + details + '\'' +
+      ", addedViolationPoints=" + addedViolationPoints +
+      '}';
+  }
+
   public static Builder builderFor(Class<? extends Check> checkClass) {
     return new Builder(checkClass);
   }

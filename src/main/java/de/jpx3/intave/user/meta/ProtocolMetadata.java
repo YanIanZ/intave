@@ -17,8 +17,9 @@ public final class ProtocolMetadata {
   // final has been removed to disguise modified integer VERSION_DETAILS
   public static int VER_1_20_2 = 764; // 1.21.2
   public static int VER_1_20 = 763; // 1.17
-  public static int VER_1_19_4 = 756; // 1.19.4
-  public static int VER_1_19_2 = 754; // 1.19.2
+  public static int VER_1_19_4 = 762; // 1.19.4
+  public static int VER_1_19_2 = 760; // 1.19.2
+  public static int VER_1_18_2 = 758; // 1.18.2
   public static int VER_1_17 = 755; // 1.17
   public static int VER_1_16 = 735; // 1.16
   public static int VER_1_15 = 573; // 1.15
@@ -184,6 +185,14 @@ public final class ProtocolMetadata {
 
   public boolean cavesAndCliffsUpdate() {
     return protocolVersion >= VER_1_17;
+  }
+
+  public double flyingPacketUncertaintyRadius() {
+    if (protocolVersion >= VER_1_18_2) {
+      return 0.0002 * 0.0002;
+    } else {
+      return 0.03;
+    }
   }
 
   public boolean beeUpdate() {
