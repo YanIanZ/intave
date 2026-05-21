@@ -15,6 +15,7 @@ import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.collision.Collision;
 import de.jpx3.intave.block.fluid.Fluid;
 import de.jpx3.intave.block.fluid.Fluids;
+import de.jpx3.intave.block.inside.EntityMovement;
 import de.jpx3.intave.block.physics.BlockProperties;
 import de.jpx3.intave.block.physics.MaterialMagic;
 import de.jpx3.intave.block.shape.BlockShape;
@@ -236,6 +237,7 @@ public final class MovementMetadata implements SimulationEnvironment {
   private Material collideMaterial = Material.AIR, previousCollideMaterial = Material.AIR;
 
   private ColliderResult beforeMoveCollider = null;
+  private EntityMovement lastEntityEffectMovement;
 
   private volatile BoundingBox boundingBox = BoundingBox.fromBounds(0, 0, 0, 0, 0, 0);
   private boolean boundingBoxSetup = false;

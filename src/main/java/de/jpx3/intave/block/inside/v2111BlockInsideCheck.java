@@ -1,11 +1,8 @@
 package de.jpx3.intave.block.inside;
 
 import de.jpx3.intave.block.access.VolatileBlockAccess;
-import de.jpx3.intave.block.fluid.Fluid;
 import de.jpx3.intave.block.physics.BlockPhysics;
-import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
-import de.jpx3.intave.player.collider.complex.ColliderResult;
 import de.jpx3.intave.share.*;
 import de.jpx3.intave.user.User;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -13,41 +10,37 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import org.bukkit.Material;
 import org.bukkit.World;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class v2111BlockInsideCheck implements BlockInsideCheck {
 	@Override
 	public void applyEffectsFromBlocks(
-		User user, SimulationEnvironment environment, Motion motion, BoundingBox boundingBox
+		User user, SimulationEnvironment environment, List<EntityMovement> movements, Motion modifiableMotion, BoundingBox boundingBox
 	) {
-		Position from = environment.lastPosition();
-		Position to = environment.position();
-		Motion move = from.motionTo(to);
-
-		ColliderResult colliderResult = environment.beforeMoveColliderResult();
-		if (colliderResult == null) {
-			return;
-		}
-
-		Motion preCollideMotion = colliderResult.intermittentResult();
 		LongSet visitedBlocks = new LongOpenHashSet();
 
-		int i = 16;
-		if (preCollideMotion != null && move.lengthSquared() > 0.0) {
-			for (Direction.Axis axis : Direction.axisStepOrder(preCollideMotion)) {
-				double preCollideMotionPartial = preCollideMotion.partialMotionIn(axis);
-				if (preCollideMotionPartial != 0.0) {
-					Position positionPartial = from.relative(axis.positive(), preCollideMotionPartial);
-					i -= checkInsideBlocks(user, environment, from, positionPartial, motion, visitedBlocks, i);
-					from = positionPartial;
+		for (EntityMovement entityMovement : movements) {
+			Position from = entityMovement.from();
+			Position to = entityMovement.to();
+			Motion move = from.motionTo(to);
+
+			int i = 16;
+			if (entityMovement.axisDependentOriginalMovement().isPresent() && move.lengthSquared() > 0.0) {
+				for (Direction.Axis axis : Direction.axisStepOrder(entityMovement.axisDependentOriginalMovement().get())) {
+					double preCollideMotionPartial = move.partialMotionIn(axis);
+					if (preCollideMotionPartial != 0.0) {
+						Position positionPartial = from.relative(axis.positive(), preCollideMotionPartial);
+						i -= checkInsideBlocks(user, environment, from, positionPartial, modifiableMotion, visitedBlocks, i);
+						from = positionPartial;
+					}
 				}
+			} else {
+				i -= checkInsideBlocks(user, environment, from, to, modifiableMotion, visitedBlocks, i);
 			}
-		} else {
-			i -= checkInsideBlocks(user, environment, from, to, motion, visitedBlocks, i);
-		}
-		if (i <= 0) {
-			checkInsideBlocks(user, environment, from, to, motion, visitedBlocks, 1);
+			if (i <= 0) {
+				checkInsideBlocks(user, environment, from, to, modifiableMotion, visitedBlocks, 1);
+			}
 		}
 
 		visitedBlocks.clear();
@@ -88,24 +81,24 @@ final class v2111BlockInsideCheck implements BlockInsideCheck {
 				if (visitedBlocks.add(cursor.asLong())) {
 //					user.player().sendMessage("Checking block at " + cursor.toBlockPosition() + " with material " + material.name());
 
-					Fluid fluid = VolatileBlockAccess.fluidAccess(user, cursor);
-					BlockShape fluidShape = fluid.uncachedShapeAt(user, cursor.toBlockPosition());
-					if (fluidShape.isEmpty()) {
-						return true;
-					}
-					BoundingBox fluidShapeBox = fluidShape.boundingBoxes().get(0);
-					NativeVector move = fromNative.subtract(toNative);
-					BoundingBox fromBoundingBox = BoundingBox.fromPosition(user, environment, from);
-					boolean collidedWithFluid = fromBoundingBox.collidesAlongVector(
-						move, Collections.singletonList(fluidShapeBox)
-					);
+//					Fluid fluid = VolatileBlockAccess.fluidAccess(user, cursor);
+//					BlockShape fluidShape = fluid.uncachedShapeAt(user, cursor.toBlockPosition());
+//					if (fluidShape.isEmpty()) {
+//						return true;
+//					}
+//					BoundingBox fluidShapeBox = fluidShape.boundingBoxes().get(0);
+//					NativeVector move = fromNative.subtract(toNative);
+//					BoundingBox fromBoundingBox = BoundingBox.fromPosition(user, environment, from);
+//					boolean collidedWithFluid = fromBoundingBox.collidesAlongVector(
+//						move, Collections.singletonList(fluidShapeBox)
+//					);
 
 //					user.player().sendMessage("Collision Candidate at " + cursor.toBlockPosition() + " with material " + material.name() + " and fluid " + fluid + " with shape " + fluidShapeBox + " and move " + move + " and player box " + playerBox);
 //					if (!collidedWithFluid) {
 //						return true;
 //					}
 
-					user.player().sendMessage(furtherThanOneBlock + " " + playerBox.intersectsWith(cursor) + " " + collidedWithFluid);
+//					user.player().sendMessage(furtherThanOneBlock + " " + playerBox.intersectsWith(cursor) + " " + collidedWithFluid);
 					Motion overrideMotion = BlockPhysics.entityInside(
 						user, material, cursor.toLocation(world), position,
 						motion.motionX, motion.motionY, motion.motionZ,

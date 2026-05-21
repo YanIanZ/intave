@@ -99,7 +99,7 @@ final class v7Collider implements Collider {
     return new ColliderResult(
       Motion.copyFrom(motion), null, onGround,
       collidedHorizontally, collidedVertically, moveResetX, moveResetZ,
-      step, false, stepHeight
+      step, false, stepHeight, null
     );
   }
 }

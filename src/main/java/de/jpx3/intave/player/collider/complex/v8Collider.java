@@ -145,7 +145,8 @@ public final class v8Collider implements Collider {
     return new ColliderResult(
       Motion.copyFrom(motion), null,
       onGround, collidedHorizontally, collidedVertically,
-      moveResetX, moveResetZ, step, edgeSneak, stepHeight
+      moveResetX, moveResetZ, step, edgeSneak, stepHeight,
+      null
     );
   }
 }

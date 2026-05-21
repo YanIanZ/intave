@@ -1,6 +1,7 @@
 package de.jpx3.intave.player.collider.complex;
 
 import de.jpx3.intave.block.collision.Collision;
+import de.jpx3.intave.block.inside.EntityMovement;
 import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.block.shape.BlockShapes;
 import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
@@ -15,6 +16,7 @@ import it.unimi.dsi.fastutil.floats.FloatSet;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static de.jpx3.intave.share.Direction.Axis.*;
 
@@ -58,6 +60,19 @@ public final class v21Collider implements Collider {
     boolean moveResetX = initialX != motion.motionX;
     boolean moveResetZ = initialZ != motion.motionZ;
 
+    EntityMovement movement = null;
+
+    if (
+      motion.lengthSquared() > 1.0E-7 ||
+      maybeBackOffFromEdgeResult.lengthSquared() - motion.lengthSquared() < 1.0E-7
+    ) {
+      movement = new EntityMovement(
+        environment.verifiedPosition(),
+        environment.position(),
+        Optional.of(maybeBackOffFromEdgeResult)
+      );
+    }
+
     return new ColliderResult(
       Motion.copyFrom(motion),
       Motion.copyFrom(maybeBackOffFromEdgeResult),
@@ -67,7 +82,8 @@ public final class v21Collider implements Collider {
       moveResetX,
       moveResetZ,
       stepped[0], edgeSneak,
-      environment.stepHeight()
+      environment.stepHeight(),
+      movement
     );
   }
 

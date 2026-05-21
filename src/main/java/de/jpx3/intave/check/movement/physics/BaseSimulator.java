@@ -6,6 +6,7 @@ import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.collision.modifier.PowderSnowCollisionModifier;
 import de.jpx3.intave.block.fluid.Fluids;
 import de.jpx3.intave.block.inside.BlockInsideCheck;
+import de.jpx3.intave.block.inside.EntityMovement;
 import de.jpx3.intave.block.physics.BlockPhysics;
 import de.jpx3.intave.block.physics.BlockProperties;
 import de.jpx3.intave.block.type.MaterialSearch;
@@ -35,7 +36,10 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 import static de.jpx3.intave.share.ClientMath.clamp_double;
 import static de.jpx3.intave.share.ClientMath.floor;
@@ -622,10 +626,23 @@ class BaseSimulator extends Simulator {
     User user, SimulationEnvironment environment, Motion motion, BoundingBox boundingBox
   ) {
     BlockInsideCheck blockInsideCheck = user.blockInsideCheck();
-    if (blockInsideCheck != null) {
-      blockInsideCheck.applyEffectsFromBlocks(
-        user, environment, motion, boundingBox
+    ColliderResult colliderResult = environment.beforeMoveColliderResult();
+    if (blockInsideCheck != null && colliderResult != null) {
+      List<EntityMovement> finalMovementsThisTick = new ArrayList<>();
+      finalMovementsThisTick.add(
+        new EntityMovement(
+          environment.verifiedPosition(), environment.position(),
+	        Optional.ofNullable(colliderResult.intermittentResult())
+        )
       );
+      if (finalMovementsThisTick.isEmpty()) {
+        finalMovementsThisTick.add(new EntityMovement(environment.verifiedPosition(), environment.position(), Optional.empty()));
+      }
+
+      blockInsideCheck.applyEffectsFromBlocks(
+              user, environment, finalMovementsThisTick, motion,
+	      boundingBox
+            );
     }
   }
 

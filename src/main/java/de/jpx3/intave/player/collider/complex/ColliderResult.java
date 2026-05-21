@@ -1,6 +1,7 @@
 package de.jpx3.intave.player.collider.complex;
 
 import de.jpx3.intave.IntaveControl;
+import de.jpx3.intave.block.inside.EntityMovement;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.share.Motion;
 
@@ -10,7 +11,9 @@ import java.util.Map;
 
 public final class ColliderResult {
   private static final ColliderResult INVALID_SIMULATION = new ColliderResult(
-    new Motion(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE), null, false, false, false, false, false, false, false, 0);
+    new Motion(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE), null, false, false, false, false,
+    false, false, false, 0, null
+  );
 
   private final Motion motion;
   private final Motion intermittentResult;
@@ -19,19 +22,20 @@ public final class ColliderResult {
   private final boolean step, edgeSneak;
 
   private final double yStepHeight;
+  private final EntityMovement movement;
 
   private final Map<String, Double> debugData = IntaveControl.ENABLE_MOVEMENT_DEBUGGER_COLLECTOR ? new HashMap<>() : Collections.emptyMap();
 
   public ColliderResult(
-    Motion motion,
-    Motion intermittentResult,
-    boolean onGround,
-    boolean collidedHorizontally, boolean collidedVertically,
-    boolean resetMotionX, boolean resetMotionZ,
-    boolean step, boolean edgeSneak,
-    double yStepHeight
+	  Motion motion,
+	  Motion intermittentResult,
+	  boolean onGround,
+	  boolean collidedHorizontally, boolean collidedVertically,
+	  boolean resetMotionX, boolean resetMotionZ,
+	  boolean step, boolean edgeSneak,
+	  double yStepHeight, EntityMovement movement
   ) {
-    if (motion == null) {
+	  if (motion == null) {
       throw new IllegalArgumentException("Context cannot be null");
     }
     this.motion = motion;
@@ -44,6 +48,7 @@ public final class ColliderResult {
     this.step = step;
     this.edgeSneak = edgeSneak;
     this.yStepHeight = yStepHeight;
+    this.movement = movement;
   }
 
   public double accuracy(Motion motionVector) {
@@ -56,6 +61,10 @@ public final class ColliderResult {
 
   public Motion intermittentResult() {
     return intermittentResult;
+  }
+
+  public EntityMovement entityMovement() {
+    return movement;
   }
 
   public boolean onGround() {
@@ -105,6 +114,6 @@ public final class ColliderResult {
   }
 
   public static ColliderResult untouched(Motion motion) {
-    return new ColliderResult(motion, null,false, false, false, false, false, false, false, 0);
+    return new ColliderResult(motion, null,false, false, false, false, false, false, false, 0, null);
   }
 }
