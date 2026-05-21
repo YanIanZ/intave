@@ -26,6 +26,7 @@ import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.module.tracker.entity.Entity;
 import de.jpx3.intave.module.tracker.entity.EntityTracker;
+import de.jpx3.intave.module.tracker.player.AbilityTracker;
 import de.jpx3.intave.module.violation.Violation;
 import de.jpx3.intave.module.violation.ViolationContext;
 import de.jpx3.intave.packet.PacketSender;
@@ -105,7 +106,9 @@ public final class AttackRaytrace extends MetaCheck<AttackRaytrace.AttackRaytrac
       if (entity == null
         || entity instanceof Entity.Destroyed
         || entity.isInVehicle() || !entity.isEntityAlive()
-        || abilities.unsynchronizedHealth <= 0) {
+        || abilities.unsynchronizedHealth <= 0
+        || abilities.inGameModeIncludePending(AbilityTracker.GameMode.SPECTATOR)
+      ) {
         // check again?
         reader.release();
         return;

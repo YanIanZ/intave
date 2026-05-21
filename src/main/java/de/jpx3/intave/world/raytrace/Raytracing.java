@@ -221,6 +221,11 @@ public final class Raytracing {
       }
     }
 
+
+    if (lastEyeVector == null) {
+      lastEyeVector = positionEyes(player, Pose.STANDING, prevPosX, prevPosY, prevPosZ);
+    }
+
     Timings.SERVICE_RAYTRACER_ENTITY.stop();
     return Raytrace.ofNative(lastEyeVector, lastHitVec, lastReach);
   }
