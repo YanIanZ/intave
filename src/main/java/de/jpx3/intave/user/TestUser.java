@@ -4,6 +4,7 @@ import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.block.cache.BlockCache;
 import de.jpx3.intave.block.fluid.FluidFlow;
+import de.jpx3.intave.block.inside.BlockInsideCheck;
 import de.jpx3.intave.check.movement.physics.Pose;
 import de.jpx3.intave.connect.customclient.CustomClientSupportConfig;
 import de.jpx3.intave.entity.size.HitboxSize;
@@ -201,6 +202,11 @@ final class TestUser implements User {
   @Override
   public SimpleCollider simplifiedCollider() {
     return (SimpleCollider) callback.apply("simplifiedCollider");
+  }
+
+  @Override
+  public BlockInsideCheck blockInsideCheck() {
+    return (BlockInsideCheck) callback.apply("blockInsideCheck");
   }
 
   @Override

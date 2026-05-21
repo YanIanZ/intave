@@ -177,6 +177,10 @@ public final class Motion {
     return new NativeVector(this.motionX, this.motionY, this.motionZ);
   }
 
+  public NativeVector difference(Motion motion) {
+    return new NativeVector(this.motionX - motion.motionX, this.motionY - motion.motionY, this.motionZ - motion.motionZ);
+  }
+
   public double partialMotionIn(Direction.Axis axis) {
     switch (axis) {
       case X_AXIS:

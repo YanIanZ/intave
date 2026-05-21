@@ -7,6 +7,8 @@ import de.jpx3.intave.block.cache.BlockCache;
 import de.jpx3.intave.block.cache.BlockCaches;
 import de.jpx3.intave.block.fluid.FluidFlow;
 import de.jpx3.intave.block.fluid.Fluids;
+import de.jpx3.intave.block.inside.BlockInsideCheck;
+import de.jpx3.intave.block.inside.BlockInsideChecks;
 import de.jpx3.intave.check.movement.physics.Pose;
 import de.jpx3.intave.connect.customclient.CustomClientSupportConfig;
 import de.jpx3.intave.entity.size.HitboxSize;
@@ -202,6 +204,11 @@ final class FallbackUser implements User {
   @Override
   public SimpleCollider simplifiedCollider() {
     return simpleCollider;
+  }
+
+  @Override
+  public BlockInsideCheck blockInsideCheck() {
+    return BlockInsideChecks.generic();
   }
 
   @Override

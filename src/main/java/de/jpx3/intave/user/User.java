@@ -7,6 +7,7 @@ import de.jpx3.intave.access.player.trust.TrustFactorResolver;
 import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.block.cache.BlockCache;
 import de.jpx3.intave.block.fluid.FluidFlow;
+import de.jpx3.intave.block.inside.BlockInsideCheck;
 import de.jpx3.intave.check.MetaCheck;
 import de.jpx3.intave.check.MetaCheckPart;
 import de.jpx3.intave.check.movement.physics.Pose;
@@ -337,6 +338,13 @@ public interface User {
    * @return the simple collider processor
    */
   SimpleCollider simplifiedCollider();
+
+
+  /**
+   * Retrieve the {@link User}-associated {@link BlockInsideCheck}
+   * @return
+   */
+  BlockInsideCheck blockInsideCheck();
 
   /**
    * Retrieve the placeholder associated with the present {@link Player}

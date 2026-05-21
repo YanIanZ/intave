@@ -261,14 +261,14 @@ public final class SimulationEvaluator {
       So lets be honest here: who will realistically abuse this? its a very specific and rare scenario that
       most cheaters don't really care about.
      */
-    if (bubblesFound) {
-      if (user.meta().protocol().newBlockEntityIntersectionLogic()) {
-        verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, 0.44);
-      } else {
-        verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, 0.08);
-      }
-      tags.add(EvaluationTag.BUBBLE);
-    }
+//    if (bubblesFound) {
+//      if (user.meta().protocol().newBlockEntityIntersectionLogic()) {
+//        verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, 0.44);
+//      } else {
+//        verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, 0.08);
+//      }
+//      tags.add(EvaluationTag.BUBBLE);
+//    }
 
     // Sometimes shit happens
     if (movement.ticksSneaking <= 1 && !movement.inWater && !movement.inWeb && (movement.onGround() || movement.lastOnGround()) && movement.motionY() <= 0 && movement.motionY() >= -0.5 && movement.lastSneaking) {

@@ -41,8 +41,7 @@ public final class BlockPhysics {
     }
   }
 
-  @Nullable
-  public static Motion entityInside(
+  public static @Nullable Motion entityInside(
     User user,
     Material material,
     Location blockLocation, Position playerPosition,
@@ -56,8 +55,7 @@ public final class BlockPhysics {
     return null;
   }
 
-  @Nullable
-  public static Motion stepOn(
+  public static @Nullable Motion stepOn(
     User user,
     Material material,
     double motionX, double motionY, double motionZ

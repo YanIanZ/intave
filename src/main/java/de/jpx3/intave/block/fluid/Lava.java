@@ -6,7 +6,7 @@ import de.jpx3.intave.share.BlockPosition;
 import de.jpx3.intave.share.BoundingBox;
 import de.jpx3.intave.user.User;
 
-class Lava implements Fluid {
+final class Lava implements Fluid {
   private final float height;
   private final int heightIndex;
   private final boolean falling;

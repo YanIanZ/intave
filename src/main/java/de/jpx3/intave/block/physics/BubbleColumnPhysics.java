@@ -30,6 +30,10 @@ final class BubbleColumnPhysics implements BlockPhysic {
   @Override
   public Motion entityInside(User user, Location location, Position playerPosition, double motionX, double motionY, double motionZ, boolean flag4) {
     ProtocolMetadata protocol = user.meta().protocol();
+    if (protocol.newBlockEntityIntersectionLogic() && !flag4) {
+      return null;
+    }
+
     if (protocol.waterUpdate()) {
       boolean water = VolatileBlockAccess.fluidAccess(user, location.clone().add(0, 1, 0)).isOfWater();
       BlockVariant variant = VolatileBlockAccess.variantAccess(user, location);

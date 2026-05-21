@@ -16,6 +16,7 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
+import static de.jpx3.intave.math.MathHelper.formatDouble;
 import static de.jpx3.intave.share.ClientMath.floor;
 import static de.jpx3.intave.share.Direction.Axis.*;
 
@@ -385,9 +386,14 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
   }
 
   public boolean intersectsWith(BlockPositionCursor cursor) {
-    return cursor.getX() + 1 > this.minX && cursor.getX() < this.maxX &&
-      cursor.getY() + 1 > this.minY && cursor.getY() < this.maxY &&
-      cursor.getZ() + 1 > this.minZ && cursor.getZ() < this.maxZ;
+    return intersectsWith(
+      cursor.getX(),
+      cursor.getY(),
+      cursor.getZ(),
+      cursor.getX() + 1,
+      cursor.getY() + 1,
+      cursor.getZ() + 1
+    );
   }
 
   public boolean intersectsWith(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
@@ -448,7 +454,15 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
 
   // width and height
   public String toString() {
-    return String.format("size{%s,%s,%s}@mid{%s,%s,%s}", sizeX(), sizeY(), sizeZ(), centerX(), centerY(), centerZ());
+    return String.format(
+      "size{%s,%s,%s}@mid{%s,%s,%s}",
+      formatDouble(sizeX(), 2),
+      formatDouble(sizeY(), 2),
+      formatDouble(sizeZ(), 2),
+      formatDouble(centerX(), 2),
+      formatDouble(centerY(), 2),
+      formatDouble(centerZ(), 2)
+    );
   }
 
   /**
@@ -886,7 +900,7 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
   }
 
   public String toCompactString() {
-    return MathHelper.formatDouble(this.minX, 3) + ", " + MathHelper.formatDouble(this.minY, 3) + ", " + MathHelper.formatDouble(this.minZ, 3) + " -> " + MathHelper.formatDouble(this.maxX, 3) + ", " + MathHelper.formatDouble(this.maxY, 3) + ", " + MathHelper.formatDouble(this.maxZ, 3);
+    return formatDouble(this.minX, 3) + ", " + formatDouble(this.minY, 3) + ", " + formatDouble(this.minZ, 3) + " -> " + formatDouble(this.maxX, 3) + ", " + formatDouble(this.maxY, 3) + ", " + formatDouble(this.maxZ, 3);
   }
 
   public boolean anyNaN() {

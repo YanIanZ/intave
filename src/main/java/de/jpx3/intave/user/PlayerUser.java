@@ -13,6 +13,8 @@ import de.jpx3.intave.block.cache.BlockCache;
 import de.jpx3.intave.block.cache.BlockCaches;
 import de.jpx3.intave.block.fluid.FluidFlow;
 import de.jpx3.intave.block.fluid.Fluids;
+import de.jpx3.intave.block.inside.BlockInsideCheck;
+import de.jpx3.intave.block.inside.BlockInsideChecks;
 import de.jpx3.intave.block.type.BlockTypeAccess;
 import de.jpx3.intave.check.movement.physics.Pose;
 import de.jpx3.intave.cleanup.GarbageCollector;
@@ -87,6 +89,7 @@ final class PlayerUser implements User {
   private final Queue<Reference<Runnable>> storageSubscriptionQueue = new ArrayDeque<>();
   private Collider collider;
   private FluidFlow waterflow;
+  private BlockInsideCheck blockInsideCheck;
   private SimpleCollider simpleCollider;
   private Map<Pose, HitboxSize> poseSizes;
   private boolean ignoreNextInboundPacket;
@@ -107,6 +110,7 @@ final class PlayerUser implements User {
     this.blockStateAccess = BlockCaches.cacheForPlayer(player);
     this.collider = Colliders.suitableComplexColliderProcessorFor(this);
     this.waterflow = Fluids.suitableWaterflowFor(this);
+    this.blockInsideCheck = BlockInsideChecks.suitableFor(this);
     this.simpleCollider = Colliders.suitableSimpleColliderProcessorFor(this);
     Synchronizer.synchronize(this::setDefaultMessagingChannel);
     this.playerContext = PlayerContext.of(player);
@@ -137,6 +141,7 @@ final class PlayerUser implements User {
   public void applyNewProtocolVersion() {
     this.waterflow = Fluids.suitableWaterflowFor(this);
     this.collider = Colliders.suitableComplexColliderProcessorFor(this);
+    this.blockInsideCheck = BlockInsideChecks.suitableFor(this);
     this.simpleCollider = Colliders.suitableSimpleColliderProcessorFor(this);
     this.poseSizes = Pose.poseSizesByVersion(metadata.protocol().protocolVersion());
     BlockTypeAccess.setupTranslationsFor(this);
@@ -330,6 +335,11 @@ final class PlayerUser implements User {
   @Override
   public SimpleCollider simplifiedCollider() {
     return simpleCollider;
+  }
+
+  @Override
+  public BlockInsideCheck blockInsideCheck() {
+    return blockInsideCheck;
   }
 
   @Override

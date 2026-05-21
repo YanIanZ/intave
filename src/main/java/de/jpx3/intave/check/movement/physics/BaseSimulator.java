@@ -5,6 +5,7 @@ import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.collision.modifier.PowderSnowCollisionModifier;
 import de.jpx3.intave.block.fluid.Fluids;
+import de.jpx3.intave.block.inside.BlockInsideCheck;
 import de.jpx3.intave.block.physics.BlockPhysics;
 import de.jpx3.intave.block.physics.BlockProperties;
 import de.jpx3.intave.block.type.MaterialSearch;
@@ -464,11 +465,11 @@ class BaseSimulator extends Simulator {
       simulateNormalAfter(user, environment, motion, gravity, slipperiness);
     }
 
-//    if (user.meta().protocol().newBlockEntityIntersectionLogic()) {
-//      Timings.CHECK_PHYSICS_SIMULATOR_BASE_EFFECTS_FROM_BLOCKS.start();
-//      simulateApplyEffectsFromBlocks(user, environment, motion, boundingBox);
-//      Timings.CHECK_PHYSICS_SIMULATOR_BASE_EFFECTS_FROM_BLOCKS.stop();
-//    }
+    if (user.meta().protocol().newBlockEntityIntersectionLogic()) {
+      Timings.CHECK_PHYSICS_SIMULATOR_BASE_EFFECTS_FROM_BLOCKS.start();
+      simulateApplyEffectsFromBlocks(user, environment, motion, boundingBox);
+      Timings.CHECK_PHYSICS_SIMULATOR_BASE_EFFECTS_FROM_BLOCKS.stop();
+    }
 
     if (clientData.combatUpdate()
       && MinecraftVersions.VER1_9_0.atOrAbove() /* todo: add scoreboard check */) {
@@ -593,7 +594,7 @@ class BaseSimulator extends Simulator {
               user, material,
               location, position,
               motion.motionX, motion.motionY, motion.motionZ,
-              false
+              true
             );
             if (collisionMotion != null) {
               motion.setTo(collisionMotion);
@@ -617,101 +618,16 @@ class BaseSimulator extends Simulator {
 // Commented out to save this for potential future use
 // feel free to delete if no longer of use
 
-//  private void simulateApplyEffectsFromBlocks(
-//    User user, SimulationEnvironment environment, Motion motion, BoundingBox boundingBox
-//  ) {
-//    Position from = environment.verifiedPosition();
-//    Position to = environment.position();
-//    Motion move = from.motionTo(to);
-//
-//    ColliderResult colliderResult = environment.beforeMoveColliderResult();
-//    if (colliderResult == null) {
-//      return;
-//    }
-//
-//    Motion preCollideMotion = colliderResult.intermittentResult();
-//    LongSet visitedBlocks = new LongOpenHashSet();
-//
-//		int i = 16;
-//    if (preCollideMotion != null && move.lengthSquared() > 0.0) {
-//      for (Direction.Axis axis : Direction.axisStepOrder(preCollideMotion)) {
-//        double preCollideMotionPartial = preCollideMotion.partialMotionIn(axis);
-//        if (preCollideMotionPartial != 0.0) {
-//	        Position positionPartial = from.relative(axis.positive(), preCollideMotionPartial);
-//	        i -= checkInsideBlocks(user, environment, from, positionPartial, motion, visitedBlocks, i);
-//					from = positionPartial;
-//        }
-//      }
-//    } else {
-//			i -= checkInsideBlocks(user, environment, from, to, motion, visitedBlocks, i);
-//    }
-//		if (i <= 0) {
-//			checkInsideBlocks(user, environment, from, to, motion, visitedBlocks, 1);
-//		}
-//
-//    visitedBlocks.clear();
-//  }
-//
-//  // 100% pure mojang shitcode
-//  // this is also very slow (50% of the complete simulation) and usually only ends up resolving 1-2 blocks
-//  private int checkInsideBlocks(
-//    User user,
-//		SimulationEnvironment environment,
-//    Position from, Position to,
-//    Motion motion,
-//    LongSet visitedBlocks,
-//    int limit
-//  ) {
-//    World world = user.player().getWorld();
-//    Position position = environment.position();
-//    BoundingBox playerBox = BoundingBox.fromPosition(user, environment, to).shrink(0.00001f);
-//		boolean furtherThanOneBlock = from.distanceSquared(to) > (0.9999900000002526 * 0.9999900000002526);
-//    AtomicInteger lastCollideIndex = new AtomicInteger();
-//
-//    NativeVector fromNative = from.toNativeVec();
-//    NativeVector toNative = to.toNativeVec();
-//    playerBox.forEachBlockIntersectedBetween(
-//      fromNative, toNative,
-//      (cursor, num) -> {
-//        if (num >= limit) {
-//          return false;
-//        }
-//        lastCollideIndex.set(num);
-//
-//        Material material = VolatileBlockAccess.typeAccess(user, cursor);
-//        if (material == Material.AIR) {
-//          return true;
-//        }
-//
-//        if (visitedBlocks.add(cursor.asLong())) {
-//          Fluid fluid = VolatileBlockAccess.fluidAccess(user, cursor);
-//          BlockShape fluidShape = fluid.uncachedShapeAt(user, cursor.toBlockPosition());
-//          if (fluidShape.isEmpty()) {
-//            return true;
-//          }
-//          BoundingBox fluidShapeBox = fluidShape.boundingBoxes().get(0);
-//          NativeVector move = fromNative.subtract(toNative);
-//          BoundingBox fromBoundingBox = BoundingBox.fromPosition(user, environment, from);
-//          boolean collidedWithFluid = fromBoundingBox.collidesAlongVector(
-//            move, Collections.singletonList(fluidShapeBox)
-//          );
-//          if (!collidedWithFluid) {
-//            return true;
-//          }
-//          Motion overrideMotion = BlockPhysics.entityInside(
-//            user, material, cursor.toLocation(world), position,
-//            motion.motionX, motion.motionY, motion.motionZ,
-//            furtherThanOneBlock || playerBox.intersectsWith(cursor)
-//          );
-//          if (overrideMotion != null) {
-//            motion.setTo(overrideMotion);
-//          }
-//        }
-//        return true;
-//      }
-//    );
-//    return lastCollideIndex.get() + 1;
-//  }
+  private void simulateApplyEffectsFromBlocks(
+    User user, SimulationEnvironment environment, Motion motion, BoundingBox boundingBox
+  ) {
+    BlockInsideCheck blockInsideCheck = user.blockInsideCheck();
+    if (blockInsideCheck != null) {
+      blockInsideCheck.applyEffectsFromBlocks(
+        user, environment, motion, boundingBox
+      );
+    }
+  }
 
   private void simulateWaterAfter(
     User user,
