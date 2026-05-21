@@ -3,16 +3,19 @@ package de.jpx3.intave.share;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 
+import static de.jpx3.intave.share.ClientMath.floor;
+
 public final class BlockPosition extends NativeVector {
   public static final BlockPosition ORIGIN = new BlockPosition(0, 0, 0);
-  private static final int NUM_X_BITS = 1 + ClientMath.calculateLogBaseTwo(ClientMath.roundUpToPowerOfTwo(30000000));
-  private static final int NUM_Z_BITS = NUM_X_BITS;
-  private static final int NUM_Y_BITS = 64 - NUM_X_BITS - NUM_Z_BITS;
-  private static final int Y_SHIFT = NUM_Z_BITS;
-  private static final int X_SHIFT = Y_SHIFT + NUM_Y_BITS;
-  private static final long X_MASK = (1L << NUM_X_BITS) - 1L;
-  private static final long Y_MASK = (1L << NUM_Y_BITS) - 1L;
-  private static final long Z_MASK = (1L << NUM_Z_BITS) - 1L;
+  static final int NUM_X_BITS = 1 + ClientMath.calculateLogBaseTwo(ClientMath.roundUpToPowerOfTwo(30000000));
+  static final int NUM_Z_BITS = NUM_X_BITS;
+  static final int NUM_Y_BITS = 64 - NUM_X_BITS - NUM_Z_BITS;
+  static final int Z_SHIFT = 0;
+  static final int Y_SHIFT = NUM_Z_BITS;
+  static final int X_SHIFT = Y_SHIFT + NUM_Y_BITS;
+  static final long X_MASK = (1L << NUM_X_BITS) - 1L;
+  static final long Y_MASK = (1L << NUM_Y_BITS) - 1L;
+  static final long Z_MASK = (1L << NUM_Z_BITS) - 1L;
 
   public BlockPosition(int x, int y, int z) {
     super(x, y, z);
@@ -218,26 +221,13 @@ public final class BlockPosition extends NativeVector {
     return (int) xCoord;
   }
 
-  public int getX() {
-    return (int) xCoord;
-  }
-
   public int getBlockY() {
-    return (int) yCoord;
-  }
-
-  public int getY() {
     return (int) yCoord;
   }
 
   public int getBlockZ() {
     return (int) zCoord;
   }
-
-  public int getZ() {
-    return (int) zCoord;
-  }
-
 
   @Override
   public int hashCode() {
@@ -274,5 +264,19 @@ public final class BlockPosition extends NativeVector {
     int j = (int) (serialized << 64 - Y_SHIFT - NUM_Y_BITS >> 64 - NUM_Y_BITS);
     int k = (int) (serialized << 64 - NUM_Z_BITS >> 64 - NUM_Z_BITS);
     return new BlockPosition(i, j, k);
+  }
+
+  public static BlockPosition at(
+    double x, double y, double z
+  ) {
+    return new BlockPosition(floor(x), floor(y), floor(z));
+  }
+
+  public BlockPosition above() {
+    return this.offset(Direction.UP, 1);
+  }
+
+  public BlockPosition below() {
+    return this.offset(Direction.DOWN, 1);
   }
 }

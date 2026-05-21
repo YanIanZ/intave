@@ -416,4 +416,12 @@ public final class ClientMath {
   public static float toRadians(float value) {
     return value * (float) Math.PI / 180f;
   }
+
+  public static int sign(double value) {
+    return (int) Math.signum(value);
+  }
+
+	public static double fraction(double value) {
+    return value - floor(value);
+	}
 }

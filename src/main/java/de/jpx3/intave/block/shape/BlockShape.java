@@ -1,6 +1,7 @@
 package de.jpx3.intave.block.shape;
 
 import de.jpx3.intave.annotate.Nullable;
+import de.jpx3.intave.share.BlockPosition;
 import de.jpx3.intave.share.BoundingBox;
 import de.jpx3.intave.share.Direction;
 import de.jpx3.intave.share.Position;
@@ -16,6 +17,14 @@ public interface BlockShape {
   boolean intersectsWith(BoundingBox boundingBox);
   BlockShape contextualized(int posX, int posY, int posZ);
   BlockShape normalized(int posX, int posY, int posZ);
+
+  default BlockShape contextualized(BlockPosition pos) {
+    return contextualized(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ());
+  }
+
+  default BlockShape normalized(BlockPosition pos) {
+    return normalized(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ());
+  }
 
   void appendUnsortedCoordsTo(Direction.Axis axis, DoubleSet appendTo);
 

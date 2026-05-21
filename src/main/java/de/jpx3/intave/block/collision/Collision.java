@@ -394,6 +394,9 @@ public final class Collision {
   public static boolean rasterizedTypeSearch(
     User user, BoundingBox boundingBox, Material material
   ) {
+    if (material == null) {
+      return false;
+    }
     return rasterizedTypeSearch(user, boundingBox, material::equals);
   }
 

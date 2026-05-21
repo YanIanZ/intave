@@ -9,7 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-public class UniversalRaytracer implements Raytracer {
+public final class IntaveRaytracer implements Raytracer {
   @Override
   public MovingObjectPosition raytrace(World world, Player player, NativeVector eyeVector, NativeVector targetVector) {
     if (eyeVector == null || targetVector == null) {

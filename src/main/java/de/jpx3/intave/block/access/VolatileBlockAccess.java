@@ -7,6 +7,7 @@ import de.jpx3.intave.block.variant.BlockVariant;
 import de.jpx3.intave.block.variant.BlockVariantRegister;
 import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.share.BlockPosition;
+import de.jpx3.intave.share.BlockPositionCursor;
 import de.jpx3.intave.share.Position;
 import de.jpx3.intave.user.User;
 import org.bukkit.Bukkit;
@@ -150,6 +151,10 @@ public final class VolatileBlockAccess {
     return fluidAccess(user, user.player().getWorld(), lastPosition.getBlockX(), lastPosition.getBlockY(), lastPosition.getBlockZ());
   }
 
+  public static Fluid fluidAccess(User user, BlockPositionCursor cursor) {
+    return fluidAccess(user, user.player().getWorld(), cursor.getX(), cursor.getY(), cursor.getZ());
+  }
+
   public static Fluid fluidAccess(User user, int blockX, int blockY, int blockZ) {
     return fluidAccess(user, user.player().getWorld(), blockX, blockY, blockZ);
   }
@@ -166,6 +171,10 @@ public final class VolatileBlockAccess {
 
   public static Material typeAccess(User user, BlockPosition position) {
     return typeAccess(user, user.player().getWorld(), position.getBlockX(), position.getBlockY(), position.getBlockZ());
+  }
+
+  public static Material typeAccess(User user, BlockPositionCursor position) {
+    return typeAccess(user, user.player().getWorld(), position.getX(), position.getY(), position.getZ());
   }
 
   public static Material typeAccess(User user, World world, Position position) {

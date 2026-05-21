@@ -75,6 +75,14 @@ public enum Direction {
     return Math.abs(motion.motionX) < Math.abs(motion.motionZ) ? YZX_AXIS_ORDER : YXZ_AXIS_ORDER;
   }
 
+  public static List<Axis> axisStepOrder(Vector motion) {
+    return Math.abs(motion.getX()) < Math.abs(motion.getZ()) ? YZX_AXIS_ORDER : YXZ_AXIS_ORDER;
+  }
+
+  public static List<Axis> axisStepOrder(NativeVector motion) {
+    return Math.abs(motion.getX()) < Math.abs(motion.getZ()) ? YZX_AXIS_ORDER : YXZ_AXIS_ORDER;
+  }
+
   public static Direction getFacingFromAxisDirection(Direction.Axis axisIn, Direction.AxisDirection axisDirectionIn) {
     switch (axisIn) {
       case X_AXIS:
@@ -341,6 +349,18 @@ public enum Direction {
 
   public Vector normalVec() {
     return this.directionVecAsVector;
+  }
+
+  public int normalX() {
+    return this.axis == X_AXIS ? this.axisDirection.offset() : 0;
+  }
+
+  public int normalY() {
+    return this.axis == Y_AXIS ? this.axisDirection.offset() : 0;
+  }
+
+  public int normalZ() {
+    return this.axis == Z_AXIS ? this.axisDirection.offset() : 0;
   }
 
   static {

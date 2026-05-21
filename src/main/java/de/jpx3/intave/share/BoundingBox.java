@@ -1,5 +1,6 @@
 package de.jpx3.intave.share;
 
+import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.block.shape.BlockRaytrace;
 import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
@@ -8,12 +9,12 @@ import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.share.link.WrapperConverter;
 import de.jpx3.intave.user.User;
 import it.unimi.dsi.fastutil.doubles.DoubleSet;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import org.bukkit.Location;
 import org.bukkit.util.Vector;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static de.jpx3.intave.share.ClientMath.floor;
 import static de.jpx3.intave.share.Direction.Axis.*;
@@ -207,6 +208,11 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
     return resulting;
   }
 
+
+  public boolean contains(NativeVector vector) {
+    return contains(vector.xCoord, vector.yCoord, vector.zCoord);
+  }
+
   public boolean contains(double x, double y, double z) {
     return x >= this.minX && x < this.maxX && y >= this.minY && y < this.maxY && z >= this.minZ && z < this.maxZ;
   }
@@ -239,6 +245,10 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
 
   public BoundingBox shrink(double value) {
     return grow(-value);
+  }
+
+  public BoundingBox shrink(double xShrink, double yShrink, double zShrink) {
+    return grow(-xShrink, -yShrink, -zShrink);
   }
 
   public BoundingBox union(BoundingBox other) {
@@ -374,6 +384,12 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
       boundingBox.maxZ > this.minZ && boundingBox.minZ < this.maxZ;
   }
 
+  public boolean intersectsWith(BlockPositionCursor cursor) {
+    return cursor.getX() + 1 > this.minX && cursor.getX() < this.maxX &&
+      cursor.getY() + 1 > this.minY && cursor.getY() < this.maxY &&
+      cursor.getZ() + 1 > this.minZ && cursor.getZ() < this.maxZ;
+  }
+
   public boolean intersectsWith(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
     return maxX > this.minX && minX < this.maxX &&
       maxY > this.minY && minY < this.maxY &&
@@ -387,6 +403,18 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
     return vec.xCoord > this.minX && vec.xCoord < this.maxX && (vec.yCoord > this.minY && vec.yCoord < this.maxY && vec.zCoord > this.minZ && vec.zCoord < this.maxZ);
   }
 
+  public double sizeX() {
+    return maxX - minX;
+  }
+
+  public double sizeY() {
+    return maxY - minY;
+  }
+
+  public double sizeZ() {
+    return maxZ - minZ;
+  }
+
   public double centerX() {
     return (minX + maxX) / 2.0;
   }
@@ -397,6 +425,10 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
 
   public double centerZ() {
     return (minZ + maxZ) / 2.0;
+  }
+
+  public NativeVector centerAsNativeVector() {
+    return new NativeVector(centerX(), centerY(), centerZ());
   }
 
   /**
@@ -416,7 +448,7 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
 
   // width and height
   public String toString() {
-    return String.format("size{%s,%s,%s}@mid{%s,%s,%s}", maxX - minX, maxY - minY, maxZ - minZ, minX + (maxX - minX) / 2d, minY + (maxY - minY) / 2d, minZ + (maxZ - minZ) / 2d);
+    return String.format("size{%s,%s,%s}@mid{%s,%s,%s}", sizeX(), sizeY(), sizeZ(), centerX(), centerY(), centerZ());
   }
 
   /**
@@ -660,6 +692,147 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
     }
   }
 
+  public boolean forEachBlockIntersectedBetween(
+    NativeVector from, NativeVector to,
+    BlockPositionConsumer blockOutput
+  ) {
+    NativeVector move = to.subtract(from);
+    if (move.length() < 0.00001f) {
+      for (BlockPositionCursor cursor : blockPositionsBetween()) {
+        if (!blockOutput.accept(cursor, 0)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    LongSet visited = new LongOpenHashSet();
+    for (BlockPositionCursor cursor : this.move(move.reverse()).blockPositionBetweenDirectional(move)) {
+      if (!blockOutput.accept(cursor, 0)) {
+        return false;
+      }
+      visited.add(cursor.asLong());
+    }
+
+    int collisionsAlongTravel = addCollisionsAlongTravel(visited, move, blockOutput);
+    if (collisionsAlongTravel <= 0) {
+      return false;
+    }
+
+    for (BlockPositionCursor cursor : blockPositionBetweenDirectional(move)) {
+	    if (visited.add(cursor.asLong()) && !blockOutput.accept(cursor, collisionsAlongTravel)) {
+		    return false;
+	    }
+    }
+
+    return true;
+  }
+
+  private @Nullable NativeVector raycast(
+    NativeVector startVec, NativeVector endVec
+  ) {
+    return raycast(minX, minY, minZ, maxX, maxY, maxZ, startVec, endVec);
+  }
+
+  private static @Nullable NativeVector raycast(
+    double minX, double minY, double minZ,
+    double maxX, double maxY, double maxZ,
+    NativeVector startVec, NativeVector endVec
+  ) {
+    double[] hitDistance = new double[]{1.0};
+    double deltaX = endVec.xCoord - startVec.xCoord;
+    double deltaY = endVec.yCoord - startVec.yCoord;
+    double deltaZ = endVec.zCoord - startVec.zCoord;
+    Direction hitFace = findHitFace(
+      minX, minY, minZ, maxX, maxY, maxZ,
+      startVec, hitDistance, null, deltaX, deltaY, deltaZ
+    );
+    if (hitFace == null) {
+      return null;
+    } else {
+      double t = hitDistance[0];
+      return startVec.add(t * deltaX, t * deltaY, t * deltaZ);
+    }
+  }
+
+  private @Nullable Direction findHitFace(
+    NativeVector startVec, double[] hitDistance, @Nullable Direction currentHitFace,
+    double deltaX, double deltaY, double deltaZ
+  ) {
+    return findHitFace(
+      minX, minY, minZ, maxX, maxY, maxZ,
+      startVec, hitDistance, currentHitFace, deltaX, deltaY, deltaZ
+    );
+  }
+
+  private static @Nullable Direction findHitFace(
+    double minX, double minY, double minZ,
+    double maxX, double maxY, double maxZ,
+    NativeVector startVec, double[] hitDistance, @Nullable Direction currentHitFace,
+    double deltaX, double deltaY, double deltaZ
+  ) {
+    if (deltaX > 0.0000001) {
+      currentHitFace = testFaceIntersection(hitDistance, currentHitFace, deltaX, deltaY, deltaZ, minX, minY, maxY, minZ, maxZ, Direction.WEST, startVec.xCoord, startVec.yCoord, startVec.zCoord);
+    } else if (deltaX < -0.0000001) {
+      currentHitFace = testFaceIntersection(hitDistance, currentHitFace, deltaX, deltaY, deltaZ, maxX, minY, maxY, minZ, maxZ, Direction.EAST, startVec.xCoord, startVec.yCoord, startVec.zCoord);
+    }
+    if (deltaY > 0.0000001) {
+      currentHitFace = testFaceIntersection(hitDistance, currentHitFace, deltaY, deltaZ, deltaX, minY, minZ, maxZ, minX, maxX, Direction.DOWN, startVec.yCoord, startVec.zCoord, startVec.xCoord);
+    } else if (deltaY < -0.0000001) {
+      currentHitFace = testFaceIntersection(hitDistance, currentHitFace, deltaY, deltaZ, deltaX, maxY, minZ, maxZ, minX, maxX, Direction.UP, startVec.yCoord, startVec.zCoord, startVec.xCoord);
+    }
+    if (deltaZ > 0.0000001) {
+      currentHitFace = testFaceIntersection(hitDistance, currentHitFace, deltaZ, deltaX, deltaY, minZ, minX, maxX, minY, maxY, Direction.NORTH, startVec.zCoord, startVec.xCoord, startVec.yCoord);
+    } else if (deltaZ < -0.0000001) {
+      currentHitFace = testFaceIntersection(hitDistance, currentHitFace, deltaZ, deltaX, deltaY, maxZ, minX, maxX, minY, maxY, Direction.SOUTH, startVec.zCoord, startVec.xCoord, startVec.yCoord);
+    }
+    return currentHitFace;
+  }
+
+  private static @Nullable Direction testFaceIntersection(
+    double[] hitDistance, @Nullable Direction currentHitFace,
+    double deltaAxis1, double deltaAxis2, double deltaAxis3,
+    double planePos,
+    double minAxis2, double maxAxis2,
+    double minAxis3, double maxAxis3,
+    Direction testFace,
+    double startAxis1, double startAxis2, double startAxis3
+  ) {
+    double t = (planePos - startAxis1) / deltaAxis1;
+    double intersectAxis2 = startAxis2 + t * deltaAxis2;
+    double intersectAxis3 = startAxis3 + t * deltaAxis3;
+
+    if (0.0 < t && t < hitDistance[0] &&
+      minAxis2 - 0.0000001 < intersectAxis2 && intersectAxis2 < maxAxis2 + 0.0000001 &&
+      minAxis3 - 0.0000001 < intersectAxis3 && intersectAxis3 < maxAxis3 + 0.0000001
+    ) {
+      hitDistance[0] = t;
+      return testFace;
+    } else {
+      return currentHitFace;
+    }
+  }
+
+  public boolean collidesAlongVector(
+    NativeVector vector,
+    List<BoundingBox> collisionCandidates
+  ) {
+    NativeVector center = centerAsNativeVector();
+    NativeVector added = center.add(vector);
+    for (BoundingBox collisionCandidate : collisionCandidates) {
+      BoundingBox shrunk = collisionCandidate.shrink(
+        sizeX() * 0.5 - 0.0000001, sizeY() * 0.5 - 0.0000001, sizeZ() * 0.5 - 0.0000001
+      );
+      if (shrunk.contains(added) || shrunk.contains(center)) {
+        return true;
+      }
+      if (shrunk.raycast(center, added) != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public double nearestDistanceTo(NativeVector fieldPoint) {
     NativeVector nativeVector = nearestPointTo(fieldPoint);
     return nativeVector.distanceTo(fieldPoint);
@@ -681,6 +854,10 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
 
   public BoundingBox move(Motion motion) {
     return move(motion.motionX, motion.motionY, motion.motionZ);
+  }
+
+  public BoundingBox move(NativeVector vector) {
+    return move(vector.xCoord, vector.yCoord, vector.zCoord);
   }
 
   public BoundingBox move(double x, double y, double z) {
@@ -712,8 +889,232 @@ public final class BoundingBox extends MemoryTraced implements BlockShape {
     return MathHelper.formatDouble(this.minX, 3) + ", " + MathHelper.formatDouble(this.minY, 3) + ", " + MathHelper.formatDouble(this.minZ, 3) + " -> " + MathHelper.formatDouble(this.maxX, 3) + ", " + MathHelper.formatDouble(this.maxY, 3) + ", " + MathHelper.formatDouble(this.maxZ, 3);
   }
 
-  public boolean func_181656_b() {
+  public boolean anyNaN() {
     return Double.isNaN(this.minX) || Double.isNaN(this.minY) || Double.isNaN(this.minZ) || Double.isNaN(this.maxX) || Double.isNaN(this.maxY) || Double.isNaN(this.maxZ);
+  }
+
+  // ported from Minecraft's "addCollisionsAlongTravel"
+  public int addCollisionsAlongTravel(
+    LongSet visitedBlocks,
+    NativeVector move,
+    BlockPositionConsumer collisionConsumer
+  ) {
+    NativeVector leadingCornerSigns = move.furthestCorner();
+    NativeVector endPos = new NativeVector(
+      centerX() + sizeX() * 0.5 * leadingCornerSigns.xCoord,
+      centerY() + sizeY() * 0.5 * leadingCornerSigns.yCoord,
+      centerZ() + sizeZ() * 0.5 * leadingCornerSigns.zCoord
+    ).add(move);
+    NativeVector startPos = endPos.subtract(move);
+
+    int blockX = ClientMath.floor(startPos.xCoord);
+    int blockY = ClientMath.floor(startPos.yCoord);
+    int blockZ = ClientMath.floor(startPos.zCoord);
+
+    int stepX = ClientMath.sign(move.xCoord);
+    int stepY = ClientMath.sign(move.yCoord);
+    int stepZ = ClientMath.sign(move.zCoord);
+
+    double tDeltaX = stepX == 0 ? Double.MAX_VALUE : stepX / move.xCoord;
+    double tDeltaY = stepY == 0 ? Double.MAX_VALUE : stepY / move.yCoord;
+    double tDeltaZ = stepZ == 0 ? Double.MAX_VALUE : stepZ / move.zCoord;
+
+    double tMaxX = tDeltaX * (stepX > 0 ? 1.0 - ClientMath.fraction(startPos.xCoord) : ClientMath.fraction(startPos.xCoord));
+    double tMaxY = tDeltaY * (stepY > 0 ? 1.0 - ClientMath.fraction(startPos.yCoord) : ClientMath.fraction(startPos.yCoord));
+    double tMaxZ = tDeltaZ * (stepZ > 0 ? 1.0 - ClientMath.fraction(startPos.zCoord) : ClientMath.fraction(startPos.zCoord));
+
+    int hitCount = 0;
+    int limitAlpha = 96;
+
+    while (tMaxX <= 1.0 || tMaxY <= 1.0 || tMaxZ <= 1.0) {
+      if (limitAlpha-- <= 0) {
+        break;
+      }
+
+      if (tMaxX < tMaxY) {
+        if (tMaxX < tMaxZ) {
+          blockX += stepX;
+          tMaxX += tDeltaX;
+        } else {
+          blockZ += stepZ;
+          tMaxZ += tDeltaZ;
+        }
+      } else if (tMaxY < tMaxZ) {
+        blockY += stepY;
+        tMaxY += tDeltaY;
+      } else {
+        blockZ += stepZ;
+        tMaxZ += tDeltaZ;
+      }
+
+      NativeVector hitpoint = BoundingBox.raycast(
+        blockX, blockY, blockZ,
+        blockX + 1, blockY + 1, blockZ + 1,
+        startPos, endPos
+      );
+
+      if (hitpoint != null) {
+        hitCount++;
+
+        double clampedX = MathHelper.minmax(blockX + 1.0E-5F, hitpoint.xCoord, blockX + 1 - 1.0E-5F);
+        double clampedY = MathHelper.minmax(blockY + 1.0E-5F, hitpoint.yCoord, blockY + 1 - 1.0E-5F);
+        double clampedZ = MathHelper.minmax(blockZ + 1.0E-5F, hitpoint.zCoord, blockZ + 1 - 1.0E-5F);
+
+        int trailX = ClientMath.floor(clampedX - sizeX() * leadingCornerSigns.xCoord);
+        int trailY = ClientMath.floor(clampedY - sizeY() * leadingCornerSigns.yCoord);
+        int trailZ = ClientMath.floor(clampedZ - sizeZ() * leadingCornerSigns.zCoord);
+
+        int limitBravo = 32;
+        BlockPositions positions = BoundingBox.blockPositionBetweenDirectional(
+          blockX, blockY, blockZ, trailX, trailY, trailZ, move
+        );
+
+        for (BlockPositionCursor cursor : positions) {
+          if (limitBravo-- <= 0) {
+            break;
+          }
+          if (visitedBlocks.add(cursor.asLong()) && !collisionConsumer.accept(cursor, hitCount)) {
+            return -1;
+          }
+        }
+      }
+    }
+    return hitCount;
+  }
+
+  public BlockPositions blockPositionsBetween() {
+    int minX = floor(this.minX);
+    int minY = floor(this.minY);
+    int minZ = floor(this.minZ);
+    int maxX = floor(this.maxX);
+    int maxY = floor(this.maxY);
+    int maxZ = floor(this.maxZ);
+
+    int sizeX = maxX - minX + 1;
+    int sizeY = maxY - minY + 1;
+    int sizeZ = maxZ - minZ + 1;
+    int volume = sizeX * sizeY * sizeZ;
+    return () -> new Iterator<BlockPositionCursor>() {
+      private final BlockPositionCursor cursor = new BlockPositionCursor(minX, minY, minZ);
+      private int index;
+
+      @Override
+      public boolean hasNext() {
+        return this.index == volume;
+      }
+
+      @Override
+      public BlockPositionCursor next() {
+        if (!hasNext()) {
+          throw new IllegalStateException("No more positions");
+        }
+        cursor.setX(cursor.getX() + 1);
+        if (cursor.getX() > maxX) {
+          cursor.setX(minX);
+          cursor.setY(cursor.getY() + 1);
+          if (cursor.getY() > maxY) {
+            cursor.setY(minY);
+            cursor.setZ(cursor.getZ() + 1);
+          }
+        }
+        this.index++;
+        return cursor;
+      }
+    };
+  }
+
+  public BlockPositions blockPositionBetweenDirectional(
+    NativeVector vector
+  ) {
+    return blockPositionBetweenDirectional(
+      this.minX, this.minY, this.minZ,
+      this.maxX, this.maxY, this.maxZ,
+      vector
+    );
+  }
+
+  public static BlockPositions blockPositionBetweenDirectional(
+    double myMinX, double myMinY, double myMinZ,
+    double myMaxX, double myMaxY, double myMaxZ,
+    NativeVector vector
+  ) {
+    int minX = floor(myMinX);
+    int minY = floor(myMinY);
+    int minZ = floor(myMinZ);
+    int maxX = floor(myMaxX);
+    int maxY = floor(myMaxY);
+    int maxZ = floor(myMaxZ);
+
+    int shortSizeX = maxX - minX;
+    int shortSizeY = maxY - minY;
+    int shortSizeZ = maxZ - minZ;
+
+    int dominantX = vector.getX() >= 0.0 ? minX : maxX;
+    int dominantY = vector.getY() >= 0.0 ? minY : maxY;
+    int dominantZ = vector.getZ() >= 0.0 ? minZ : maxZ;
+
+    List<Direction.Axis> axisStepOrder = Direction.axisStepOrder(vector);
+    Direction.Axis thirdAxis = axisStepOrder.get(0);
+    Direction.Axis secondAxis = axisStepOrder.get(1);
+    Direction.Axis firstAxis = axisStepOrder.get(2);
+
+    Direction firstAxisDirection = vector.select(firstAxis) >= 0.0 ? firstAxis.positive() : firstAxis.negative();
+    Direction secondAxisDirection = vector.select(secondAxis) >= 0.0 ? secondAxis.positive() : secondAxis.negative();
+    Direction thirdAxisDirection = vector.select(thirdAxis) >= 0.0 ? thirdAxis.positive() : thirdAxis.negative();
+
+    int sizeFirstAxis = firstAxis.select(shortSizeX, shortSizeY, shortSizeZ);
+    int sizeSecondAxis = secondAxis.select(shortSizeX, shortSizeY, shortSizeZ);
+    int sizeThirdAxis = thirdAxis.select(shortSizeX, shortSizeY, shortSizeZ);
+
+    return () -> new Iterator<BlockPositionCursor>() {
+      private final BlockPositionCursor cursor = new BlockPositionCursor(0, 0, 0);
+      private int firstIndex;
+      private int secondIndex;
+      private int thirdIndex;
+      private boolean end;
+      private final int firstDirX = firstAxisDirection.normalX();
+      private final int firstDirY = firstAxisDirection.normalY();
+      private final int firstDirZ = firstAxisDirection.normalZ();
+      private final int secondDirX = secondAxisDirection.normalX();
+      private final int secondDirY = secondAxisDirection.normalY();
+      private final int secondDirZ = secondAxisDirection.normalZ();
+      private final int thirdDirX = thirdAxisDirection.normalX();
+      private final int thirdDirY = thirdAxisDirection.normalY();
+      private final int thirdDirZ = thirdAxisDirection.normalZ();
+
+      @Override
+      public boolean hasNext() {
+        return !end;
+      }
+
+      @Override
+      public BlockPositionCursor next() {
+        if (!hasNext()) {
+          throw new NoSuchElementException();
+        }
+
+        int currentX = dominantX + firstIndex * firstDirX + secondIndex * secondDirX + thirdIndex * thirdDirX;
+        int currentY = dominantY + firstIndex * firstDirY + secondIndex * secondDirY + thirdIndex * thirdDirY;
+        int currentZ = dominantZ + firstIndex * firstDirZ + secondIndex * secondDirZ + thirdIndex * thirdDirZ;
+
+        cursor.set(currentX, currentY, currentZ);
+
+        if (thirdIndex < sizeThirdAxis) {
+          thirdIndex++;
+        } else if (secondIndex < sizeSecondAxis) {
+          secondIndex++;
+          thirdIndex = 0;
+        } else if (firstIndex < sizeFirstAxis) {
+          firstIndex++;
+          thirdIndex = 0;
+          secondIndex = 0;
+        } else {
+          end = true;
+        }
+
+        return cursor;
+      }
+    };
   }
 
   public float width() {

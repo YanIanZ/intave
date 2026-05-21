@@ -6,6 +6,7 @@ import de.jpx3.intave.math.Hypot;
 import de.jpx3.intave.packet.Relative;
 import io.netty.buffer.ByteBuf;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 
@@ -148,11 +149,11 @@ public final class Motion {
     return this;
   }
 
-  public Motion add(Motion other) {
+  public Motion add(@NotNull Motion other) {
     return add(other.motionX, other.motionY, other.motionZ);
   }
 
-  public void setTo(Motion motion) {
+  public void setTo(@NotNull Motion motion) {
     setTo(motion.motionX, motion.motionY, motion.motionZ);
   }
 
@@ -172,16 +173,11 @@ public final class Motion {
     return new Vector(this.motionX, this.motionY, this.motionZ);
   }
 
-  public static Motion copyFrom(Motion context) {
-    return new Motion(context.motionX, context.motionY, context.motionZ);
+  public NativeVector toNativeVector() {
+    return new NativeVector(this.motionX, this.motionY, this.motionZ);
   }
 
-  @Override
-  public String toString() {
-    return "(" + motionX + ", " + motionY + ", " + motionZ + ")";
-  }
-
-	public double partialMotionIn(Direction.Axis axis) {
+  public double partialMotionIn(Direction.Axis axis) {
     switch (axis) {
       case X_AXIS:
         return motionX;
@@ -191,5 +187,14 @@ public final class Motion {
         return motionZ;
     }
     throw new IllegalArgumentException("Unknown axis: " + axis);
-	}
+  }
+
+  public static Motion copyFrom(Motion context) {
+    return new Motion(context.motionX, context.motionY, context.motionZ);
+  }
+
+  @Override
+  public String toString() {
+    return "(" + motionX + ", " + motionY + ", " + motionZ + ")";
+  }
 }

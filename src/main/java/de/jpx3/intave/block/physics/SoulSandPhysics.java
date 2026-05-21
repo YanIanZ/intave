@@ -2,6 +2,7 @@ package de.jpx3.intave.block.physics;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.share.Motion;
+import de.jpx3.intave.share.Position;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import org.bukkit.Location;
@@ -21,7 +22,7 @@ final class SoulSandPhysics implements BlockPhysic {
   }
 
   @Override
-  public Motion entityInside(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
+  public Motion entityInside(User user, Location location, Position playerPosition, double motionX, double motionY, double motionZ, boolean flag4) {
     boolean useBlockCollision = useBlockCollision(user);
     return useBlockCollision ? new Motion(motionX * 0.4, motionY, motionZ * 0.4) : null;
   }

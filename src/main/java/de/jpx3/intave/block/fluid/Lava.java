@@ -1,5 +1,11 @@
 package de.jpx3.intave.block.fluid;
 
+import de.jpx3.intave.block.access.VolatileBlockAccess;
+import de.jpx3.intave.block.shape.BlockShape;
+import de.jpx3.intave.share.BlockPosition;
+import de.jpx3.intave.share.BoundingBox;
+import de.jpx3.intave.user.User;
+
 class Lava implements Fluid {
   private final float height;
   private final int heightIndex;
@@ -44,6 +50,21 @@ class Lava implements Fluid {
   @Override
   public boolean isSource() {
     return false;
+  }
+
+  @Override
+  public BlockShape uncachedShapeAt(User user, BlockPosition pos) {
+    Fluid fluidAbove = VolatileBlockAccess.fluidAccess(user, pos.above());
+    float height;
+    if (fluidAbove.sameAs(this)) {
+      height = 1.0F;
+    } else {
+      height = this.height;
+    }
+    return BoundingBox.fromBounds(
+      pos.getX(), pos.getY(), pos.getZ(),
+      pos.getX() + 1.0, pos.getY() + height, pos.getZ() + 1.00
+    );
   }
 
   @Override

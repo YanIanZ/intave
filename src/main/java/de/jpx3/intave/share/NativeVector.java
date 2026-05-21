@@ -11,6 +11,9 @@ import java.lang.reflect.InvocationTargetException;
 
 public class NativeVector {
   public static final NativeVector ZERO = new NativeVector(0.0D, 0.0D, 0.0D);
+  public static final NativeVector UNIT_X = new NativeVector(1.0D, 0.0D, 0.0D);
+  public static final NativeVector UNIT_Y = new NativeVector(0.0D, 1.0D, 0.0D);
+  public static final NativeVector UNIT_Z = new NativeVector(0.0D, 0.0D, 1.0D);
   public final double xCoord, yCoord, zCoord;
 
   public NativeVector(double x, double y, double z) {
@@ -30,6 +33,18 @@ public class NativeVector {
 
   public Position toPosition() {
     return new Position(xCoord, yCoord, zCoord);
+  }
+
+  public double getX() {
+    return xCoord;
+  }
+
+  public double getY() {
+    return yCoord;
+  }
+
+  public double getZ() {
+    return zCoord;
   }
 
   public Vector convertToBukkitVec() {
@@ -79,6 +94,10 @@ public class NativeVector {
 
   public NativeVector scale(double factor) {
     return new NativeVector(xCoord * factor, yCoord * factor, zCoord * factor);
+  }
+
+  public NativeVector reverse() {
+    return scale(-1);
   }
 
   /**
@@ -203,6 +222,48 @@ public class NativeVector {
       return d3 >= 0.0D && d3 <= 1.0D ? new NativeVector(this.xCoord + d0 * d3, this.yCoord + d1 * d3, this.zCoord + d2 * d3) : null;
     }
   }
+
+  public NativeVector furthestCorner() {
+    double crossX = Math.abs(UNIT_X.dot(this));
+    double crossY = Math.abs(UNIT_Y.dot(this));
+    double crossZ = Math.abs(UNIT_Z.dot(this));
+    int i = this.xCoord >= 0.0 ? 1 : -1;
+    int j = this.yCoord >= 0.0 ? 1 : -1;
+    int k = this.zCoord >= 0.0 ? 1 : -1;
+    if (crossX <= crossY && crossX <= crossZ) {
+      return new NativeVector(-i, -k, j);
+    } else {
+      return crossY <= crossZ ? new NativeVector(k, -j, -i) : new NativeVector(-j, i, -k);
+    }
+  }
+
+  public double angle(NativeVector vec) {
+    double d0 = Math.sqrt(this.xCoord * this.xCoord + this.yCoord * this.yCoord + this.zCoord * this.zCoord);
+    double d1 = Math.sqrt(vec.xCoord * vec.xCoord + vec.yCoord * vec.yCoord + vec.zCoord * vec.zCoord);
+    if (d0 == 0.0D || d1 == 0.0D) {
+      return 0.0D;
+    } else {
+      double d2 = this.dotProduct(vec) / (d0 * d1);
+      return Math.acos(ClientMath.clamp_double(d2, -1.0D, 1.0D));
+    }
+  }
+
+  public double dot(NativeVector vec) {
+    return this.xCoord * vec.xCoord + this.yCoord * vec.yCoord + this.zCoord * vec.zCoord;
+  }
+
+	public double select(Direction.Axis firstAxis) {
+		switch (firstAxis) {
+			case X_AXIS:
+				return xCoord;
+			case Y_AXIS:
+				return yCoord;
+			case Z_AXIS:
+				return zCoord;
+			default:
+				throw new IllegalStateException("Invalid axis " + firstAxis);
+		}
+	}
 
   public static NativeVector fromNative(Object vec3d) {
     return WrapperConverter.vectorFromVec3D(vec3d);

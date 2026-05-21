@@ -144,9 +144,9 @@ final class MultiChunkKeyBlockCache implements BlockCache {
       BlockPosition blockPosition = speculativeHead.getKey();
       BlockState blockState = speculativeHead.getValue();
       int sequenceNumber = speculativeSequenceNumbers.getOrDefault(blockPosition, -1);
-      int posX = blockPosition.getX();
-      int posY = blockPosition.getY();
-      int posZ = blockPosition.getZ();
+      int posX = blockPosition.getBlockX();
+      int posY = blockPosition.getBlockY();
+      int posZ = blockPosition.getBlockZ();
       if (sequenceNumber > seqReq) {
         if (IntaveControl.BLOCK_CACHE_DEBUG) {
           player.sendMessage(ChatColor.LIGHT_PURPLE + "SKIP APPLYING " + ChatColor.AQUA + blockState.type() + ChatColor.LIGHT_PURPLE + " at " + ChatColor.GRAY + blockPosition + " " + sequenceNumber + " > " + seqReq);

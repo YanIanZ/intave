@@ -4,6 +4,7 @@ import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.variant.BlockVariant;
 import de.jpx3.intave.share.Motion;
+import de.jpx3.intave.share.Position;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
@@ -27,7 +28,7 @@ final class BubbleColumnPhysics implements BlockPhysic {
   }
 
   @Override
-  public Motion entityInside(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
+  public Motion entityInside(User user, Location location, Position playerPosition, double motionX, double motionY, double motionZ, boolean flag4) {
     ProtocolMetadata protocol = user.meta().protocol();
     if (protocol.waterUpdate()) {
       boolean water = VolatileBlockAccess.fluidAccess(user, location.clone().add(0, 1, 0)).isOfWater();

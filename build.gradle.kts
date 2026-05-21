@@ -313,6 +313,10 @@ fun registerPaperRunTask(serverVersion: String, javaVersion: Int) {
     if (serverVersion == "1.21.7") {
       serverJar(File("libs/servers/paper-1.21.7-15.jar"))
     }
+    downloadPlugins {
+      modrinth("viaversion", "5.9.1")
+      modrinth("viabackwards", "5.9.1")
+    }
     runDirectory(File("runs/paper_${serverVersion}-j$javaVersion"))
     jvmArgs("-Dcom.mojang.eula.agree=true")
     // set online mode to false

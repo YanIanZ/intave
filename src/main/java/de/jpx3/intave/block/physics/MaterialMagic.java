@@ -1,5 +1,6 @@
 package de.jpx3.intave.block.physics;
 
+import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.block.fluid.Fluids;
 import de.jpx3.intave.block.type.BlockTypeAccess;
 import org.bukkit.Material;
@@ -111,5 +112,11 @@ public final class MaterialMagic {
 
   public static boolean isWater(Material material) {
     return (STATIONARY_WATER != null && material == STATIONARY_WATER) || material == Material.WATER;
+  }
+
+  private static final Material BUBBLE_COLUMN = Material.getMaterial("BUBBLE_COLUMN");
+
+	public static @Nullable Material bubbleColumn() {
+    return BUBBLE_COLUMN;
   }
 }

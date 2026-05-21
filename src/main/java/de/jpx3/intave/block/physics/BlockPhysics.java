@@ -3,6 +3,7 @@ package de.jpx3.intave.block.physics;
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.share.Motion;
+import de.jpx3.intave.share.Position;
 import de.jpx3.intave.user.User;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -44,12 +45,13 @@ public final class BlockPhysics {
   public static Motion entityInside(
     User user,
     Material material,
-    Location location, Location from,
-    double motionX, double motionY, double motionZ
+    Location blockLocation, Position playerPosition,
+    double motionX, double motionY, double motionZ,
+    boolean flag4
   ) {
     BlockPhysic collision = physicLookup(material);
     if (collision != null) {
-      return collision.entityInside(user, location, from, motionX, motionY, motionZ);
+      return collision.entityInside(user, blockLocation, playerPosition, motionX, motionY, motionZ, flag4);
     }
     return null;
   }

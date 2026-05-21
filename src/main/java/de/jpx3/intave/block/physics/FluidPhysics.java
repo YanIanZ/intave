@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.fluid.Fluid;
 import de.jpx3.intave.share.Motion;
+import de.jpx3.intave.share.Position;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
@@ -29,7 +30,7 @@ final class FluidPhysics implements BlockPhysic {
   }
 
   @Override
-  public Motion entityInside(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
+  public Motion entityInside(User user, Location location, Position playerPosition, double motionX, double motionY, double motionZ, boolean flag4) {
     ProtocolMetadata clientData = user.meta().protocol();
     if (clientData.waterUpdate()) {
       MovementMetadata movementData = user.meta().movement();

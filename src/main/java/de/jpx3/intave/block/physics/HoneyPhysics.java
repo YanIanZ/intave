@@ -3,6 +3,7 @@ package de.jpx3.intave.block.physics;
 import com.comphenix.protocol.utility.MinecraftVersion;
 import com.google.common.collect.ImmutableList;
 import de.jpx3.intave.share.Motion;
+import de.jpx3.intave.share.Position;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.Location;
@@ -19,7 +20,7 @@ final class HoneyPhysics implements BlockPhysic {
   }
 
   @Override
-  public Motion entityInside(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
+  public Motion entityInside(User user, Location location, Position playerPosition, double motionX, double motionY, double motionZ, boolean flag4) {
     if (doBlockPhysics(user, location, motionY)) {
       return updateMovement(user, motionX, motionY, motionZ);
     }

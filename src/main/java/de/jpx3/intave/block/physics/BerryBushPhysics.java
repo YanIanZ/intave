@@ -2,6 +2,7 @@ package de.jpx3.intave.block.physics;
 
 import com.comphenix.protocol.utility.MinecraftVersion;
 import de.jpx3.intave.share.Motion;
+import de.jpx3.intave.share.Position;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.Location;
@@ -23,7 +24,7 @@ final class BerryBushPhysics implements BlockPhysic {
   }
 
   @Override
-  public Motion entityInside(User user, Location location, Location from, double motionX, double motionY, double motionZ) {
+  public Motion entityInside(User user, Location location, Position playerPosition, double motionX, double motionY, double motionZ, boolean flag4) {
     MovementMetadata movementData = user.meta().movement();
     movementData.setMotionMultiplier(new Vector(0.8f, 0.75, 0.8f));
     return null;

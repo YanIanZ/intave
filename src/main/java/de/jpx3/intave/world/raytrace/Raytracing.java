@@ -20,29 +20,7 @@ public final class Raytracing {
   private static final boolean[] PESSIMISTIC_BOOLEAN_ORDER = new boolean[]{false, true};
 
   public static void setup() {
-//    String className;
-//    if (MinecraftVersions.VER1_14_0.atOrAbove()) {
-//      className = "de.jpx3.intave.world.raytrace.v14Raytracer";
-//    } else if (MinecraftVersions.VER1_13_0.atOrAbove()) {
-//      className = "de.jpx3.intave.world.raytrace.v13Raytracer";
-//    } else if (MinecraftVersions.VER1_9_0.atOrAbove()) {
-//      className = "de.jpx3.intave.world.raytrace.v9Raytracer";
-//    } else {
-//      className = "de.jpx3.intave.world.raytrace.v8Raytracer";
-//    }
-//    PatchyLoadingInjector.loadUnloadedClassPatched(Raytracing.class.getClassLoader(), className);
-//    raytracer = instanceOf(className);
-    universalRaytracer = new UniversalRaytracer();
-//    raytracer = new UnivRaytracer();
-  }
-
-  private static <T> T instanceOf(String className) {
-    try {
-      //noinspection unchecked
-      return (T) Class.forName(className).newInstance();
-    } catch (Exception exception) {
-      throw new IllegalStateException(exception);
-    }
+    universalRaytracer = new IntaveRaytracer();
   }
 
   public static float reachDistanceOf(Player player) {

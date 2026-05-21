@@ -3,6 +3,7 @@ package de.jpx3.intave.check.movement.physics.evaluation;
 public enum EvaluationTag {
   ATTACH,
   BOAT,
+  BUBBLE,
   COLLISION_INACCURACY,
   FIREWORK,
   FLYING,

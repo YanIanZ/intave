@@ -1,6 +1,7 @@
 package de.jpx3.intave.check.movement.physics;
 
 import de.jpx3.intave.block.collision.Collision;
+import de.jpx3.intave.block.physics.MaterialMagic;
 import de.jpx3.intave.check.movement.physics.evaluation.EvaluationTag;
 import de.jpx3.intave.math.Hypot;
 import de.jpx3.intave.math.MathHelper;
@@ -22,7 +23,7 @@ public final class SimulationEvaluator {
 
   public double calculateVerticalViolationLevelIncrease(
     User user,
-    double predictedY,
+    double predictedYMotion,
     boolean onLadder,
     boolean collidedWithBoat,
     Set<? super EvaluationTag> tags
@@ -39,7 +40,7 @@ public final class SimulationEvaluator {
     double receivedMotionX = movement.motionX();
     double receivedMotionY = movement.motionY();
     double receivedMotionZ = movement.motionZ();
-    double differenceY = abs(receivedMotionY - predictedY);
+    double differenceY = abs(receivedMotionY - predictedYMotion);
     boolean accountedSkippedMovement = movement.receivedFlyingPacketIn(2);
     double verticalLegitimateDeviation = accountedSkippedMovement ? 0.01 : 0.00001;
 
@@ -194,7 +195,7 @@ public final class SimulationEvaluator {
       if (Math.abs(movement.motionY()) < 0.1 &&
         Math.abs(movement.motionX()) < 0.1 &&
         Math.abs(movement.motionZ()) < 0.1 &&
-        Math.abs(predictedY) < 0.1 &&
+        Math.abs(predictedYMotion) < 0.1 &&
         movement.pastExternalVelocity > 8
       ) {
         verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, 0.1);
@@ -245,6 +246,28 @@ public final class SimulationEvaluator {
         verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, 0.7f);
         tags.add(EvaluationTag.WATERFLOW);
       }
+    }
+
+    BoundingBox bubbleBox = user.meta().movement().boundingBox().grow(0.2, 0.5, 0.2);
+    boolean bubblesFound = Collision.rasterizedTypeSearch(
+      user, bubbleBox,
+      MaterialMagic.bubbleColumn()
+    );
+
+    /*
+      So I tried to support bubble columns properly, but it makes our simulation take twice as long and
+      the mojang code is an absolute nightmare that took me 6 hours to properly understand and port.
+      I trashed the code b/c it was so bad and didn't really fit in Intave or the game tbh.
+      So lets be honest here: who will realistically abuse this? its a very specific and rare scenario that
+      most cheaters don't really care about.
+     */
+    if (bubblesFound) {
+      if (user.meta().protocol().newBlockEntityIntersectionLogic()) {
+        verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, 0.44);
+      } else {
+        verticalLegitimateDeviation = Math.max(verticalLegitimateDeviation, 0.08);
+      }
+      tags.add(EvaluationTag.BUBBLE);
     }
 
     // Sometimes shit happens
