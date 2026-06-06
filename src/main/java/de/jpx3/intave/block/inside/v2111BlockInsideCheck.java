@@ -36,10 +36,10 @@ final class v2111BlockInsideCheck implements BlockInsideCheck {
 					}
 				}
 			} else {
-				i -= checkInsideBlocks(user, environment, from, to, modifiableMotion, visitedBlocks, i);
+				i -= checkInsideBlocks(user, environment, entityMovement.from(), to, modifiableMotion, visitedBlocks, i);
 			}
 			if (i <= 0) {
-				checkInsideBlocks(user, environment, from, to, modifiableMotion, visitedBlocks, 1);
+				checkInsideBlocks(user, environment, entityMovement.from(), to, modifiableMotion, visitedBlocks, 1);
 			}
 		}
 

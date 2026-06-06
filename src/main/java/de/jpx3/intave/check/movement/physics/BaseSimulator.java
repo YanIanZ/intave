@@ -640,9 +640,9 @@ class BaseSimulator extends Simulator {
       }
 
       blockInsideCheck.applyEffectsFromBlocks(
-              user, environment, finalMovementsThisTick, motion,
-	      boundingBox
-            );
+        user, environment, finalMovementsThisTick,
+        motion, boundingBox
+      );
     }
   }
 
