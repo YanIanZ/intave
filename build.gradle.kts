@@ -42,8 +42,10 @@ dependencies {
     files(fileTree(mapOf("dir" to "libs/", "include" to listOf("*.jar"))).files.sorted())
   )
 
-  // Testing
-  testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
+  testRuntimeOnly("it.unimi.dsi:fastutil:8.5.12")
+  testImplementation("org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT")
+  testImplementation("net.dmulloy2:ProtocolLib:5.4.0")
+  testImplementation("io.netty:netty-all:4.2.15.Final")
 
   // random shit
   compileOnly("org.jetbrains:annotations:23.1.0")
@@ -62,7 +64,11 @@ dependencies {
   compileOnly("org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT")
 
   // pcap
-//  compileOnly("org.pcap4j:pcap4j-core:1.8.0")
+  implementation("net.bytebuddy:byte-buddy:1.18.2")
+
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 /*
@@ -385,6 +391,7 @@ tasks {
   }
 
   test {
+    useJUnitPlatform()
     failOnNoDiscoveredTests = false
   }
 }

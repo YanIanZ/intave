@@ -1,6 +1,6 @@
 package de.jpx3.intave.block.type;
 
-import com.comphenix.protocol.utility.MinecraftVersion;
+import de.jpx3.intave.adapter.MinecraftVersion;
 import com.google.common.collect.ImmutableList;
 import org.bukkit.Material;
 

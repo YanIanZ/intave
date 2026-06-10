@@ -57,6 +57,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.FIREWORK_ROCKETS;
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.feedback.FeedbackOptions.*;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION;
@@ -501,7 +503,7 @@ public final class EntityTracker extends Module {
     }
     ConnectionMetadata synchronizeData = user.meta().connection();
     MovementMetadata movement = user.meta().movement();
-    if (movement.lastTeleport == 0) {
+    if (movement.ticksPast(TELEPORT) == 0) {
       return;
     }
     for (Entity entity : synchronizeData.entities()) {
@@ -1090,7 +1092,7 @@ public final class EntityTracker extends Module {
           power = Math.max(fireworkMeta.getPower(), 1);
         }
       }
-      movement.fireworkRocketsTicks = 0;
+      movement.activeTick(FIREWORK_ROCKETS);
       movement.fireworkRocketsPower = power;
     }
   }
@@ -1127,7 +1129,7 @@ public final class EntityTracker extends Module {
           power = Math.max(fireworkMeta.getPower(), 1);
         }
       }
-      movement.fireworkRocketsTicks = 0;
+      movement.activeTick(FIREWORK_ROCKETS);
       movement.fireworkRocketsPower = power;
     }
   }

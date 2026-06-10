@@ -11,6 +11,9 @@ import de.jpx3.intave.share.Motion;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.ViolationMetadata;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.EXTERNAL_VELOCITY;
+import static de.jpx3.intave.check.movement.physics.MoveMetric.IN_WEB;
+
 public final class Evaluation {
   private static final double VELOCITY_VL_THRESHOLD = 6;
 
@@ -67,17 +70,17 @@ public final class Evaluation {
     boolean velocityDetected = false;
     boolean skipVLCalculation = totalDistance <= 0.00001;
     boolean checkVelocity = !skipVLCalculation
-      && movement.pastInWeb() > 5
+      && movement.ticksPast(IN_WEB) > 5
       && !movement.inWater()
       && !movement.collidedWithBoat();
 
     boolean elytraFlying = movement.pose() == Pose.FALL_FLYING;
 
-    if (checkVelocity && !elytraFlying && movement.pastExternalVelocity() < 10 && !movement.receivedFlyingPacketIn(2)) {
+    if (checkVelocity && !elytraFlying && movement.ticksPast(EXTERNAL_VELOCITY) < 10 && !movement.receivedFlyingPacketIn(2)) {
       boolean actuallyMoved = (Math.abs(predictedX) > 0.01 || Math.abs(predictedZ) > 0.01);
       if (totalDistance > 0.005 /*&& !onLadder*/) {
         if (actuallyMoved) {
-          boolean aggressive = violationMetadata.physicsVelocityVL++ >= VELOCITY_VL_THRESHOLD || movement.pastExternalVelocity() == 0;
+          boolean aggressive = violationMetadata.physicsVelocityVL++ >= VELOCITY_VL_THRESHOLD || movement.ticksPast(EXTERNAL_VELOCITY) == 0;
           if (aggressive || totalDistance > 0.01) {
             if (aggressive) {
               horizontalVL = Math.max(2, horizontalVL);
@@ -86,7 +89,7 @@ public final class Evaluation {
             horizontalVL *= 20.0;
           }
         } else {
-          if (Math.abs(differenceY) < 0.015 && movement.pastExternalVelocity() < 2) {
+          if (Math.abs(differenceY) < 0.015 && movement.ticksPast(EXTERNAL_VELOCITY) < 2) {
             horizontalVL = 0;
           }
         }
@@ -106,7 +109,7 @@ public final class Evaluation {
     // TODO: 05/28/22 check if this worked, and deal with adjustments
     // trustfactor limit is just temporary
     boolean suspectSafeWalk = user.trustFactor().atOrBelow(TrustFactor.YELLOW);
-    if (totalDistance > 0.008 && suspectSafeWalk /*&& movement.pastBlockPlacement <= 8*/ && horizontalVL > 0.1 && !movement.isSneaking()) {
+    if (totalDistance > 0.008 && suspectSafeWalk /*&& movement.past(BLOCK_PLACEMENT) <= 8*/ && horizontalVL > 0.1 && !movement.isSneaking()) {
       boolean smallMovement = (Math.abs(movement.motionX()) < 0.08 || Math.abs(movement.motionZ()) < 0.08) && movement.onGround();
       if (smallMovement && !movement.receivedFlyingPacketIn(3)) {
         horizontalVL = Math.max(100, horizontalVL * 50);

@@ -244,8 +244,7 @@ public final class BoatSimulator extends BaseSimulator {
   @Override
   public void simulateAfterTick(
     User user, SimulationEnvironment environment,
-    Position position,
-    Motion motion
+    Position position, Motion motion
   ) {
     BoundingBox boundingBox = BoundingBox.fromPosition(user, environment, position);
     environment.setBoundingBox(boundingBox);

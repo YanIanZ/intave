@@ -21,6 +21,7 @@ import org.bukkit.util.Vector;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.check.world.PlacementAnalysis.COMMON_FLAG_MESSAGE;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.LOOK;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION_LOOK;
@@ -48,7 +49,7 @@ public final class RotationSpeed extends MetaCheckPart<PlacementAnalysis, Rotati
     MovementMetadata movementData = user.meta().movement();
     RotationSpeedMeta meta = metaOf(user);
     float rotationMovement = Math.min(MathHelper.distanceInDegrees(movementData.rotationYaw, movementData.lastRotationYaw), 360);
-    if (System.currentTimeMillis() - meta.lastBlockPlacement > 1000 || movementData.lastTeleport <= 5) {
+    if (System.currentTimeMillis() - meta.lastBlockPlacement > 1000 || movementData.ticksPast(TELEPORT) <= 5) {
       return;
     }
     List<Float> rotationHistory = meta.rotationHistory;

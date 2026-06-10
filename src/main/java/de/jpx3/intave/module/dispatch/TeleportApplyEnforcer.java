@@ -38,6 +38,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.comphenix.protocol.wrappers.EnumWrappers.PlayerDigType.DROP_ITEM;
+import static de.jpx3.intave.check.movement.physics.MoveMetric.LONG_TELEPORT;
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.math.MathHelper.formatDouble;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.BLOCK_DIG;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.TELEPORT_ACCEPT;
@@ -143,7 +145,7 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
     if (NEW_TELEPORTATION) {
       movementData.teleportId = packet.getIntegers().read(0);
     }
-    movementData.lastTeleport = 0;
+    movementData.activeTick(TELEPORT);
 
     if (IntaveControl.DEBUG_TELEPORT_LOCKS) {
       IntaveLogger.logger().info("[Intave] Sent teleportation request to " + player.getName() + ": " + MathHelper.formatPosition(movementData.teleportLocation));
@@ -398,7 +400,7 @@ public final class TeleportApplyEnforcer implements PacketEventSubscriber {
           teleportLocation.getX(), teleportLocation.getZ()
       );
       if (teleportLength > 20) {
-        movementData.pastLongTeleport = 0;
+        movementData.activeTick(LONG_TELEPORT);
       }
     }
   }

@@ -1,11 +1,7 @@
 package de.jpx3.intave.user.meta;
 
-import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.BlockPosition;
-import com.comphenix.protocol.wrappers.WrappedAttribute;
-import com.comphenix.protocol.wrappers.WrappedAttributeModifier;
 import de.jpx3.intave.IntaveControl;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
@@ -21,19 +17,18 @@ import de.jpx3.intave.block.tick.ShulkerBox;
 import de.jpx3.intave.block.type.BlockTypeAccess;
 import de.jpx3.intave.check.movement.physics.*;
 import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
-import de.jpx3.intave.check.movement.physics.environment.UnmodifiableSimulationEnvironmentView;
 import de.jpx3.intave.check.world.interaction.BlockTrustChain;
 import de.jpx3.intave.cleanup.GarbageCollector;
 import de.jpx3.intave.entity.datawatcher.DataWatcherAccess;
 import de.jpx3.intave.executor.RateLimiter;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.math.MathHelper;
-import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.tracker.entity.Entity;
-import de.jpx3.intave.module.tracker.player.PacketLogging;
 import de.jpx3.intave.packet.Relative;
 import de.jpx3.intave.player.Effects;
 import de.jpx3.intave.player.ItemProperties;
+import de.jpx3.intave.player.attribute.WrappedAttribute;
+import de.jpx3.intave.player.attribute.WrappedAttributeModifier;
 import de.jpx3.intave.player.collider.complex.ColliderResult;
 import de.jpx3.intave.share.*;
 import de.jpx3.intave.share.Rotation;
@@ -45,22 +40,21 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.comphenix.protocol.wrappers.WrappedAttributeModifier.Operation.ADD_PERCENTAGE;
 import static de.jpx3.intave.IntaveControl.REPLACE_JOAP_SETBACK_WITH_CM;
+import static de.jpx3.intave.check.movement.physics.MoveMetric.*;
 import static de.jpx3.intave.check.movement.physics.MovementCharacteristics.resolveFriction;
-import static de.jpx3.intave.reflect.access.ReflectiveHandleAccess.handleOf;
+import static de.jpx3.intave.player.attribute.WrappedAttributeModifier.Operation.ADD_PERCENTAGE;
 import static de.jpx3.intave.share.ClientMath.*;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.*;
 
 public final class MovementMetadata implements SimulationEnvironment {
   public static final WrappedAttributeModifier SPRINTING_MODIFIER = WrappedAttributeModifier.newBuilder(
     UUID.fromString("662A6B8D-DA3E-4C1C-8813-96EA6097278D")
-  ).amount(0.3F).operation(ADD_PERCENTAGE).name("Sprint Boost").build();
+  ).withAmount(0.3F).withOperation(ADD_PERCENTAGE).withName("Sprint Boost").build();
   private static final boolean ELYTRA_ENABLED = MinecraftVersions.VER1_9_0.atOrAbove();
   private final Player player;
   private final User user;
@@ -73,14 +67,12 @@ public final class MovementMetadata implements SimulationEnvironment {
   public double stepHeightThisMove = 0d;
   public double widthRounded, heightRounded;
   public boolean elytraFlying;
-  public int fireworkRocketsTicks = 100;
   public int fireworkRocketsPower = 1;
   public boolean onGround, lastOnGround, step, onGroundWithRiptide;
   public boolean collidedHorizontally, collidedVertically;
   public float artificialFallDistance;
   public boolean dealCustomFallDamage;
-  public boolean inWaterSinceFallDamagePostCheck;
-  public double gravity;
+  public double gravity = 0.08;
   public boolean outsideBorder = true;
   public Vector lookVector = new Vector();
   public double verifiedPositionX, verifiedPositionY, verifiedPositionZ;
@@ -90,8 +82,6 @@ public final class MovementMetadata implements SimulationEnvironment {
   public boolean sprinting, lastSprinting, hasSprintSpeed, sneaking, lastSneaking;
   public int sprintSneakFaults;
   public boolean acceptSneakFaults = true;
-  public int ticksSneaking, ticksSprinting;
-  public int ticksSinceLastSneak;
   public float rotationYaw, rotationPitch;
   public float lastRotationYaw, lastRotationPitch;
   public long recordedMoves;
@@ -103,8 +93,7 @@ public final class MovementMetadata implements SimulationEnvironment {
   public Vector setbackOverrideVelocity = new Vector(0, 0, 0);
   public Vector lastVelocity = new Vector();
   public boolean canResetMotion;
-  public int pastNearbyCollisionInaccuracy = 10;
-  public float frictionMultiplier;
+  public float frictionMultiplier = 0.09998f;
   public int lastPositionUpdate;
   @Nullable
   public Fluid interactingFluid;
@@ -112,18 +101,6 @@ public final class MovementMetadata implements SimulationEnvironment {
   public boolean inWater;
   public boolean inWeb;
   public boolean checkWebStateAgainNextTick = false;
-  public int pastPushedByWaterFlow = 100;
-  public int pastElytraFlying = 100, pastVelocity = 100, pastExternalVelocity = 100, pastExternalVelocityResetCache, pastInWeb = 100, pastWaterMovement = 100, pastLavaMovement = 100;
-  public int pastLongTeleport = 100;
-  public int pastInventoryOpen = 100;
-  public int pastBlockPlacement = 100;
-  public int pastEdgeSneak = 100;
-  public int pastStep = 100;
-  public int pastEntityUse = 100;
-  public int pastSprintChange = 100;
-  public int pastReceiveVelocityPacket = 100;
-  public int waterTicks = 0;
-  public int webTicks = 0;
   public int reduceTicks = 0;
   public boolean onLadderLast;
   public boolean aquaticUpdateInLava;
@@ -133,16 +110,9 @@ public final class MovementMetadata implements SimulationEnvironment {
   public boolean invalidMovement, suspiciousMovement;
   public double baseMotionX, baseMotionY, baseMotionZ; // base or last motion, exclusively for the physics check
   public double baseMotionXBeforeVelocity, baseMotionYBeforeVelocity, baseMotionZBeforeVelocity;
-  public double baseMotionXResetCache, baseMotionYResetCache, baseMotionZResetCache;
-  public double baseMotionXBeforeVelocityResetCache, baseMotionYBeforeVelocityResetCache, baseMotionZBeforeVelocityResetCache;
   public boolean endMotionXOverride, endMotionYOverride, endMotionZOverride;
   public double endMotionXOverrideValue, endMotionYOverrideValue, endMotionZOverrideValue;
-  public int pastRiptideSpin = 100;
   public int highestLocalRiptideLevel = 0;
-  public int pastPlayerReduceAttackPhysics = 100;
-  public int pastInPowderSnow = 100;
-  public int pastEdgeSneakTickGrants;
-  public int pastVehicleExitTicks = 100;
   public boolean physicsResetMotionX, physicsResetMotionZ;
   public int keyForward, keyStrafe;
   public int lastKeyForward, lastKeyStrafe;
@@ -167,13 +137,10 @@ public final class MovementMetadata implements SimulationEnvironment {
   // To prevent a slot switch if the player changes his slot by itself we have to check if the movement is 2x wrong
   // If the player does not have an active use-item this field will be set to 0
   public int physicsEatingSlotSwitchVL;
-  // Phase prevention
-  public List<BoundingBox> phaseIntersectingBoundingBoxes;
   public boolean currentlyInBlock;
   // Entity collision
   public boolean enforceBoatStep;
   public volatile Location nearestBoatLocation = null;
-  public int attachVehicleTicks = 100, detachVehicleTicks = 100;
   public float boatGlide, momentum;
   public double waterLevel;
   public BoatSimulator.Status boatStatus = BoatSimulator.Status.ON_LAND,
@@ -182,8 +149,6 @@ public final class MovementMetadata implements SimulationEnvironment {
   public boolean dropPostTickMotionProcessing;
   public boolean willReceiveSetbackVelocity;
   public boolean willReceiveFinalSetbackVelocity;
-  public boolean willReceiveSetbackVelocityResetCache;
-  public int lastTeleport = 100;
   public int teleportId;
   public volatile boolean awaitTeleport = false, expectTeleport = false, awaitOutgoingTeleport = false;
   public volatile boolean expectTeleportWithRotation = false;
@@ -213,21 +178,18 @@ public final class MovementMetadata implements SimulationEnvironment {
   public boolean clientPressedJump = false;
   public boolean forceCorrectReduce = false;
   public double invalidReduceVL = 0;
-  public int afterRespawnTicks = 0;
   public double lastRespawnX, lastRespawnY, lastRespawnZ;
   public boolean allowRespawnLeniency = false;
-  private volatile WeakReference<Object> nmsWorld;
   private boolean hasJumpFactor;
   private double resetMotion, frictionPosSubtraction;
   private double motionX, motionY, motionZ;
   private boolean sprintingAllowed;
-  private float yawSine, yawCosine, friction;
+  private float yawSine = 0, yawCosine = 1, friction;
   private Pose pose = Pose.STANDING;
   private Simulator simulator = Simulators.PLAYER;
   @Nullable
   public Position mainSupportingBlockPos = null;
-  private boolean mainSupportingBlockPosLocking = false;
-  private Material frictionMaterial = Material.AIR, previousFrictionMaterial = Material.AIR;
+	private Material frictionMaterial = Material.AIR, previousFrictionMaterial = Material.AIR;
   private Material collideMaterial = Material.AIR, previousCollideMaterial = Material.AIR;
 
   private ColliderResult beforeMoveCollider = null;
@@ -237,8 +199,6 @@ public final class MovementMetadata implements SimulationEnvironment {
   @Nullable
   private Vector motionMultiplier = null;
   private double jumpMotion;
-  private int pastClientFlyingPacket;
-  public int pastFlyingPacketAccurate;
   private float aiMoveSpeed, jumpMovementFactor;
   private boolean eyesInWater;
   // Vehicle
@@ -255,6 +215,16 @@ public final class MovementMetadata implements SimulationEnvironment {
   public Input input = new Input();
   public Input lastInput = new Input();
 
+  private final Map<MoveMetric, Integer> activeTracker = new EnumMap<>(MoveMetric.class);
+  private final Map<MoveMetric, Integer> pastTracker = new EnumMap<>(MoveMetric.class);
+
+  {
+    for (MoveMetric value : MoveMetric.values()) {
+      activeTracker.put(value, value.activeDefault());
+      pastTracker.put(value, value.pastDefault());
+    }
+  }
+
   public MovementMetadata(Player player, User user) {
     this.player = player;
     this.user = user;
@@ -262,10 +232,13 @@ public final class MovementMetadata implements SimulationEnvironment {
 
   public void setup() {
     if (player != null) {
-      Synchronizer.synchronize(() -> this.elytraFlying = flyingWithElytra(player));
+      if (player.hasMetadata("intave.testplayer.gliding")) {
+        this.elytraFlying = player.getMetadata("intave.testplayer.gliding").get(0).asBoolean();
+      } else {
+        Synchronizer.synchronize(() -> this.elytraFlying = flyingWithElytra(player));
+      }
     }
     applyPlayerStats();
-    updateWorld();
     applyPlayerLocation();
   }
 
@@ -288,7 +261,11 @@ public final class MovementMetadata implements SimulationEnvironment {
   private void applyPlayerLocation() {
     Location location;
     if (player == null) {
-      location = new Location(Bukkit.getWorlds().get(0), 0, 0, 0);
+      World world = null;
+      if (Bukkit.getServer() != null) {
+        world = Bukkit.getWorlds().get(0);
+      }
+      location = new Location(world, 0, 0, 0);
     } else {
       location = player.getLocation();
       artificialFallDistance = player.getFallDistance();
@@ -297,10 +274,14 @@ public final class MovementMetadata implements SimulationEnvironment {
     positionX = location.getX();
     positionY = location.getY();
     positionZ = location.getZ();
+    lastPositionX = positionX;
+    lastPositionY = positionY;
+    lastPositionZ = positionZ;
     verifiedPositionX = positionX;
     verifiedPositionY = positionY;
     verifiedPositionZ = positionZ;
     verifiedPositionOrigin = "initial";
+    setRotation(0, 0);
     updateSize();
   }
 
@@ -312,22 +293,12 @@ public final class MovementMetadata implements SimulationEnvironment {
     sneaking = player.isSneaking();
   }
 
-  public void updateWorld() {
-    if (player == null) {
-      nmsWorld = new WeakReference<>(handleOf(Bukkit.getWorlds().get(0)));
-      return;
-    }
-    nmsWorld = new WeakReference<>(handleOf(player.getWorld()));
-  }
-
   @DispatchTarget
   public void updateMovement(
-    PacketContainer packet,
+    double newPositionX, double newPositionY, double newPositionZ,
+    float newRotationYaw, float newRotationPitch,
     boolean hasMovement, boolean hasRotation
   ) {
-    boolean vehicleMove = packet.getType() == PacketType.Play.Client.VEHICLE_MOVE;
-    boolean containsCollision = MinecraftVersions.VER1_21_4.atOrAbove();
-    PacketLogging logging = Modules.tracker().packetLogging();
     if (!boundingBoxSetup) {
       setupDefaults();
     }
@@ -340,17 +311,12 @@ public final class MovementMetadata implements SimulationEnvironment {
       sprintResetNextTick = false;
     }
     if (hasMovement) {
-      StructureModifier<Double> position = packet.getDoubles();
-      if (containsCollision && vehicleMove) {
-        position = packet.getStructures().read(0).getDoubles();
-      }
-      positionX = position.read(0);
-      positionY = position.read(1);
-      positionZ = position.read(2);
+      positionX = newPositionX;
+      positionY = newPositionY;
+      positionZ = newPositionZ;
       motionX = positionX - verifiedPositionX;
       motionY = positionY - verifiedPositionY;
       motionZ = positionZ - verifiedPositionZ;
-      logging.logSystemMessage(user, () -> "MOTION LOGIC: Received motion: " + motionX + " " + motionY + " " + motionZ);
       boolean falling = motionY() <= 0.0D;
       if (falling && Effects.slowFallingEffectActive(player)) {
         artificialFallDistance = 0f;
@@ -361,7 +327,7 @@ public final class MovementMetadata implements SimulationEnvironment {
       updateEntityActionStates();
       updateMovementMetaData();
     } else {
-      pastClientFlyingPacket = 0;
+      setPast(FLYING_PACKET_CLIENT, 0);
       if (hasRotation) {
         motionX = positionX - verifiedPositionX;
         motionY = positionY - verifiedPositionY;
@@ -376,19 +342,22 @@ public final class MovementMetadata implements SimulationEnvironment {
     lastRotationYaw = rotationYaw;
     lastRotationPitch = rotationPitch;
     if (hasRotation) {
-      StructureModifier<Float> rotation = packet.getFloat();
-      rotationYaw = rotation.read(0);
-      rotationPitch = rotation.read(1);
-      lookVector = vectorForRotation(rotationYaw, rotationPitch);
-      float rotationYawInRadians = rotationYaw * (float) Math.PI / 180.0F;
-      yawSine = sin(rotationYawInRadians);
-      yawCosine = cos(rotationYawInRadians);
+      setRotation(newRotationYaw, newRotationPitch);
     }
     recheckWebStateFromLastTick();
     if (hasMovement || hasRotation) {
       updatePose();
     }
     updateSlotSwitch();
+  }
+
+  private void setRotation(float newRotationYaw, float newRotationPitch) {
+    rotationYaw = newRotationYaw;
+    rotationPitch = newRotationPitch;
+    lookVector = vectorForRotation(rotationYaw, rotationPitch);
+    float rotationYawInRadians = rotationYaw * (float) Math.PI / 180.0F;
+    yawSine = sin(rotationYawInRadians);
+    yawCosine = cos(rotationYawInRadians);
   }
 
   @Override
@@ -613,7 +582,6 @@ public final class MovementMetadata implements SimulationEnvironment {
     return plate != null && plate.getType() == Material.ELYTRA;
   }
 
-  @Deprecated
   public void updateEyesInWater() {
     double yPos = positionY + eyeHeight() - (double) 0.11111f;
     this.eyesInWater = interactingFluid != null && interactingFluid.isOfWater();
@@ -894,7 +862,7 @@ public final class MovementMetadata implements SimulationEnvironment {
     if (clientData.waterUpdate()) {
       return aquaticUpdateInLava;
     } else {
-      BoundingBox lavaBoundingBox = boundingBox.grow(
+      BoundingBox lavaBoundingBox = boundingBox().grow(
         -0.1f,
         -0.4000000059604645D,
         -0.1f
@@ -906,11 +874,6 @@ public final class MovementMetadata implements SimulationEnvironment {
   @Override
   public boolean inWeb() {
     return inWeb;
-  }
-
-  @Override
-  public int pastInWeb() {
-    return pastInWeb;
   }
 
   @Override
@@ -941,9 +904,9 @@ public final class MovementMetadata implements SimulationEnvironment {
   public boolean receivedFlyingPacketIn(int ticks) {
     ProtocolMetadata protocol = user.meta().protocol();
     if (protocol.flyingPacketsAreSent()) {
-      return pastClientFlyingPacket <= ticks && pastFlyingPacketAccurate <= ticks;
+      return ticksPast(FLYING_PACKET_CLIENT) <= ticks && ticksPast(FLYING_PACKET_ACCURATE) <= ticks;
     } else {
-      return pastFlyingPacketAccurate <= ticks;
+      return ticksPast(FLYING_PACKET_ACCURATE) <= ticks;
     }
   }
 
@@ -958,7 +921,7 @@ public final class MovementMetadata implements SimulationEnvironment {
       return false;
     }
     int trustFactorSetting = user.trustFactorSetting("physics.joap-limit") + (REPLACE_JOAP_SETBACK_WITH_CM ? 1 : 0);
-    return pastVelocity == 0 && sprinting && lastVelocityApplicableForJumpDenial() && physicsJumpedOverrideVL >= trustFactorSetting;
+    return ticksPast(VELOCITY) == 0 && sprinting && lastVelocityApplicableForJumpDenial() && physicsJumpedOverrideVL >= trustFactorSetting;
   }
 
   public boolean applyJumpCM() {
@@ -970,7 +933,7 @@ public final class MovementMetadata implements SimulationEnvironment {
 //      return true;
 //    }
 //    int trustFactorSetting = user.trustFactorSetting("physics.joap-limit");
-//    return pastVelocity == 0 && sprinting && lastVelocityApplicableForJumpDenial() && physicsJumpedOverrideVL >= trustFactorSetting;
+//    return past(VELOCITY) == 0 && sprinting && lastVelocityApplicableForJumpDenial() && physicsJumpedOverrideVL >= trustFactorSetting;
     return false;
   }
 
@@ -1002,22 +965,17 @@ public final class MovementMetadata implements SimulationEnvironment {
 
   public void setSprinting(boolean sprinting) {
     this.sprinting = sprinting;
-    pastSprintChange = 0;
+    activeTick(SPRINT_CHANGE);
 //    this.sprinting = false;
     AbilityMetadata abilities = user.meta().abilities();
     WrappedAttribute movementSpeed = abilities.findAttribute("generic.movementSpeed");
 
-//    player.sendMessage(ChatColor.GOLD + "Sprint-toggle to: " + sprinting);
-
     List<WrappedAttributeModifier> movementSpeedModifiers = abilities.modifiersOf(movementSpeed);
     if (sprinting) {
-      //
       if (!movementSpeedModifiers.contains(SPRINTING_MODIFIER)) {
-//        player.sendMessage(ChatColor.RED + "Added Sprinting Modifier");
         movementSpeedModifiers.add(SPRINTING_MODIFIER);
       }
     } else {
-//      player.sendMessage(ChatColor.RED + "Removed Sprinting Modifier");
       movementSpeedModifiers.remove(SPRINTING_MODIFIER);
     }
   }
@@ -1034,65 +992,31 @@ public final class MovementMetadata implements SimulationEnvironment {
     return shulkerData.get(new BlockPosition(posX, posY, posZ));
   }
 
-  public void resetFlyingPacketAccurate() {
-    pastFlyingPacketAccurate = 0;
-  }
-
-  public void increaseFlyingPacketTicks() {
-    pastFlyingPacketAccurate++;
-    pastClientFlyingPacket++;
-    pastNearbyCollisionInaccuracy++;
-    afterRespawnTicks++;
+  @Override
+  public void activeTick(MoveMetric metric) {
+    activeTracker.put(metric, ticks(metric) + 1);
+    pastTracker.put(metric, 0);
   }
 
   @Override
-  public void increaseEntityUseTicks() {
-    pastEntityUse++;
+  public void inactiveTick(MoveMetric metric) {
+    activeTracker.put(metric, 0);
+    pastTracker.put(metric, ticksPast(metric) + 1);
   }
 
-  @Override
-  public void increasePlayerAttackTicks() {
-    if (pastPlayerReduceAttackPhysics < 100) {
-      pastPlayerReduceAttackPhysics++;
-    }
+	@Override
+  public int ticks(MoveMetric metric) {
+    return activeTracker.getOrDefault(metric, metric.activeDefault());
   }
 
-  @Override
-  public void increasePushedByWaterFlowTicks() {
-    if (pastPushedByWaterFlow < 100) {
-      pastPushedByWaterFlow++;
-    }
+	@Override
+  public int ticksPast(MoveMetric metric) {
+    return pastTracker.getOrDefault(metric, metric.pastDefault());
   }
 
-  @Override
-  public void resetPushedByWaterFlowTicks() {
-    pastPushedByWaterFlow = 0;
-  }
-
-  @Override
-  public void resetPhysicsPacketRelinkFlyVL() {
-    physicsPacketRelinkFlyVL = 0;
-  }
-
-  @Override
-  public void increasePowderSnowTicks() {
-    pastInPowderSnow++;
-  }
-
-  @Override
-  public void resetPowderSnowTicks() {
-    pastInPowderSnow = 0;
-  }
-
-  @Override
-  public void increaseEdgeSneakTickGrants() {
-    pastEdgeSneakTickGrants++;
-  }
-
-  @Override
-  public void increaseVehicleTicks() {
-    pastVehicleExitTicks++;
-  }
+	public void setPast(MoveMetric metric, int ticks) {
+		pastTracker.put(metric, ticks);
+	}
 
   @Override
   public void aquaticUpdateLavaReset() {
@@ -1120,8 +1044,29 @@ public final class MovementMetadata implements SimulationEnvironment {
   }
 
   @Override
-  public SimulationEnvironment unmodifiable() {
-    return UnmodifiableSimulationEnvironmentView.of(this);
+  public Fluid interactingFluid() {
+    return interactingFluid;
+  }
+
+  @Override
+  public void assumeOccurred(Simulation simulation) {
+    ColliderResult collider = simulation.collider();
+    onGround = collider.onGround();
+    collidedHorizontally = collider.collidedHorizontally();
+    collidedVertically = collider.collidedVertically();
+    physicsResetMotionX = collider.resetMotionX();
+    physicsResetMotionZ = collider.resetMotionZ();
+    boolean step = collider.step();
+	  stepHeightThisMove = step ? collider.stepHeightThisMove() : 0;
+    if (step) {
+      activeTick(STEP);
+    }
+    if (collider.edgeSneak()) {
+      activeTick(EDGE_SNEAKING);
+    }
+    if (user.meta().protocol().newBlockEntityIntersectionLogic()) {
+      setBeforeMoveColliderResult(collider);
+    }
   }
 
   @Override
@@ -1164,10 +1109,7 @@ public final class MovementMetadata implements SimulationEnvironment {
     return vehicle;
   }
 
-  public Object nmsWorld() {
-    return nmsWorld.get();
-  }
-
+  @Deprecated
   public Location verifiedLocation() {
     return verifiedLocation;
   }
@@ -1273,6 +1215,14 @@ public final class MovementMetadata implements SimulationEnvironment {
     return inWater;
   }
 
+  @Override
+  public void setInWater(boolean inWater) {
+    this.inWater = inWater;
+    if (inWater) {
+      artificialFallDistance = 0;
+    }
+  }
+
   @Deprecated
   public float aiMoveSpeed() {
     return aiMoveSpeed;
@@ -1301,10 +1251,6 @@ public final class MovementMetadata implements SimulationEnvironment {
   /// /    friction = MovementHelper.resolveFriction(user, sprinting, verifiedPositionX, verifiedPositionY, verifiedPositionZ);
 //    refreshFriction(sprinting);
 //  }
-  public int pastFlyingPacketAccurate() {
-    return pastFlyingPacketAccurate;
-  }
-
   public Simulator simulator() {
     return simulator;
   }
@@ -1342,6 +1288,14 @@ public final class MovementMetadata implements SimulationEnvironment {
   @Override
   public double verifiedPositionZ() {
     return verifiedPositionZ;
+  }
+
+  @Override
+  public void setVerifiedPosition(Position position, String reason) {
+    this.verifiedPositionX = position.getX();
+    this.verifiedPositionY = position.getY();
+    this.verifiedPositionZ = position.getZ();
+    this.verifiedPositionOrigin = reason;
   }
 
   @Override
@@ -1452,19 +1406,15 @@ public final class MovementMetadata implements SimulationEnvironment {
     this.simulator = simulator;
   }
 
-  public void setPastFlyingPacketAccurate(int pastFlyingPacketAccurate) {
-    this.pastFlyingPacketAccurate = pastFlyingPacketAccurate;
-  }
-
   public double estimatedAttachMovement() {
-    if (this.attachVehicleTicks > 1) {
+    if (ticksPast(VEHICLE_ATTACHMENT) > 1) {
       return 0;
     }
     return attachMoveDistance * 1.25;
   }
 
   public void setVehicle(Entity ridingEntity) {
-    this.attachVehicleTicks = 0;
+    activeTick(VEHICLE_ATTACHMENT);
     this.invalidVehiclePositionTicks = 0;
     this.attachMoveDistance = ridingEntity.distanceTo(lastPosition().toBukkitVec());
     this.vehicle = ridingEntity;
@@ -1512,7 +1462,7 @@ public final class MovementMetadata implements SimulationEnvironment {
     if (user.receives(MessageChannel.DEBUG_MOUNTS)) {
       player.sendMessage(IntavePlugin.prefix() + "Unmounting " + vehicle.entityName() + " for " + reason.toLowerCase() + " " + (positionReset ? "(with position reset)" : ""));
     }
-    detachVehicleTicks = 0;
+    activeTick(VEHICLE_DETACHMENT);
     this.vehicle = null;
   }
 
@@ -1526,23 +1476,10 @@ public final class MovementMetadata implements SimulationEnvironment {
     return pushedByEntity;
   }
 
-  @Override
-  public int afterRespawnTicks() {
-    return afterRespawnTicks;
-  }
+  private final SimulationEnvironment unmodifiableView = SimulationEnvironment.super.unmodifiable();
 
   @Override
-  public int pastAnyVelocity() {
-    return pastVelocity;
-  }
-
-  @Override
-  public int pastExternalVelocity() {
-    return pastExternalVelocity;
-  }
-
-  @Override
-  public int pastNearbyCollisionInaccuracy() {
-    return pastNearbyCollisionInaccuracy;
+  public SimulationEnvironment unmodifiable() {
+    return unmodifiableView;
   }
 }

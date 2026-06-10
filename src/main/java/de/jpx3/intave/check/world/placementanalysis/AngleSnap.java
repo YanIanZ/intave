@@ -14,6 +14,8 @@ import org.bukkit.entity.Player;
 import java.util.LinkedList;
 import java.util.List;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.BLOCK_PLACEMENT;
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.check.world.PlacementAnalysis.COMMON_FLAG_MESSAGE;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.module.violation.Violation.ViolationFlags.DISPLAY_IN_ALL_VERBOSE_MODES;
@@ -50,8 +52,8 @@ public class AngleSnap extends PlayerCheckPart<PlacementAnalysis> {
         rotationSum += Math.abs(rotationHistory.get(i) - rotationHistory.get(i + 1));
       }
 
-      boolean recentBlockPlacement = user.meta().movement().pastBlockPlacement < 20;
-      if (rotationSum > 60 && recentBlockPlacement && user.meta().movement().lastTeleport > 5 && rotationSum < 300) {
+      boolean recentBlockPlacement = user.meta().movement().ticksPast(BLOCK_PLACEMENT) < 20;
+      if (rotationSum > 60 && recentBlockPlacement && user.meta().movement().ticksPast(TELEPORT) > 5 && rotationSum < 300) {
         if (vl > 2) {
 //          int outputVL = rotationSum > 150 || (Math.abs(rotationSum - 90) < 0.1) ? 25 : 10;
 //          float lastRot = Math.abs(movementData.rotationYaw - movementData.lastRotationYaw);

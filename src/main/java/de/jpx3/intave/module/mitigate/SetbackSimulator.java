@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.RECEIVED_VELOCITY_PACKET;
 import static de.jpx3.intave.math.MathHelper.minmax;
 import static de.jpx3.intave.share.ClientMath.floor;
 import static de.jpx3.intave.share.Direction.Axis.*;
@@ -46,13 +47,12 @@ import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.NETHER_P
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.UNKNOWN;
 
 public final class SetbackSimulator extends Module {
-  private Physics physicsCheck;
   private InternalTeleportApplier teleportMethodContainer;
   private boolean closeInventoryOnDetection;
 
   @Override
   public void enable() {
-    this.physicsCheck = plugin.checks().searchCheck(Physics.class);
+    Physics physicsCheck = plugin.checks().searchCheck(Physics.class);
     this.closeInventoryOnDetection = physicsCheck.closeInventoryOnDetection();
     this.teleportMethodContainer = new InternalTeleportApplier();
   }
@@ -107,7 +107,7 @@ public final class SetbackSimulator extends Module {
     boolean isOriginal = true;
 
     if (movementData.emulationVelocity != null) {
-      if (movementData.pastReceiveVelocityPacket < 2) {
+      if (movementData.ticksPast(RECEIVED_VELOCITY_PACKET) < 2) {
         motion = movementData.emulationVelocity;
         isOriginal = false;
       }
@@ -224,7 +224,7 @@ public final class SetbackSimulator extends Module {
     BoundingBox boundingBox = BoundingBox.fromPosition(user, movementData, futurePosition);
 
     Vector emulationVelocity = movementData.emulationVelocity;
-    if (emulationVelocity != null && movementData.pastReceiveVelocityPacket < 2) {
+    if (emulationVelocity != null && movementData.ticksPast(RECEIVED_VELOCITY_PACKET) < 2) {
       motion = motionProceed(emulationVelocity, user, boundingBox, true);
       movementData.emulationVelocity = null;
     } else {
@@ -468,13 +468,8 @@ public final class SetbackSimulator extends Module {
   }
 
   private void updateMovementStatus(User user) {
-    Player player = user.player();
-    World world = player.getWorld();
     MovementMetadata movementData = user.meta().movement();
     movementData.inWater = Collision.rasterizedLiquidPresentSearch(user, movementData.boundingBox());
-    if (movementData.inWater) {
-      movementData.inWaterSinceFallDamagePostCheck = true;
-    }
   }
 
   private synchronized void rotationlessTeleport(Player player, Location to, double motionY, float nativeYaw, float nativePitch) {

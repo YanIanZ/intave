@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.check.world.PlacementAnalysis.COMMON_FLAG_MESSAGE;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.module.violation.Violation.ViolationFlags.DISPLAY_IN_ALL_VERBOSE_MODES;
@@ -206,7 +207,7 @@ public class RotationFlick extends PlayerCheckPart<PlacementAnalysis> {
     float rotationMovement = Math.min(MathHelper.distanceInDegrees(movementData.rotationYaw, movementData.lastRotationYaw), 360);
     rotationHistogram.add(movementData.rotationPitch);
 
-    if (System.currentTimeMillis() - lastPlacement > 2000 || movementData.lastTeleport <= 5) {
+    if (System.currentTimeMillis() - lastPlacement > 2000 || movementData.ticksPast(TELEPORT) <= 5) {
       if (rotationHistogram.size() > 10) {
 //        for (String s : rotationHistogram.plot()) {
 //          player.sendMessage(s);

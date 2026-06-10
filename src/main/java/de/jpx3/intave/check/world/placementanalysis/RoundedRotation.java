@@ -3,6 +3,7 @@ package de.jpx3.intave.check.world.placementanalysis;
 import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.check.MetaCheckPart;
+import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
 import de.jpx3.intave.check.world.PlacementAnalysis;
 import de.jpx3.intave.connect.sibyl.SibylMessageTransmitter;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
@@ -10,9 +11,9 @@ import de.jpx3.intave.user.MessageChannelSubscriptions;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
-import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.entity.Player;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.BLOCK_PLACEMENT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.LOOK;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION_LOOK;
 
@@ -34,12 +35,12 @@ public class RoundedRotation extends MetaCheckPart<PlacementAnalysis, RoundedRot
     User user = UserRepository.userOf(player);
 
     Meta meta = metaOf(user);
-    MovementMetadata movement = user.meta().movement();
+    SimulationEnvironment movement = user.meta().movement();
 
-    float rotationPitch = movement.rotationPitch;
+    float rotationPitch = movement.rotationPitch();
     int firstZero = firstZeroInDecimal(rotationPitch);
 
-    boolean recentlyPlaced = movement.pastBlockPlacement < 20;
+    boolean recentlyPlaced = movement.ticksPast(BLOCK_PLACEMENT) < 20;
     int[] zerosBuilding = meta.zerosBuilding;
     int[] zerosNotBuilding = meta.zerosNotBuilding;
 

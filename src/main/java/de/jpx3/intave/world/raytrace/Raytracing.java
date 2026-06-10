@@ -15,6 +15,8 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.SNEAKING;
+
 public final class Raytracing {
   private static Raytracer raytracer, universalRaytracer;
   private static final boolean[] PESSIMISTIC_BOOLEAN_ORDER = new boolean[]{false, true};
@@ -162,7 +164,7 @@ public final class Raytracing {
     User user = UserRepository.userOf(player);
     Pose assumedPose = user.meta().movement().pose();
     boolean sneakUncertainty = user.meta().protocol().delayedSneak() &&
-      user.meta().movement().ticksSinceLastSneak <= 1 &&
+      user.meta().movement().ticksPast(SNEAKING) <= 2 &&
       assumedPose == Pose.STANDING;
 
     for (int i = 0; i < 2; i++) {

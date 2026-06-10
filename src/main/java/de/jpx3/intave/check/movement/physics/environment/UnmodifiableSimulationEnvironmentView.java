@@ -1,6 +1,9 @@
 package de.jpx3.intave.check.movement.physics.environment;
 
+import de.jpx3.intave.block.fluid.Fluid;
+import de.jpx3.intave.check.movement.physics.MoveMetric;
 import de.jpx3.intave.check.movement.physics.Pose;
+import de.jpx3.intave.check.movement.physics.Simulation;
 import de.jpx3.intave.player.collider.complex.ColliderResult;
 import de.jpx3.intave.share.BoundingBox;
 import de.jpx3.intave.share.Motion;
@@ -29,6 +32,11 @@ public final class UnmodifiableSimulationEnvironmentView implements SimulationEn
 	@Override
 	public Vector lookVector() {
 		return delegate.lookVector();
+	}
+
+	@Override
+	public void updateMovement(double newPositionX, double newPositionY, double newPositionZ, float newRotationYaw, float newRotationPitch, boolean hasMovement, boolean hasRotation) {
+		throw new UnsupportedOperationException("This environment view is unmodifiable");
 	}
 
 	@Override
@@ -69,6 +77,11 @@ public final class UnmodifiableSimulationEnvironmentView implements SimulationEn
 	@Override
 	public double verifiedPositionZ() {
 		return delegate.verifiedPositionZ();
+	}
+
+	@Override
+	public void setVerifiedPosition(Position position, String reason) {
+		throw new UnsupportedOperationException("This environment view is unmodifiable");
 	}
 
 	@Override
@@ -252,6 +265,11 @@ public final class UnmodifiableSimulationEnvironmentView implements SimulationEn
 	}
 
 	@Override
+	public void setInWater(boolean inWater) {
+		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
+	}
+
+	@Override
 	public boolean inLava() {
 		return delegate.inLava();
 	}
@@ -259,11 +277,6 @@ public final class UnmodifiableSimulationEnvironmentView implements SimulationEn
 	@Override
 	public boolean inWeb() {
 		return delegate.inWeb();
-	}
-
-	@Override
-	public int pastInWeb() {
-		return delegate.pastInWeb();
 	}
 
 	@Override
@@ -377,72 +390,22 @@ public final class UnmodifiableSimulationEnvironmentView implements SimulationEn
 	}
 
 	@Override
-	public int afterRespawnTicks() {
-		return delegate.afterRespawnTicks();
+	public int ticks(MoveMetric metric) {
+		return delegate.ticks(metric);
 	}
 
 	@Override
-	public int pastAnyVelocity() {
-		return delegate.pastAnyVelocity();
+	public int ticksPast(MoveMetric metric) {
+		return delegate.ticksPast(metric);
 	}
 
 	@Override
-	public int pastExternalVelocity() {
-		return delegate.pastExternalVelocity();
-	}
-
-	@Override
-	public int pastNearbyCollisionInaccuracy() {
-		return delegate.pastNearbyCollisionInaccuracy();
-	}
-
-	@Override
-	public void increaseFlyingPacketTicks() {
+	public void activeTick(MoveMetric metric) {
 		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
 	}
 
 	@Override
-	public void increaseEntityUseTicks() {
-		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
-	}
-
-	@Override
-	public void increasePlayerAttackTicks() {
-		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
-	}
-
-	@Override
-	public void increasePushedByWaterFlowTicks() {
-		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
-	}
-
-	@Override
-	public void resetPhysicsPacketRelinkFlyVL() {
-		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
-	}
-
-	@Override
-	public void increasePowderSnowTicks() {
-		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
-	}
-
-	@Override
-	public void resetPowderSnowTicks() {
-		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
-	}
-
-	@Override
-	public void increaseEdgeSneakTickGrants() {
-		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
-	}
-
-	@Override
-	public void increaseVehicleTicks() {
-		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
-	}
-
-	@Override
-	public void resetPushedByWaterFlowTicks() {
+	public void inactiveTick(MoveMetric metric) {
 		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
 	}
 
@@ -474,6 +437,21 @@ public final class UnmodifiableSimulationEnvironmentView implements SimulationEn
 	@Override
 	public double widthRounded() {
 		return delegate.widthRounded();
+	}
+
+	@Override
+	public float eyeHeight() {
+		return delegate.eyeHeight();
+	}
+
+	@Override
+	public Fluid interactingFluid() {
+		return delegate.interactingFluid();
+	}
+
+	@Override
+	public void assumeOccurred(Simulation simulation) {
+		throw new UnsupportedOperationException("Cannot modify unmodifiable view");
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package de.jpx3.intave.player.collider.complex;
 
 import de.jpx3.intave.IntaveControl;
+import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.share.Motion;
 
@@ -88,6 +89,14 @@ public final class ColliderResult {
 
   public double stepHeightThisMove() {
     return yStepHeight;
+  }
+
+  public void applyTo(
+    SimulationEnvironment environment
+  ) {
+    if (environment == null) {
+      throw new IllegalArgumentException("Environment cannot be null");
+    }
   }
 
   public void debugAttach(String key, double value) {

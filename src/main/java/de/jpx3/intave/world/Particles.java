@@ -5,16 +5,17 @@ import de.jpx3.intave.user.User;
 import org.bukkit.Effect;
 import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 public class Particles {
 	public static void spawnVillagerHappyParticleAt(User user, Position position) {
-		World world = user.player().getWorld();
-
+		Player player = user.player();
+		World world = player.getWorld();
 		Object villagerHappyParticle = villagerHappyParticle();
 		if (villagerHappyParticleCacheFailed) {
-			world.playEffect(position.toLocation(world), Effect.HAPPY_VILLAGER, 0);
+			player.playEffect(position.toLocation(world), Effect.HAPPY_VILLAGER, 0);
 		} else {
-			world.spawnParticle(
+			player.spawnParticle(
 				(Particle) villagerHappyParticle,
 				position.toLocation(world), 1
 			);

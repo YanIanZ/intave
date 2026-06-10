@@ -2,22 +2,25 @@ package de.jpx3.intave.block.fluid;
 
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.physics.MaterialMagic;
+import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
 import de.jpx3.intave.share.BlockPosition;
 import de.jpx3.intave.share.BoundingBox;
 import de.jpx3.intave.share.Direction;
 import de.jpx3.intave.share.Motion;
 import de.jpx3.intave.user.User;
-import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.Material;
 import org.bukkit.World;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.WATERFLOW_PUSH;
 import static de.jpx3.intave.share.ClientMath.ceil;
 import static de.jpx3.intave.share.ClientMath.floor;
 
 final class v13Waterflow implements FluidFlow {
   @Override
-  public boolean applyFlowTo(User user, BoundingBox boundingBox) {
-    MovementMetadata movementData = user.meta().movement();
+  public boolean applyFlowTo(
+    User user, SimulationEnvironment environment,
+    Motion baseMotion, BoundingBox boundingBox
+  ) {
     BoundingBox wrappedBoundingBox = boundingBox.shrink(0.001D);
     int minX = floor(wrappedBoundingBox.minX);
     int minY = floor(wrappedBoundingBox.minY);
@@ -63,18 +66,18 @@ final class v13Waterflow implements FluidFlow {
       double d2 = 0.014d;
       waterFlowTotal.multiply(d2);
 
-      if (Math.abs(movementData.baseMotionX) < 0.003D &&
-        Math.abs(movementData.baseMotionZ) < 0.003D &&
+      if (Math.abs(baseMotion.motionX) < 0.003D &&
+        Math.abs(baseMotion.motionZ) < 0.003D &&
         waterFlowTotal.length() < 0.0045000000000000005D
       ) {
         waterFlowTotal.normalize().multiply(0.0045000000000000005D);
       }
 
-      movementData.baseMotionX += waterFlowTotal.motionX;
-      movementData.baseMotionY += waterFlowTotal.motionY;
-      movementData.baseMotionZ += waterFlowTotal.motionZ;
+      baseMotion.motionX += waterFlowTotal.motionX;
+      baseMotion.motionY += waterFlowTotal.motionY;
+      baseMotion.motionZ += waterFlowTotal.motionZ;
 
-      movementData.pastPushedByWaterFlow = 0;
+      environment.activeTick(WATERFLOW_PUSH);
     }
     return inWater;
   }

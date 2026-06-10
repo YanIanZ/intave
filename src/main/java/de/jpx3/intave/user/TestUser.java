@@ -15,6 +15,7 @@ import de.jpx3.intave.module.violation.placeholder.PlayerContext;
 import de.jpx3.intave.module.violation.placeholder.UserContext;
 import de.jpx3.intave.player.collider.complex.Collider;
 import de.jpx3.intave.player.collider.simple.SimpleCollider;
+import de.jpx3.intave.player.meta.IntaveMetadataValue;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.MetadataBundle;
 import de.jpx3.intave.user.permission.PermissionCache;
@@ -38,21 +39,29 @@ final class TestUser implements User {
   private final MetadataBundle meta;
   private final Map<Pose, HitboxSize> poseSizes;
   private final Function<String, Object> callback;
+  private final CustomClientSupportConfig customClientSupportConfig = CustomClientSupportConfig.createDefault();
 
   TestUser(Player player, Function<String, Object> callback) {
     this.player = player;
+
+    Integer protocolVersion = (Integer) callback.apply("protocolVersion");
+    if (protocolVersion == null) {
+      protocolVersion = 0;
+    }
+
+    player.setMetadata("intave.testplayer.gliding", IntaveMetadataValue.of(false));
+    player.setMetadata("intave.testplayer.protocolversion", IntaveMetadataValue.of(protocolVersion));
+
     UUID id = player.getUniqueId();
     if (id != null) {
       this.storage = Storages.emptyPlayerStorageFor(id);
     }
     this.callback = callback;
-    this.meta = new MetadataBundle(null, this);
-    Integer protocolVersion = (Integer) callback.apply("protocolVersion");
-    if (protocolVersion == null) {
-      protocolVersion = 0;
-    }
+    this.meta = new MetadataBundle(player, this);
+
     this.poseSizes = Pose.poseSizesByVersion(protocolVersion);
     meta.setup();
+    meta.movement().setupDefaults();
   }
 
   @Override
@@ -125,7 +134,7 @@ final class TestUser implements User {
 
   @Override
   public CustomClientSupportConfig customClientSupport() {
-    return null;
+    return customClientSupportConfig;
   }
 
   @Override

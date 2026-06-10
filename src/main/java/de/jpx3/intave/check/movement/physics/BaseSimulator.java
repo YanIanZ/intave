@@ -32,6 +32,7 @@ import org.bukkit.util.Vector;
 
 import java.util.Collection;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.*;
 import static de.jpx3.intave.share.ClientMath.clamp_double;
 import static de.jpx3.intave.share.ClientMath.floor;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_14;
@@ -39,73 +40,66 @@ import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_14;
 class BaseSimulator extends Simulator {
   @Override
   public void simulatePreTick(
-    User user, Motion motion,
+    User user, Motion baseMotion,
     SimulationEnvironment environment
   ) {
-    handleSneakInWater(user, environment);
-    updateAquatics(user, environment);
-    simulateMotionClamp(user);
+    handleSneakInWater(user, baseMotion, environment);
+    updateAquatics(user, baseMotion, environment);
+    simulateMotionClamp(user, baseMotion, environment);
   }
 
-  private void updateAquatics(User user, SimulationEnvironment environment) {
-    updateInWater(user);
-    updateInLava(user);
-    environment.updateEyesInWater();
-  }
-
-  private void handleSneakInWater(User user, SimulationEnvironment environment) {
+  private void handleSneakInWater(User user, Motion motion, SimulationEnvironment environment) {
     ProtocolMetadata protocol = user.meta().protocol();
     if (protocol.waterUpdate() && environment.isSneaking() && environment.inWater()) {
-      environment.setBaseMotionY(environment.baseMotionY() - 0.04F);
+      motion.motionY -= 0.04F;
     }
   }
 
-  private void updateInWater(User user) {
+  private void updateAquatics(User user, Motion baseMotion, SimulationEnvironment environment) {
+    updateInWater(user, baseMotion, environment);
+    updateInLava(user, environment);
+    environment.updateEyesInWater();
+  }
+  
+  private void updateInWater(User user, Motion baseMotion, SimulationEnvironment environment) {
     MetadataBundle meta = user.meta();
     ProtocolMetadata clientData = meta.protocol();
-    MovementMetadata movementData = meta.movement();
-    BoundingBox boundingBox = movementData.boundingBox();
+    BoundingBox boundingBox = environment.boundingBox();
     if (!clientData.waterUpdate()) {
       boundingBox = boundingBox.grow(0.0D, -0.4000000059604645D, 0.0D);
     }
     boundingBox = boundingBox.shrink(0.001D);
-    movementData.inWater = user.waterflow().applyFlowTo(user, boundingBox);
-    if (movementData.inWater) {
-      movementData.inWaterSinceFallDamagePostCheck = true;
-      movementData.pastWaterMovement = 0;
-      movementData.artificialFallDistance = 0;
-    }
+    environment.setInWater(user.waterflow().applyFlowTo(user, environment, baseMotion, boundingBox));
   }
 
-  private void updateInLava(User user) {
-    MovementMetadata movementData = user.meta().movement();
-    if (movementData.inLava()) {
-      movementData.pastLavaMovement = 0;
+  private void updateInLava(User user, SimulationEnvironment environment) {
+    if (environment.inLava()) {
+      environment.activeTick(IN_LAVA);
     }
   }
 
   private void simulateMotionClamp(
-    User user
+    User user, Motion baseMotion,
+    SimulationEnvironment environment
   ) {
-    MovementMetadata movementData = user.meta().movement();
-    double resetMotion = movementData.resetMotion();
+    double resetMotion = environment.resetMotion();
 
     if (user.meta().protocol().newMotionClampLogic()) {
-      if (movementData.mutableBaseMotionCopy().horizontalLengthSqr() < 0.000009) {
-        movementData.baseMotionX = 0;
-        movementData.baseMotionZ = 0;
+      if (baseMotion.horizontalLengthSqr() < 0.000009) {
+        baseMotion.motionX = 0;
+        baseMotion.motionZ = 0;
       }
     } else {
-      if (Math.abs(movementData.baseMotionX) < resetMotion) {
-        movementData.baseMotionX = 0.0;
+      if (Math.abs(baseMotion.motionX) < resetMotion) {
+        baseMotion.motionX = 0.0;
       }
-      if (Math.abs(movementData.baseMotionZ) < resetMotion) {
-        movementData.baseMotionZ = 0.0;
+      if (Math.abs(baseMotion.motionZ) < resetMotion) {
+        baseMotion.motionZ = 0.0;
       }
     }
 
-    if (Math.abs(movementData.baseMotionY) < resetMotion) {
-      movementData.baseMotionY = 0.0;
+    if (Math.abs(baseMotion.motionY) < resetMotion) {
+      baseMotion.motionY = 0.0;
     }
   }
 
@@ -142,6 +136,8 @@ class BaseSimulator extends Simulator {
     boolean swimming = pose == Pose.SWIMMING;
     boolean crouching = pose == Pose.CROUCHING;
     boolean waterUpdate = protocol.waterUpdate();
+
+    motion = motion.copy();
 
     if (crouching || (!protocol.beeUpdate() && environment.isSneaking())) {
       double sneakingSpeed = user.meta().abilities().attributeValue("player.sneaking_speed");
@@ -195,7 +191,7 @@ class BaseSimulator extends Simulator {
       } else if (inLava) {
         // #handleJumpLava
         motion.motionY += 0.04F;
-      } else {
+      } else if (environment.lastOnGround()) {
         motion.motionY = user.protocolVersion() >= 768 ?
           Math.max(environment.jumpMotion(), meta.movement().baseMotionY) :
           environment.jumpMotion();
@@ -416,7 +412,7 @@ class BaseSimulator extends Simulator {
       }
     }
     if (interpolations != 0) {
-      movementData.resetFlyingPacketAccurate();
+      movementData.activeTick(FLYING_PACKET_ACCURATE);
     }
   }
 
@@ -441,10 +437,10 @@ class BaseSimulator extends Simulator {
   }
 
   void notePossibleFlyingPacket(User user, ColliderResult collisionResult) {
-    MovementMetadata movementData = user.meta().movement();
+    SimulationEnvironment movementData = user.meta().movement();
     Motion context = collisionResult.motion();
     if (flyingPacket(user, context.motionX, context.motionY, context.motionZ)) {
-      movementData.resetFlyingPacketAccurate();
+      movementData.activeTick(FLYING_PACKET_ACCURATE);
     }
   }
 
@@ -535,7 +531,9 @@ class BaseSimulator extends Simulator {
   private void updateFallStateAfter(User user, double motionY, boolean onGround) {
     MovementMetadata movementData = user.meta().movement();
     if (!movementData.inWater) {
-      updateAquatics(user, movementData);
+      Motion baseMotion = movementData.mutableBaseMotionCopy();
+      updateAquatics(user, baseMotion, movementData);
+      movementData.setBaseMotion(baseMotion);
     }
     if (onGround) {
       movementData.artificialFallDistance = 0;
@@ -815,13 +813,13 @@ class BaseSimulator extends Simulator {
   public void setback(User user, SimulationEnvironment environment, double predictedX, double predictedY, double predictedZ) {
 //    MovementMetadata movement = user.meta().movement();
     ViolationMetadata violationMetadata = user.meta().violationLevel();
-    //    System.out.println("Past external velocity: " + movement.pastExternalVelocity);
+    //    System.out.println("Past external velocity: " + movement.past(EXTERNAL_VELOCITY));
     Vector emulationMotion = new Vector(predictedX, predictedY, predictedZ);
-    int setbackTicks = (environment.pastExternalVelocity() <= 8) ? 8 : ((violationMetadata.physicsVL > 50) ? 3 : 2);
+    int setbackTicks = (environment.ticksPast(EXTERNAL_VELOCITY) <= 8) ? 8 : ((violationMetadata.physicsVL > 50) ? 3 : 2);
     Modules.mitigate()
       .movement()
       .emulationSetBack(
-        user.player(), emulationMotion, setbackTicks, (environment.pastExternalVelocity() > 16)
+        user.player(), emulationMotion, setbackTicks, (environment.ticksPast(EXTERNAL_VELOCITY) > 16)
       );
   }
 }

@@ -1,14 +1,11 @@
 package de.jpx3.intave.user.meta;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.WrappedAttribute;
-import com.comphenix.protocol.wrappers.WrappedAttributeModifier;
 import com.google.common.collect.ImmutableMap;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.module.tracker.player.AbilityTracker;
+import de.jpx3.intave.player.attribute.WrappedAttribute;
+import de.jpx3.intave.player.attribute.WrappedAttributeModifier;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
@@ -70,7 +67,6 @@ public final class AbilityMetadata {
   private void setupDefaultGameMode(GameMode gameMode) {
     if (gameMode == null) {
       IntaveLogger.logger().warn("Player " + player.getName() + " has no game mode set, this is quite dangerous and may lead to unexpected behaviour.");
-//      Thread.dumpStack();
     }
     int gameModeValue = gameMode == null ? -1 : gameMode.getValue();
     this.gameMode = Arrays.stream(AbilityTracker.GameMode.values())
@@ -95,10 +91,10 @@ public final class AbilityMetadata {
 
   private void setupAttribute(String name, double baseValue) {
     name = keyTranslation(name);
-    PacketContainer packet = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.UPDATE_ATTRIBUTES);
+//    PacketContainer packet = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.UPDATE_ATTRIBUTES);
     try {
       WrappedAttribute attribute = WrappedAttribute.newBuilder()
-        .attributeKey(name).baseValue(baseValue).packet(packet).build();
+        .withAttributeKey(name).withBaseValue(baseValue).build();
       attributes.put(name, reduceNumberPrecision(attribute));
       attributeModifiers.put(name, new CopyOnWriteArrayList<>());
     } catch (Exception e) {
@@ -118,7 +114,7 @@ public final class AbilityMetadata {
     if (attribute == null || attributeModifiers == null) {
       return Double.NaN;
     }
-    double x = attribute.getBaseValue();
+    double x = attribute.baseValue();
     double y = 0.0;
     // ProtocolLib code pasted,
     for(int phase = 0; phase < 3; ++phase) {
@@ -148,12 +144,12 @@ public final class AbilityMetadata {
   }
 
   public List<WrappedAttributeModifier> modifiersOf(WrappedAttribute attribute) {
-    return attributeModifiers.get(keyTranslation(attribute.getAttributeKey()));
+    return attributeModifiers.get(keyTranslation(attribute.attributeKey()));
   }
 
   private WrappedAttribute reduceNumberPrecision(WrappedAttribute input) {
-    double baseValue = reducePrecision(input.getBaseValue());
-    return WrappedAttribute.newBuilder(input).baseValue(baseValue).build();
+    double baseValue = reducePrecision(input.baseValue());
+    return WrappedAttribute.newBuilder(input).withBaseValue(baseValue).build();
   }
 
   private static final double REDUCE_APPLIER = 1000d;
@@ -165,10 +161,6 @@ public final class AbilityMetadata {
   public WrappedAttribute findAttribute(String key) {
     key = keyTranslation(key);
     return attributes.get(key);
-  }
-
-  public List<? extends String> attributeKeys() {
-    return new ArrayList<>(attributes.keySet());
   }
 
   private static final boolean KEY_WRAPPED;
@@ -213,7 +205,7 @@ public final class AbilityMetadata {
     key = keyTranslation(key);
     WrappedAttribute attribute = findAttribute(key);
     if (attribute != null) {
-      attributes.put(key, WrappedAttribute.newBuilder(attribute).baseValue(baseValue).build());
+      attributes.put(key, WrappedAttribute.newBuilder(attribute).withBaseValue(baseValue).build());
       List<WrappedAttributeModifier> modifiers = modifiersOf(attribute);
       attributeModifiers.remove(key);
       attributeModifiers.put(key, new ArrayList<>(modifiers));

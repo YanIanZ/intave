@@ -2,20 +2,24 @@ package de.jpx3.intave.block.fluid;
 
 import de.jpx3.intave.block.access.VolatileBlockAccess;
 import de.jpx3.intave.block.physics.MaterialMagic;
+import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
 import de.jpx3.intave.share.*;
 import de.jpx3.intave.user.User;
-import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.WATERFLOW_PUSH;
+
 final class v8Waterflow implements FluidFlow {
   @Override
-  public boolean applyFlowTo(User user, BoundingBox boundingBox) {
+  public boolean applyFlowTo(
+    User user, SimulationEnvironment environment,
+    Motion baseMotion, BoundingBox boundingBox
+  ) {
     Player player = user.player();
     World world = player.getWorld();
-    MovementMetadata movementData = user.meta().movement();
-    int minX = ClientMath.floor(boundingBox.minX);
+	  int minX = ClientMath.floor(boundingBox.minX);
     int minY = ClientMath.floor(boundingBox.minY);
     int minZ = ClientMath.floor(boundingBox.minZ);
     int maxX = ClientMath.floor(boundingBox.maxX + 1.0D);
@@ -46,10 +50,10 @@ final class v8Waterflow implements FluidFlow {
     if (inWater && flowVector != null && flowVector.length() > 0.0D) {
       flowVector.normalize();
       double factor = 0.014D;
-      movementData.baseMotionX += flowVector.motionX * factor;
-      movementData.baseMotionY += flowVector.motionY * factor;
-      movementData.baseMotionZ += flowVector.motionZ * factor;
-      movementData.pastPushedByWaterFlow = 0;
+      baseMotion.motionX += flowVector.motionX * factor;
+      baseMotion.motionY += flowVector.motionY * factor;
+      baseMotion.motionZ += flowVector.motionZ * factor;
+      environment.activeTick(WATERFLOW_PUSH);
     }
     return inWater;
   }

@@ -52,6 +52,8 @@ import java.util.stream.Collectors;
 
 import static de.jpx3.intave.IntaveControl.DUMP_BLOCK_HITBOX_ON_RIGHT_CLICK;
 import static de.jpx3.intave.IntaveControl.REMOVE_PLACED_BLOCKS_WITH_DELAY;
+import static de.jpx3.intave.check.movement.physics.MoveMetric.BLOCK_PLACEMENT;
+import static de.jpx3.intave.check.movement.physics.MoveMetric.NEARBY_COLLISION_INACCURACY;
 
 public final class InteractionEmulator implements EventProcessor {
   private final IntavePlugin plugin;
@@ -168,7 +170,7 @@ public final class InteractionEmulator implements EventProcessor {
       Location verifiedLocation = user.meta().movement().verifiedLocation();
       if (distance(verifiedLocation, blockPosition) < 2
         && blockPosition.getY() < verifiedLocation.getBlockY()) {
-        user.meta().movement().pastNearbyCollisionInaccuracy = 0;
+        user.meta().movement().activeTick(NEARBY_COLLISION_INACCURACY);
       }
 
       Material material = blockStateAccess.typeAt(blockX, blockY, blockZ);
@@ -278,7 +280,7 @@ public final class InteractionEmulator implements EventProcessor {
 
       Material presentType = VolatileBlockAccess.typeAccess(user, blockX, blockY, blockZ);
       int presentVariant = VolatileBlockAccess.variantIndexAccess(user, world, blockX, blockY, blockZ);
-      movement.pastBlockPlacement = 0;
+      movement.activeTick(BLOCK_PLACEMENT);
       blockStates.override(world, blockX, blockY, blockZ, placedBlockType, variant, "PLACE");
       blockStates.invalidateCacheAround(blockX, blockY, blockZ);
       blockStates.lockOverride(blockX, blockY, blockZ);

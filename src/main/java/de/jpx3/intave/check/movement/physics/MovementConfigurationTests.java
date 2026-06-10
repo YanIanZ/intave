@@ -15,7 +15,7 @@ public final class MovementConfigurationTests extends Tests {
     severity = Severity.ERROR
   )
   public void testKeys() {
-    MovementConfiguration conf = MovementConfiguration.noAction();
+    MovementConfiguration conf = MovementConfiguration.blank();
     conf = conf.withReduceTicks(1);
     conf = conf.withForward(1);
     conf = conf.withSprinting();
@@ -96,7 +96,7 @@ public final class MovementConfigurationTests extends Tests {
       assertEquals(0, value.reduceTicks());
     }
 
-    MovementConfiguration configuration = MovementConfiguration.noAction();
+    MovementConfiguration configuration = MovementConfiguration.blank();
     configuration = configuration.withForward(1);
 //    System.out.println(configuration.bitString());
     configuration = configuration.withStrafe(1);

@@ -1,6 +1,7 @@
 package de.jpx3.intave.block.shape.resolve.patch;
 
-import com.comphenix.protocol.utility.MinecraftVersion;
+import de.jpx3.intave.adapter.MinecraftVersion;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.block.shape.BlockShape;
 import de.jpx3.intave.block.shape.BlockShapes;
 import de.jpx3.intave.block.variant.BlockVariant;
@@ -36,10 +37,15 @@ final class HopperPatch extends BlockShapePatch {
   private static final BlockShape LEGACY_SHAPE = BlockShapes.merge(SHAPE_WALLS, BoundingBox.originFromX16(0, 0, 0, 16, 10.0f, 16));
 
   @Override
-  protected BlockShape collisionPatch(World world, Player player, int posX, int posY, int posZ, Material type, int blockState, BlockShape originalShape) {
+  protected BlockShape collisionPatch(
+    World world, Player player,
+    int posX, int posY, int posZ,
+    Material type, int blockState,
+    BlockShape originalShape
+  ) {
     User user = UserRepository.userOf(player);
     if (user.protocolVersion() >= VER_1_13) {
-      if (MinecraftVersion.AQUATIC_UPDATE.atOrAbove()) {
+      if (MinecraftVersions.VER1_13_0.atOrAbove()) {
         return originalShape;
       } else {
         BlockVariant variant = BlockVariantRegister.variantOf(Material.HOPPER, blockState);
@@ -70,7 +76,7 @@ final class HopperPatch extends BlockShapePatch {
         return shape;
       }
     } else {
-      if (MinecraftVersion.AQUATIC_UPDATE.atOrAbove()) {
+      if (MinecraftVersions.VER1_13_0.atOrAbove()) {
         return LEGACY_SHAPE;
       } else {
         return originalShape;

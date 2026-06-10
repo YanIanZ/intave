@@ -18,6 +18,7 @@ import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.test.Severity.ERROR;
+import static org.bukkit.GameMode.SURVIVAL;
 import static org.bukkit.Material.LAVA;
 import static org.bukkit.Material.WATER;
 
@@ -76,6 +77,20 @@ public final class FluidTests extends Tests {
     Player player = FakePlayerFactory.createPlayer((s, objects) -> {
       if (s.equals("getWorld")) {
         return world;
+      }
+      switch (s) {
+        case "isFlying":
+        case "getAllowFlight":
+        case "isSprinting":
+        case "isSneaking":
+          return false;
+        case "getFallDistance":
+          return 0.0f;
+        case "getGameMode":
+          return SURVIVAL;
+        case "getFlySpeed":
+        case "getWalkSpeed":
+          return 0.2f;
       }
       return null;
     });

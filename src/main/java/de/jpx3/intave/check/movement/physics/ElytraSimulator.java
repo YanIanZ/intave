@@ -11,6 +11,7 @@ import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.FLYING_PACKET_ACCURATE;
 import static de.jpx3.intave.share.ClientMath.cos;
 import static de.jpx3.intave.share.ClientMath.sin;
 
@@ -157,7 +158,7 @@ final class ElytraSimulator extends BaseSimulator {
       }
     }
     if (interpolations != 0) {
-      movementData.resetFlyingPacketAccurate();
+      movementData.activeTick(FLYING_PACKET_ACCURATE);
     }
   }
 

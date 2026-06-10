@@ -14,6 +14,7 @@ import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.entity.Player;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
 public final class Constraint extends MetaCheckPart<PlacementAnalysis, Constraint.ConstraintMeta> {
@@ -33,7 +34,7 @@ public final class Constraint extends MetaCheckPart<PlacementAnalysis, Constrain
     MovementMetadata movement = user.meta().movement();
     ConstraintMeta meta = metaOf(user);
 
-    if (movement.lastTeleport == 0) {
+    if (movement.ticksPast(TELEPORT) == 0) {
       return;
     }
 

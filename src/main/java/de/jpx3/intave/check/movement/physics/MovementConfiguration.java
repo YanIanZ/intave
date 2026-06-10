@@ -46,7 +46,7 @@ public class MovementConfiguration {
   public static MovementConfiguration select(
     int forward, int strafe, int reduceTicks, boolean sprint, boolean jumped, boolean handActive, boolean reduceBefore
   ) {
-    MovementConfiguration configuration = noAction();
+    MovementConfiguration configuration = blank();
     configuration = configuration.withForward(forward);
     configuration = configuration.withStrafe(strafe);
     configuration = configuration.withReduceTicks(reduceTicks);
@@ -102,6 +102,14 @@ public class MovementConfiguration {
     }
   }
 
+  public MovementConfiguration pressingW() {
+    return withForward(1);
+  }
+
+  public MovementConfiguration pressingS() {
+    return withForward(-1);
+  }
+
   public MovementConfiguration withStrafe(int strafe) {
     if (strafe < -1 || strafe > 1) {
       throw new IllegalArgumentException("strafe can only be -1, 0, 1");
@@ -116,6 +124,14 @@ public class MovementConfiguration {
       default:
         throw new IllegalStateException("Unexpected value: " + strafe);
     }
+  }
+
+  public MovementConfiguration pressingA() {
+    return withStrafe(-1);
+  }
+
+  public MovementConfiguration pressingD() {
+    return withStrafe(1);
   }
 
   public MovementConfiguration withoutKeypress() {
@@ -205,7 +221,7 @@ public class MovementConfiguration {
     return UNIVERSE[index];
   }
 
-  public static MovementConfiguration noAction() {
+  public static MovementConfiguration blank() {
     return UNIVERSE[0];
   }
 

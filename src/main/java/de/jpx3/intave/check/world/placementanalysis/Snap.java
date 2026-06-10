@@ -17,6 +17,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockPlaceEvent;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.check.world.PlacementAnalysis.COMMON_FLAG_MESSAGE;
 import static de.jpx3.intave.math.MathHelper.formatDouble;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
@@ -37,7 +38,7 @@ public final class Snap extends MetaCheckPart<PlacementAnalysis, Snap.SnapMeta> 
     Player player = event.getPlayer();
     User user = userOf(player);
     MovementMetadata movementData = user.meta().movement();
-    if (movementData.lastTeleport == 0) {
+    if (movementData.ticksPast(TELEPORT) == 0) {
       return;
     }
 
