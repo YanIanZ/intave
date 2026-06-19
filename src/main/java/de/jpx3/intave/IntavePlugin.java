@@ -64,7 +64,7 @@ import de.jpx3.intave.resource.legacy.EncryptedLegacyResource;
 import de.jpx3.intave.security.PlayerListService;
 import de.jpx3.intave.share.FriendlyByteBuf;
 import de.jpx3.intave.share.link.WrapperConverter;
-import de.jpx3.intave.test.TestService;
+import de.jpx3.intave.test.IntegrationTestService;
 import de.jpx3.intave.trustfactor.TrustFactorService;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.storage.LongTermViolationStorage;
@@ -75,7 +75,6 @@ import de.jpx3.intave.version.JavaVersion;
 import de.jpx3.intave.world.border.WorldBorders;
 import de.jpx3.intave.world.chunk.ChunkProviderServerAccess;
 import de.jpx3.intave.world.permission.WorldPermission;
-import de.jpx3.intave.world.raytrace.Raytracing;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -131,7 +130,7 @@ public final class IntavePlugin extends JavaPlugin {
   private ScheduledUploadService uploadService; // module candidate
   private Analytics analytics; // module candidate
   private Metrics metrics;
-  private TestService testService;
+  private IntegrationTestService integrationTestService;
 
   public IntavePlugin() {
     // stage 2
@@ -293,7 +292,6 @@ public final class IntavePlugin extends JavaPlugin {
       HitboxSizeAccess.setup();
       UserRepository.setup();
       WrapperConverter.setup();
-      Raytracing.setup();
       Fluids.setup();
 
       VolatileBlockAccess.setup();
@@ -342,8 +340,8 @@ public final class IntavePlugin extends JavaPlugin {
       fakePlayerEventService = new FakePlayerEventService(this);
       proxyMessenger = new ProxyMessenger(this);
       sibylIntegrationService = new SibylIntegrationService(this);
-      testService = new TestService();
-      testService.setup();
+      integrationTestService = new IntegrationTestService();
+      integrationTestService.setup();
       uploadService = new ScheduledUploadService();
       uploadService.enable();
 

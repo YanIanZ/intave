@@ -54,7 +54,7 @@ dependencies {
   )
 
   testRuntimeOnly("it.unimi.dsi:fastutil:8.5.12")
-  testImplementation("org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT")
+  testImplementation("org.spigotmc:spigot-api:1.21.4-R0.1-SNAPSHOT")
   testImplementation("net.dmulloy2:ProtocolLib:5.4.0")
   testImplementation("io.netty:netty-all:4.2.15.Final")
 
@@ -338,6 +338,10 @@ fun registerPaperRunTask(serverVersion: String, javaVersion: Int) {
     }
     if (serverVersion == "1.21.7") {
       serverJar(File("libs/servers/paper-1.21.7-15.jar"))
+    }
+    downloadPlugins {
+      modrinth("viaversion", "5.9.1")
+      modrinth("viabackwards", "5.9.1")
     }
     runDirectory(File("runs/paper_${serverVersion}-j$javaVersion"))
     jvmArgs("-Dcom.mojang.eula.agree=true")

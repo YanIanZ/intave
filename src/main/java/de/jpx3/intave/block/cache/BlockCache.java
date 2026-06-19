@@ -1,6 +1,7 @@
 package de.jpx3.intave.block.cache;
 
 import de.jpx3.intave.block.shape.BlockShape;
+import de.jpx3.intave.share.BlockPosition;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +21,10 @@ public interface BlockCache {
    */
   @NotNull BlockShape outlineShapeAt(int posX, int posY, int posZ);
 
+  default @NotNull BlockShape outlineShapeAt(BlockPosition position) {
+    return outlineShapeAt(position.getBlockX(), position.getBlockY(), position.getBlockZ());
+  }
+
   /**
    * Resolve-if-not-cached and retrieve the collision shape of the specified block.
    *
@@ -29,6 +34,10 @@ public interface BlockCache {
    * @return the blocks bounding boxes
    */
   @NotNull BlockShape collisionShapeAt(int posX, int posY, int posZ);
+
+  default @NotNull BlockShape collisionShapeAt(BlockPosition position) {
+    return collisionShapeAt(position.getBlockX(), position.getBlockY(), position.getBlockZ());
+  }
 
   /**
    * Resolve-if-not-cached and retrieve the type of the specified block.
@@ -40,6 +49,10 @@ public interface BlockCache {
    */
   @NotNull Material typeAt(int posX, int posY, int posZ);
 
+  default @NotNull Material typeAt(BlockPosition position) {
+    return typeAt(position.getBlockX(), position.getBlockY(), position.getBlockZ());
+  }
+
   /**
    * Resolve-if-not-cached and retrieve the variant index of the specified block.
    *
@@ -49,6 +62,10 @@ public interface BlockCache {
    * @return the blocks variant index
    */
   int variantIndexAt(int posX, int posY, int posZ);
+
+  default int variantIndexAt(BlockPosition position) {
+    return variantIndexAt(position.getBlockX(), position.getBlockY(), position.getBlockZ());
+  }
 
   boolean isClientSpeculatingAt(int posX, int posY, int posZ);
 

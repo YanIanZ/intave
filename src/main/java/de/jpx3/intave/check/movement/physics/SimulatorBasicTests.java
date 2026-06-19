@@ -21,7 +21,7 @@ import java.util.UUID;
 
 import static org.bukkit.GameMode.SURVIVAL;
 
-public final class SimulatorBasicTests extends Tests {
+public final class SimulatorBasicTests extends IntegrationTests {
   private static final UUID EMPTY_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   private User testUser;

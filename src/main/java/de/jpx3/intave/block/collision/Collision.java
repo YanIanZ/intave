@@ -57,15 +57,15 @@ public final class Collision {
   }
 
   public static BlockShape shape(
-    Player player, SimulationEnvironment environment, BoundingBox playerBoundingBox
+    Player player, SimulationEnvironment environment, BoundingBox box
   ) {
     int collisionLimit = scaleAdjustedCollisionLimitOf(UserRepository.userOf(player));
-    return collectCollisionShapes(player, environment, playerBoundingBox, collisionLimit, SHAPE_COMPILATION, BlockShapes::emptyShape);
+    return collectCollisionShapes(player, environment, box, collisionLimit, SHAPE_COMPILATION, BlockShapes::emptyShape);
   }
 
   @Deprecated
-  public static boolean present(Player player, BoundingBox playerBox) {
-    return present(player, UserRepository.userOf(player).meta().movement(), playerBox);
+  public static boolean present(Player player, BoundingBox box) {
+    return present(player, UserRepository.userOf(player).meta().movement(), box);
   }
 
   public static boolean present(Player player, SimulationEnvironment environment, BoundingBox playerBox) {
@@ -320,9 +320,9 @@ public final class Collision {
                 if (blockShape != null && !blockShape.isEmpty()) {
                   if (blockShape.intersectsWith(playerBoundingBox)) {
                     if (resolvedBoundingBoxes == null) {
-                      resolvedBoundingBoxes = new ArrayList<>(blockShape.boundingBoxes());
+                      resolvedBoundingBoxes = new ArrayList<>(blockShape.elementaryBoxes());
                     } else {
-                      resolvedBoundingBoxes.addAll(blockShape.boundingBoxes());
+                      resolvedBoundingBoxes.addAll(blockShape.elementaryBoxes());
                     }
                   }
                 }
@@ -463,7 +463,7 @@ public final class Collision {
     );
   }
 
-  public static <I, C, R> R collectRasterizedCollisions(
+	public static <I, C, R> R collectRasterizedCollisions(
     BoundingBox boundingBox,
     Function<? super BlockPosition, ? extends I> input,
     Predicate<? super I> isFinal,

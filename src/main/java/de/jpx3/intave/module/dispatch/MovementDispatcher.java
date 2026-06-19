@@ -417,8 +417,8 @@ public final class MovementDispatcher extends Module {
     if (IntaveControl.DEBUG_COLLISION_BOXES || user.receives(MessageChannel.DEBUG_COLLISIONS)) {
       BoundingBox box = movementData.boundingBox().grow(0.1);
       BlockShape shape = Collision.shape(player, movementData, box);
-      List<BoundingBox> boundingBoxes = shape.boundingBoxes();
-      boundingBoxes = BlockShapes.mergeBoxes(boundingBoxes).boundingBoxes();
+      List<BoundingBox> boundingBoxes = shape.elementaryBoxes();
+      boundingBoxes = BlockShapes.mergeBoxes(boundingBoxes).elementaryBoxes();
       drawDebugBoxes(user, boundingBoxes);
     }
 
@@ -1189,11 +1189,11 @@ public final class MovementDispatcher extends Module {
       if (isExtending) {
         Modules.feedback().synchronize(player, nothing -> {
           // First off, check if the player is even affected by this
-          NativeVector directionVec = facing.directionVector();
+          RawVector3d directionVec = facing.directionVector();
           BoundingBox pistonCollisionArea = new BoundingBox(0, 0, 0, 1.1f, 1.1f, 1.1f);
-          int expectedPistonX = (int) directionVec.xCoord + blockPosition.getX();
-          int expectedPistonY = (int) directionVec.yCoord + blockPosition.getY();
-          int expectedPistonZ = (int) directionVec.zCoord + blockPosition.getZ();
+          int expectedPistonX = (int) directionVec.x + blockPosition.getX();
+          int expectedPistonY = (int) directionVec.y + blockPosition.getY();
+          int expectedPistonZ = (int) directionVec.z + blockPosition.getZ();
           BoundingBox expandingBlockArea = pistonCollisionArea.offset(expectedPistonX, expectedPistonY, expectedPistonZ);
           boolean playerAffected = expandingBlockArea.intersectsWith(user.meta().movement().boundingBox());
 
@@ -1212,13 +1212,13 @@ public final class MovementDispatcher extends Module {
             switch (facing.axis()) {
               case X_AXIS: {
                 // Magical hack to get the proper bounding box factor
-                float horizontalBoundingBoxFactor = (float) (user.meta().movement().width() / 2f * directionVec.xCoord);
+                float horizontalBoundingBoxFactor = (float) (user.meta().movement().width() / 2f * directionVec.x);
                 movement.pistonHorizontalAllowance = xOffset + horizontalBoundingBoxFactor + 0.05f;
                 break;
               }
               case Z_AXIS: {
                 // Magical hack to get the proper bounding box factor
-                float horizontalBoundingBoxFactor = (float) (user.meta().movement().width() / 2f * directionVec.zCoord);
+                float horizontalBoundingBoxFactor = (float) (user.meta().movement().width() / 2f * directionVec.z);
                 movement.pistonHorizontalAllowance = zOffset + horizontalBoundingBoxFactor + 0.05f;
                 break;
               }

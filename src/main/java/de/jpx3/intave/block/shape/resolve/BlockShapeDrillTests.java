@@ -16,9 +16,7 @@ import org.bukkit.entity.Player;
 import java.util.Collections;
 import java.util.UUID;
 
-import static org.bukkit.GameMode.SURVIVAL;
-
-public final class BlockShapeDrillTests extends Tests {
+public final class BlockShapeDrillTests extends IntegrationTests {
   private Block block;
   private Player player;
   private User user;

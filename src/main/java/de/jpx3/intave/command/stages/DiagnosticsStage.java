@@ -6,11 +6,11 @@ import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.injector.PacketFilterManager;
-import de.jpx3.intave.adapter.MinecraftVersion;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.player.trust.TrustFactor;
+import de.jpx3.intave.adapter.MinecraftVersion;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.block.collision.Collision;
 import de.jpx3.intave.check.Check;
@@ -30,7 +30,8 @@ import de.jpx3.intave.module.nayoro.Nayoro;
 import de.jpx3.intave.module.nayoro.event.AttackEvent;
 import de.jpx3.intave.module.nayoro.event.BlockPlaceEvent;
 import de.jpx3.intave.module.nayoro.event.sink.EventSink;
-import de.jpx3.intave.module.testing.ChestLootProvider;
+import de.jpx3.intave.module.test.ChestLootProvider;
+import de.jpx3.intave.module.test.PhysicsTestRecorder;
 import de.jpx3.intave.module.tracker.player.PacketLogging;
 import de.jpx3.intave.player.DamageModify;
 import de.jpx3.intave.resource.Resource;
@@ -375,6 +376,49 @@ public final class DiagnosticsStage extends CommandStage {
     } catch (Exception exception) {
       exception.printStackTrace();
       user.player().sendMessage("Invalid protocollib version? Error: " + exception.getMessage());
+    }
+  }
+
+  @SubCommand(selectors = "ptr")
+  public void ptrCommand(User user) {
+    PhysicsTestRecorder recorder = Modules.physicsTestRecorder();
+    boolean recording = recorder.isRecording(user);
+    recorder.setRecordingStatus(user, !recording);
+
+    if (!MinecraftVersions.VER1_13_0.atOrAbove()) {
+      user.player().sendMessage(ChatColor.RED + "Physics test recordings have incorrect blockshapes on 1.13 and below");
+    }
+
+    if (recording) {
+      user.player().sendMessage(ChatColor.RED + "Stopped recording physics tests");
+
+      File file;
+      File resourcesFolder = new File(plugin.dataFolder(), "../../../../src/test/resources");
+	    if (resourcesFolder.exists()) {
+        file = new File(
+          resourcesFolder,
+          "/physics_test_runs/pending/" + UUID.randomUUID() + ".ptr"
+        );
+      } else {
+        file = new File(
+          plugin.dataFolder(),
+          "/ptrs/" + UUID.randomUUID() + ".ptr"
+        );
+      }
+      file.getParentFile().mkdirs();
+      try {
+		    recorder.saveRecordingDataTo(user, file);
+	    } catch (IOException e) {
+		    user.player().sendMessage(ChatColor.RED + "Failed to save recording: " + e.getMessage());
+        return;
+      }
+	    try {
+		    user.player().sendMessage(ChatColor.GREEN + "Saved recording to " + file.getCanonicalPath());
+	    } catch (IOException e) {
+		    user.player().sendMessage(ChatColor.GREEN + "Saved recording to " + file.getAbsolutePath());
+	    }
+    } else {
+      user.player().sendMessage(ChatColor.GREEN + "Started recording physics tests");
     }
   }
 

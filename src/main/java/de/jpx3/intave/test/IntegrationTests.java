@@ -2,10 +2,10 @@ package de.jpx3.intave.test;
 
 import java.util.Set;
 
-public abstract class Tests {
+public abstract class IntegrationTests {
   private final String testCode;
 
-  public Tests(String testCode) {
+  public IntegrationTests(String testCode) {
     this.testCode = testCode;
   }
 
@@ -83,6 +83,6 @@ public abstract class Tests {
 
   @Override
   protected final void finalize() {
-    TestService.testClearedByGC(testCode);
+    IntegrationTestService.testClearedByGC(testCode);
   }
 }

@@ -2,6 +2,7 @@ package de.jpx3.intave.packet.reader;
 
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.reflect.StructureModifier;
+import de.jpx3.intave.annotate.Unmodifiable;
 import de.jpx3.intave.share.Motion;
 import org.bukkit.util.Vector;
 
@@ -33,7 +34,7 @@ public class EntityVelocityReader extends EntityReader {
     return packet.getIntegers().read(3) / 8000.0D;
   }
 
-  public Motion motion() {
+  public @Unmodifiable Motion motion() {
     PacketContainer packet = packet();
     Vector vector = packet.getVectors().readSafely(0);
     if (vector != null) {

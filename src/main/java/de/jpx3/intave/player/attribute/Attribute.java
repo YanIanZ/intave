@@ -4,23 +4,23 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public final class WrappedAttribute {
+public final class Attribute {
 	private final String attributeKey;
 	private final double defaultBaseValue;
 	private double baseValue;
-	private final Set<WrappedAttributeModifier> attributeModifiers = new HashSet<>();
+	private final Set<AttributeModifier> attributeModifiers = new HashSet<>();
 
-	public WrappedAttribute(String attributeKey, double defaultBaseValue) {
+	public Attribute(String attributeKey, double defaultBaseValue) {
 		this.attributeKey = attributeKey;
 		this.defaultBaseValue = defaultBaseValue;
 	}
 
-	public static WrappedAttribute fromProtocolLib(
+	public static Attribute fromProtocolLib(
 		com.comphenix.protocol.wrappers.WrappedAttribute attribute
 	) {
-		WrappedAttribute wrappedAttribute = new WrappedAttribute(attribute.getAttributeKey(), attribute.getBaseValue());
+		Attribute wrappedAttribute = new Attribute(attribute.getAttributeKey(), attribute.getBaseValue());
 		wrappedAttribute.baseValue = attribute.getBaseValue();
-		wrappedAttribute.attributeModifiers.addAll(WrappedAttributeModifier.fromProtocolLib(attribute.getModifiers()));
+		wrappedAttribute.attributeModifiers.addAll(AttributeModifier.fromProtocolLib(attribute.getModifiers()));
 		return wrappedAttribute;
 	}
 
@@ -32,7 +32,7 @@ public final class WrappedAttribute {
 		return baseValue;
 	}
 
-	public Set<WrappedAttributeModifier> modifiers() {
+	public Set<AttributeModifier> modifiers() {
 		return Collections.unmodifiableSet(attributeModifiers);
 	}
 
@@ -40,19 +40,19 @@ public final class WrappedAttribute {
 		return new Builder();
 	}
 
-	public static Builder newBuilder(WrappedAttribute wrappedAttribute) {
+	public static Builder newBuilder(Attribute attribute) {
 		return new Builder()
-			.withAttributeKey(wrappedAttribute.attributeKey)
-			.withDefaultBaseValue(wrappedAttribute.defaultBaseValue)
-			.withBaseValue(wrappedAttribute.baseValue)
-			.withAttributeModifiers(wrappedAttribute.attributeModifiers);
+			.withAttributeKey(attribute.attributeKey)
+			.withDefaultBaseValue(attribute.defaultBaseValue)
+			.withBaseValue(attribute.baseValue)
+			.withAttributeModifiers(attribute.attributeModifiers);
 	}
 
 	public static class Builder {
 		private String attributeKey;
 		private double defaultBaseValue;
 		private double baseValue;
-		private final Set<WrappedAttributeModifier> attributeModifiers = new HashSet<>();
+		private final Set<AttributeModifier> attributeModifiers = new HashSet<>();
 
 		public Builder withAttributeKey(String attributeKey) {
 			this.attributeKey = attributeKey;
@@ -69,14 +69,14 @@ public final class WrappedAttribute {
 			return this;
 		}
 
-		public Builder withAttributeModifiers(Set<WrappedAttributeModifier> attributeModifiers) {
+		public Builder withAttributeModifiers(Set<AttributeModifier> attributeModifiers) {
 			this.attributeModifiers.clear();
 			this.attributeModifiers.addAll(attributeModifiers);
 			return this;
 		}
 
-		public WrappedAttribute build() {
-			WrappedAttribute attribute = new WrappedAttribute(attributeKey, defaultBaseValue);
+		public Attribute build() {
+			Attribute attribute = new Attribute(attributeKey, defaultBaseValue);
 			attribute.baseValue = baseValue;
 			attribute.attributeModifiers.addAll(attributeModifiers);
 			return attribute;

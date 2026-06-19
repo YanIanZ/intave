@@ -7,7 +7,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Tester implements Runnable {
+public final class IntegrationTester implements Runnable {
   private Class<?> testClass;
 
   private Method beforeMethod;
@@ -15,7 +15,7 @@ public final class Tester implements Runnable {
 
   private final List<Method> testMethods = new ArrayList<>();
 
-  public Tester(Class<? extends Tests> testClass) {
+  public IntegrationTester(Class<? extends IntegrationTests> testClass) {
     this.testClass = testClass;
   }
 
@@ -57,9 +57,9 @@ public final class Tester implements Runnable {
     Test annotation = testMethod.getAnnotation(Test.class);
     String testCode = annotation.testCode();
 
-    Tests test;
+    IntegrationTests test;
     try {
-      test = (Tests) testClass.newInstance();
+      test = (IntegrationTests) testClass.newInstance();
     } catch (Exception exception) {
       throw new RuntimeException("Failed to instantiate test", exception);
     }

@@ -34,7 +34,14 @@ public final class Resources {
     if (path.startsWith("/")) {
       throw new IllegalArgumentException("Path must not start with a slash");
     }
-    return resourceFromJarWithFallback(path, resourceFromFile(new File("src/main/java/resources/" + path)));
+    return resourceFromJarWithFallback(path, resourceFromFile(new File("src/main/resources/" + path)));
+  }
+
+  public static Resource resourceFromJarOrTestBuild(String path) {
+    if (path.startsWith("/")) {
+      throw new IllegalArgumentException("Path must not start with a slash");
+    }
+    return resourceFromJarWithFallback(path, resourceFromFile(new File("src/test/resources/" + path)));
   }
 
   public static Resource hashProtected(String path, Resource target) {

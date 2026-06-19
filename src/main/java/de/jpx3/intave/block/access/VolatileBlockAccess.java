@@ -91,7 +91,7 @@ public final class VolatileBlockAccess {
   }
 
   public static Block blockAccess(World blockAccess, BlockPosition position) {
-    return blockAccess(blockAccess, position.xCoord, position.yCoord, position.zCoord);
+    return blockAccess(blockAccess, position.x, position.y, position.z);
   }
 
   public static Block blockAccess(World blockAccess, double x, double y, double z) {
@@ -242,7 +242,7 @@ public final class VolatileBlockAccess {
   }
 
   public static BlockShape collisionShapeAccess(User user, BlockPosition position) {
-    return collisionShapeAccess(user, position.xCoord, position.yCoord, position.zCoord);
+    return collisionShapeAccess(user, position.x, position.y, position.z);
   }
 
   public static BlockShape collisionShapeAccess(User user, double x, double y, double z) {

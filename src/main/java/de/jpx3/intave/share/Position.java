@@ -9,16 +9,12 @@ import org.bukkit.util.Vector;
 
 import java.io.Serializable;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static de.jpx3.intave.math.MathHelper.formatDouble;
 import static de.jpx3.intave.share.ClientMath.floor;
 
 public final class Position implements Serializable, Cloneable {
-	private double x;
-	private double y;
-	private double z;
-	private boolean immutable = true;
-
 	public static final StreamCodec<ByteBuf, ByteBuf, Position> STREAM_CODEC = StreamCodec.of(
 		(byteBuf, position) -> {
 			byteBuf.writeDouble(position.x);
@@ -27,6 +23,11 @@ public final class Position implements Serializable, Cloneable {
 		},
 		byteBuf -> new Position(byteBuf.readDouble(), byteBuf.readDouble(), byteBuf.readDouble())
 	);
+
+	private double x;
+	private double y;
+	private double z;
+	private boolean immutable = true;
 
 	public Position() {
 		this(0, 0, 0);
@@ -176,8 +177,8 @@ public final class Position implements Serializable, Cloneable {
 		this.z = z;
 	}
 
-	public NativeVector toNativeVec() {
-		return new NativeVector(x, y, z);
+	public RawVector3d toNativeVec() {
+		return new RawVector3d(x, y, z);
 	}
 
 	public Rotation rotationTo(Position otherPoint) {
@@ -228,6 +229,30 @@ public final class Position implements Serializable, Cloneable {
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null || getClass() != obj.getClass()) {
+			return false;
+		}
+		Position other = (Position) obj;
+		return Double.compare(other.x, x) == 0 && Double.compare(other.y, y) == 0 && Double.compare(other.z, z) == 0;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = 17;
+		long xBits = Double.doubleToLongBits(x);
+		long yBits = Double.doubleToLongBits(y);
+		long zBits = Double.doubleToLongBits(z);
+		result = 31 * result + Long.hashCode(xBits);
+		result = 31 * result + Long.hashCode(yBits);
+		result = 31 * result + Long.hashCode(zBits);
+		return result;
+	}
+
+	@Override
 	public Position clone() throws CloneNotSupportedException {
 		return (Position) super.clone();
 	}
@@ -242,6 +267,15 @@ public final class Position implements Serializable, Cloneable {
 		Position copy = new Position(position.x, position.y, position.z);
 		copy.immutable = false;
 		return copy;
+	}
+
+	public static Position immutableRandom() {
+		ThreadLocalRandom current = ThreadLocalRandom.current();
+		return new Position(
+			current.nextDouble(-1000, 1000),
+			current.nextDouble(-1000, 1000),
+			current.nextDouble(-1000, 1000)
+		);
 	}
 
 	public static Position mutableEmpty() {

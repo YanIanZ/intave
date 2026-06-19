@@ -552,8 +552,8 @@ public final class SetbackSimulator extends Module {
 
   private Vector resolvePushVector(Player player, double positionX, double positionY, double positionZ) {
     BlockPosition blockPosition = new BlockPosition(positionX, positionY, positionZ);
-    double d0 = positionX - blockPosition.xCoord;
-    double d1 = positionZ - blockPosition.zCoord;
+    double d0 = positionX - blockPosition.x;
+    double d1 = positionZ - blockPosition.z;
     Vector vector = new Vector();
     int i = -1;
     double d2 = 9999.0D;

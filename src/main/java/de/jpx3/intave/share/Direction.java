@@ -13,12 +13,12 @@ import static de.jpx3.intave.share.Direction.AxisDirection.NEGATIVE;
 import static de.jpx3.intave.share.Direction.AxisDirection.POSITIVE;
 
 public enum Direction {
-  DOWN(0, 1, -1, "down", NEGATIVE, Y_AXIS, new NativeVector(0, -1, 0)),
-  UP(1, 0, -1, "up", POSITIVE, Y_AXIS, new NativeVector(0, 1, 0)),
-  NORTH(2, 3, 2, "north", NEGATIVE, Z_AXIS, new NativeVector(0, 0, -1)),
-  SOUTH(3, 2, 0, "south", POSITIVE, Z_AXIS, new NativeVector(0, 0, 1)),
-  WEST(4, 5, 1, "west", NEGATIVE, X_AXIS, new NativeVector(-1, 0, 0)),
-  EAST(5, 4, 3, "east", POSITIVE, X_AXIS, new NativeVector(1, 0, 0));
+  DOWN(0, 1, -1, "down", NEGATIVE, Y_AXIS, new RawVector3d(0, -1, 0)),
+  UP(1, 0, -1, "up", POSITIVE, Y_AXIS, new RawVector3d(0, 1, 0)),
+  NORTH(2, 3, 2, "north", NEGATIVE, Z_AXIS, new RawVector3d(0, 0, -1)),
+  SOUTH(3, 2, 0, "south", POSITIVE, Z_AXIS, new RawVector3d(0, 0, 1)),
+  WEST(4, 5, 1, "west", NEGATIVE, X_AXIS, new RawVector3d(-1, 0, 0)),
+  EAST(5, 4, 3, "east", POSITIVE, X_AXIS, new RawVector3d(1, 0, 0));
 
   /**
    * Ordering index for D-U-N-S-W-E
@@ -41,7 +41,7 @@ public enum Direction {
   /**
    * Normalized Vector that points in the direction of this Facing
    */
-  private final NativeVector directionVec;
+  private final RawVector3d directionVec;
   private final Motion directionVecAsMotion;
   private final Vector directionVecAsVector;
 
@@ -56,7 +56,7 @@ public enum Direction {
   private static final Direction[] HORIZONTALS = new Direction[4];
   private static final Map<String, Direction> NAME_LOOKUP = Maps.newHashMap();
 
-  Direction(int indexIn, int oppositeIn, int horizontalIndexIn, String nameIn, Direction.AxisDirection axisDirectionIn, Direction.Axis axisIn, NativeVector directionVecIn) {
+  Direction(int indexIn, int oppositeIn, int horizontalIndexIn, String nameIn, Direction.AxisDirection axisDirectionIn, Direction.Axis axisIn, RawVector3d directionVecIn) {
     this.index = indexIn;
     this.horizontalIndex = horizontalIndexIn;
     this.opposite = oppositeIn;
@@ -296,7 +296,7 @@ public enum Direction {
     Direction enumfacing = NORTH;
     float f = Float.MIN_VALUE;
     for (Direction enumfacing1 : values()) {
-      float f1 = p_176737_0_ * (float) enumfacing1.directionVec.xCoord + p_176737_1_ * (float) enumfacing1.directionVec.yCoord + p_176737_2_ * (float) enumfacing1.directionVec.zCoord;
+      float f1 = p_176737_0_ * (float) enumfacing1.directionVec.x + p_176737_1_ * (float) enumfacing1.directionVec.y + p_176737_2_ * (float) enumfacing1.directionVec.z;
       if (f1 > f) {
         f = f1;
         enumfacing = enumfacing1;
@@ -331,7 +331,7 @@ public enum Direction {
   /**
    * Get a normalized Vector that points in the direction of this Facing.
    */
-  public NativeVector directionVector() {
+  public RawVector3d directionVector() {
     return this.directionVec;
   }
 

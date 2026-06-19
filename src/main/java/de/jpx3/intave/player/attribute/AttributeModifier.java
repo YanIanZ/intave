@@ -1,19 +1,19 @@
 package de.jpx3.intave.player.attribute;
 
-import com.comphenix.protocol.wrappers.MinecraftKey;
+import de.jpx3.intave.share.MinecraftKey;
 
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public final class WrappedAttributeModifier {
+public final class AttributeModifier {
 	private final MinecraftKey key;
 	private final UUID uuid;
 	private final String name;
 	private final Operation operation;
 	private final double amount;
 
-	public WrappedAttributeModifier(
+	public AttributeModifier(
 		MinecraftKey key, UUID uuid,
 		String name, Operation operation,
 		double amount
@@ -25,31 +25,31 @@ public final class WrappedAttributeModifier {
 		this.amount = amount;
 	}
 
-	public MinecraftKey getKey() {
+	public MinecraftKey key() {
 		return key;
 	}
 
-	public UUID getUUID() {
+	public UUID id() {
 		return uuid;
 	}
 
-	public String getName() {
+	public String name() {
 		return name;
 	}
 
-	public Operation getOperation() {
+	public Operation operation() {
 		return operation;
 	}
 
-	public double getAmount() {
+	public double amount() {
 		return amount;
 	}
 
-	public static Set<WrappedAttributeModifier> fromProtocolLib(
+	public static Set<AttributeModifier> fromProtocolLib(
 		Set<com.comphenix.protocol.wrappers.WrappedAttributeModifier> protocolLibModifiers
 	) {
 		return protocolLibModifiers.stream()
-			.map(WrappedAttributeModifier::fromProtocolLib)
+			.map(AttributeModifier::fromProtocolLib)
 			.collect(Collectors.toSet());
 	}
 
@@ -65,20 +65,20 @@ public final class WrappedAttributeModifier {
 		KEY_EXISTS = keyExists;
 	}
 
-	private static WrappedAttributeModifier fromProtocolLib(
+	private static AttributeModifier fromProtocolLib(
 		com.comphenix.protocol.wrappers.WrappedAttributeModifier protocolLibModifier
 	) {
 		if (KEY_EXISTS) {
-			return new WrappedAttributeModifier(
-				protocolLibModifier.getKey(),
+			return new AttributeModifier(
+				MinecraftKey.fromProtocolLib(protocolLibModifier.getKey()),
 				protocolLibModifier.getUUID(),
 				protocolLibModifier.getName(),
 				Operation.fromId(protocolLibModifier.getOperation().getId()),
 				protocolLibModifier.getAmount()
 			);
 		} else {
-			return new WrappedAttributeModifier(
-				new MinecraftKey(protocolLibModifier.getName()),
+			return new AttributeModifier(
+				MinecraftKey.withDefaultNamespace(protocolLibModifier.getName()),
 				protocolLibModifier.getUUID(),
 				protocolLibModifier.getName(),
 				Operation.fromId(protocolLibModifier.getOperation().getId()),
@@ -133,14 +133,14 @@ public final class WrappedAttributeModifier {
 			return this;
 		}
 
-		public WrappedAttributeModifier build() {
+		public AttributeModifier build() {
 			if (name == null || operation == null) {
 				throw new IllegalStateException("Key, name, and operation must be set");
 			}
 			if (key == null) {
 				key = new MinecraftKey("intave", "custom_modifier");
 			}
-			return new WrappedAttributeModifier(key, uuid, name, operation, amount);
+			return new AttributeModifier(key, uuid, name, operation, amount);
 		}
 	}
 

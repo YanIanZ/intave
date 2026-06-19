@@ -632,7 +632,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
       return false;
     }
 //    user.player().sendMessage(interaction.targetBlock() + " ");
-    NativeVector playerEyesNativeVec = playerEyes.toNativeVec();
+    RawVector3d playerEyesNativeVec = playerEyes.toNativeVec();
     List<Position> edges = edgesOf(interaction.targetBlockAsPosition());
     Player player = user.player();
     World world = player.getWorld();
@@ -866,7 +866,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
     } catch (Exception exception) {
       return null;
     }
-    boolean hitMiss = (raycastResult == null || raycastResult.hitVec == NativeVector.ZERO);
+    boolean hitMiss = (raycastResult == null || raycastResult.hitVec == RawVector3d.ZERO);
     BlockPosition raycastVector = hitMiss ? BlockPosition.ORIGIN : raycastResult.getBlockPos();
     Location raycastLocation = raycastVector.toLocation(world);
     Location targetLocation = interaction.targetBlock().toLocation(world);
@@ -1154,7 +1154,7 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
   }
 
   private boolean atLeastLookingAtBlock(User user, Location location, Location targetBlockLocation, MovingObjectPosition movingObjectPosition) {
-    NativeVector hitVec = movingObjectPosition.hitVec;
+    RawVector3d hitVec = movingObjectPosition.hitVec;
     BoundingBox targetBlockBox = new BoundingBox(
       targetBlockLocation.getBlockX(),
       targetBlockLocation.getBlockY(),
@@ -1163,9 +1163,9 @@ public final class InteractionRaytrace extends MetaCheck<InteractionRaytrace.Int
       targetBlockLocation.getBlockY() + 1,
       targetBlockLocation.getBlockZ() + 1
     ).grow(0.1);
-    NativeVector origin = Raytracing.resolvePositionEyes(location, location, user.meta().movement().eyeHeight(), 1f);
-    NativeVector directionVector = hitVec.subtract(origin).normalize().scale(0.2);
-    NativeVector itrVector = origin.scale(1);
+    RawVector3d origin = Raytracing.resolvePositionEyes(location, location, user.meta().movement().eyeHeight(), 1f);
+    RawVector3d directionVector = hitVec.subtract(origin).normalize().scale(0.2);
+    RawVector3d itrVector = origin.scale(1);
     if (targetBlockBox.isVecInside(hitVec)) {
       return true;
     } else {

@@ -6,11 +6,11 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
-public final class ExampleTests extends Tests {
+public final class ExampleIntegrationTests extends IntegrationTests {
   private Block targetBlock;
   private Material priorMaterial;
 
-  public ExampleTests() {
+  public ExampleIntegrationTests() {
     super("EX");
   }
 

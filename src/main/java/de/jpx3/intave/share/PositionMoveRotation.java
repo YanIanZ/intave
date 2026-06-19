@@ -9,7 +9,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.Set;
 
 public final class PositionMoveRotation {
-  public static final StreamCodec<ByteBuf, ByteBuf, PositionMoveRotation> STREAM_CODEC = StreamCodec.forRecord(
+  public static final StreamCodec<ByteBuf, ByteBuf, PositionMoveRotation> STREAM_CODEC = StreamCodec.compound(
     Position.STREAM_CODEC,
     PositionMoveRotation::position,
     Motion.STREAM_CODEC,

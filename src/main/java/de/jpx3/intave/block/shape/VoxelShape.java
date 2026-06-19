@@ -4,9 +4,12 @@ import de.jpx3.intave.block.shape.voxel.IndexMerger;
 import de.jpx3.intave.block.shape.voxel.NonOverlappingGridMerger;
 import de.jpx3.intave.block.shape.voxel.OverlappingGridMerger;
 import de.jpx3.intave.block.shape.voxel.SameIndexMerger;
+import de.jpx3.intave.codec.StreamCodec;
 import de.jpx3.intave.share.*;
+import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.doubles.DoubleSet;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
@@ -17,6 +20,13 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public final class VoxelShape implements BlockShape {
+  private static final BitSet FILLED_BLOCK_BITSET = new BitSet(1);
+  static {
+    FILLED_BLOCK_BITSET.set(0);
+  }
+
+  public static final StreamCodec<ByteBuf, ByteBuf, VoxelShape> STREAM_CODEC = new VoxelShapeCodec();
+
   private final BitSet sectorBits;
 
   private final int xSectors;
@@ -36,11 +46,6 @@ public final class VoxelShape implements BlockShape {
 
   private final boolean immutable;
 
-  private static final BitSet FILLED_BLOCK_BITSET = new BitSet(1);
-  static {
-    FILLED_BLOCK_BITSET.set(0);
-  }
-
   private VoxelShape(
     double minX, double minY, double minZ,
     double maxX, double maxY, double maxZ
@@ -53,7 +58,7 @@ public final class VoxelShape implements BlockShape {
     sectorBits = FILLED_BLOCK_BITSET;
     positionX = positionY = positionZ = 0;
     xFirstFilledSector = yFirstFilledSector = zFirstFilledSector = 0;
-    xLastFilledSector = yLastFilledSector = zLastFilledSector = 0;
+    xLastFilledSector = yLastFilledSector = zLastFilledSector = 1;
   }
 
   private VoxelShape(
@@ -71,6 +76,12 @@ public final class VoxelShape implements BlockShape {
     this.positionY = positionY;
     this.positionZ = positionZ;
     this.immutable = true;
+    this.xFirstFilledSector = copyFrom.xFirstFilledSector;
+    this.yFirstFilledSector = copyFrom.yFirstFilledSector;
+    this.zFirstFilledSector = copyFrom.zFirstFilledSector;
+    this.xLastFilledSector = copyFrom.xLastFilledSector;
+    this.yLastFilledSector = copyFrom.yLastFilledSector;
+    this.zLastFilledSector = copyFrom.zLastFilledSector;
   }
 
   private VoxelShape(
@@ -322,7 +333,7 @@ public final class VoxelShape implements BlockShape {
   @Override
   public BlockRaytrace raytrace(Position origin, Position target) {
     BlockRaytrace raytrace = BlockRaytrace.none();
-    for (BoundingBox boundingBox : boundingBoxes()) {
+    for (BoundingBox boundingBox : elementaryBoxes()) {
       BlockRaytrace newRaytrace = boundingBox.raytrace(origin, target);
       if (raytrace == null) {
         raytrace = newRaytrace;
@@ -339,7 +350,7 @@ public final class VoxelShape implements BlockShape {
   }
 
   @Override
-  public List<BoundingBox> boundingBoxes() {
+  public List<BoundingBox> elementaryBoxes() {
     return collectBoxes(Collectors.toList());
   }
 
@@ -367,7 +378,7 @@ public final class VoxelShape implements BlockShape {
               boolean cont = shapeConsumer.accept(
                 positionOf(Direction.Axis.X_AXIS, xSector),
                 positionOf(Direction.Axis.Y_AXIS, ySector),
-                positionOf(Direction.Axis.Z_AXIS, zStart),
+                positionOf(Direction.Axis.Z_AXIS, zSector),
                 positionOf(Direction.Axis.X_AXIS, xSector + 1),
                 positionOf(Direction.Axis.Y_AXIS, ySector + 1),
                 positionOf(Direction.Axis.Z_AXIS, zSector + 1)
@@ -423,7 +434,9 @@ public final class VoxelShape implements BlockShape {
 
   @Override
   public boolean isCubic() {
-    return xSectors == 1 && ySectors == 1 && zSectors == 1 && this.sectorBits.cardinality() == 3;
+    return xSectors == 1 && ySectors == 1 && zSectors == 1 && this.sectorBits.cardinality() == 1 &&
+      Math.abs(xSectorOffsets[0]) < EPSILON && Math.abs(ySectorOffsets[0]) < EPSILON && Math.abs(zSectorOffsets[0]) < EPSILON &&
+      Math.abs(xSectorOffsets[1] - 1.0D) < EPSILON && Math.abs(ySectorOffsets[1] - 1.0D) < EPSILON && Math.abs(zSectorOffsets[1] - 1.0D) < EPSILON;
   }
 
   private int maxSector(Direction.Axis axis) {
@@ -524,7 +537,7 @@ public final class VoxelShape implements BlockShape {
     int ySectorSize = yMerger.size() - 1;
     int zSectorSize = zMerger.size() - 1;
     BitSet mergedSectors = new BitSet(xSectorSize * ySectorSize * zSectorSize);
-    int[] minBounds = new int[3];
+    int[] minBounds = new int[] { xSectorSize, ySectorSize, zSectorSize };
     int[] maxBounds = new int[3];
     boolean[] yMergeSuccess = new boolean[1];
     boolean[] zMergeSuccess = new boolean[1];
@@ -540,21 +553,21 @@ public final class VoxelShape implements BlockShape {
             int thisIndex = xIndex * ySectorSize * zSectorSize + yIndex * zSectorSize + zIndex;
             mergedSectors.set(thisIndex);
             minBounds[2] = Math.min(minBounds[2], zIndex);
-            maxBounds[2] = Math.max(maxBounds[2], zIndex);
+            maxBounds[2] = Math.max(maxBounds[2], zIndex + 1);
             zMergeSuccess[0] = true;
           }
           return true;
         });
         if (zMergeSuccess[0]) {
           minBounds[1] = Math.min(minBounds[1], yIndex);
-          maxBounds[1] = Math.max(maxBounds[1], yIndex);
+          maxBounds[1] = Math.max(maxBounds[1], yIndex + 1);
           yMergeSuccess[0] = true;
         }
         return true;
       });
       if (yMergeSuccess[0]) {
         minBounds[0] = Math.min(minBounds[0], xIndex);
-        maxBounds[0] = Math.max(maxBounds[0], xIndex);
+        maxBounds[0] = Math.max(maxBounds[0], xIndex + 1);
       }
       return true;
     });
@@ -650,5 +663,41 @@ public final class VoxelShape implements BlockShape {
     }, true);
     builder.append("]");
     return builder.toString();
+  }
+
+  private static class VoxelShapeCodec implements StreamCodec<ByteBuf, ByteBuf, VoxelShape> {
+    @Override
+    public void encode(ByteBuf out, VoxelShape shape) {
+      List<BoundingBox> boxes = new ArrayList<>();
+      shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
+        boxes.add(new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ));
+        return true;
+      }, true);
+      out.writeInt(boxes.size());
+      for (BoundingBox box : boxes) {
+        out.writeDouble(box.minX);
+        out.writeDouble(box.minY);
+        out.writeDouble(box.minZ);
+        out.writeDouble(box.maxX);
+        out.writeDouble(box.maxY);
+        out.writeDouble(box.maxZ);
+      }
+    }
+
+    @Override
+    public VoxelShape decode(ByteBuf in) {
+      int boxCount = in.readInt();
+      List<BoundingBox> boxes = new ArrayList<>(boxCount);
+      for (int i = 0; i < boxCount; i++) {
+        double minX = in.readDouble();
+        double minY = in.readDouble();
+        double minZ = in.readDouble();
+        double maxX = in.readDouble();
+        double maxY = in.readDouble();
+        double maxZ = in.readDouble();
+        boxes.add(new BoundingBox(minX, minY, minZ, maxX, maxY, maxZ));
+      }
+      return fromBoxes(boxes);
+    }
   }
 }

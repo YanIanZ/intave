@@ -1,4 +1,4 @@
-package de.jpx3.intave.module.testing;
+package de.jpx3.intave.module.test;
 
 import de.jpx3.intave.block.type.MaterialSearch;
 import de.jpx3.intave.cleanup.GarbageCollector;

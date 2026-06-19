@@ -1,12 +1,12 @@
 package de.jpx3.intave.check.movement.physics;
 
+import de.jpx3.intave.test.IntegrationTests;
 import de.jpx3.intave.test.Severity;
 import de.jpx3.intave.test.Test;
-import de.jpx3.intave.test.Tests;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class MovementConfigurationTests extends Tests {
+public final class MovementConfigurationTests extends IntegrationTests {
   public MovementConfigurationTests() {
     super("MC");
   }

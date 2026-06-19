@@ -50,8 +50,8 @@ import java.util.stream.Collectors;
 import static de.jpx3.intave.IntaveControl.USE_DEBUG_LOCATE_RESOURCE;
 
 @HighOrderService
-public final class TestService implements EventProcessor {
-  private static final boolean IS_TEST_RUN = "shutdown".equalsIgnoreCase(System.getProperty("intave.test.success"));
+public final class IntegrationTestService implements EventProcessor {
+  private static final boolean IS_INTEGRATION_TEST_RUN = "shutdown".equalsIgnoreCase(System.getProperty("intave.test.success"));
   private static final Resource environmentHashResource = Resources.fileCache("environmentHashes");
   private static final Map<String, Long> supportedEnvironments =
     environmentHashResource.collectLines(
@@ -131,7 +131,7 @@ public final class TestService implements EventProcessor {
   }
 
   public void setup() {
-    if (IS_TEST_RUN) {
+    if (IS_INTEGRATION_TEST_RUN) {
       ShutdownTasks.add(() -> {
         if (!testsWereRun) {
           System.err.println("Tests were not run, but this is a test run.");
@@ -144,7 +144,7 @@ public final class TestService implements EventProcessor {
   }
 
   public void scheduleTestsForFifthTick() {
-    if (!environmentKnown() || IS_TEST_RUN) {
+    if (!environmentKnown() || IS_INTEGRATION_TEST_RUN) {
       Modules.linker().bukkitEvents().registerEventsIn(this);
       Synchronizer.synchronizeDelayed(this::performTests, 5);
     }
@@ -163,13 +163,13 @@ public final class TestService implements EventProcessor {
 
   public void performTests() {
     if (Bukkit.getWorlds().isEmpty()) {
-      IntaveLogger.logger().info("No worlds loaded, delaying self-tests");
+      IntaveLogger.logger().info("No worlds loaded, delaying integration tests");
       loadQueue.add(this::performTests);
       return;
     }
 
     if (IntaveControl.DEBUG_OUTPUT_FOR_TESTS) {
-      IntaveLogger.logger().info("Start self-testing..");
+      IntaveLogger.logger().info("Start integration testing..");
     }
     long start = System.currentTimeMillis();
     try {
@@ -205,7 +205,7 @@ public final class TestService implements EventProcessor {
       IntaveLogger.logger().error("You are hereby advised to report this fault to us before using this version of Intave.");
       IntaveLogger.logger().error("If possible, include the following stacktrace in your report:");
       throwable.printStackTrace();
-      if (IS_TEST_RUN) {
+      if (IS_INTEGRATION_TEST_RUN) {
         IntaveLogger.logger().error("Shutting down server due to test failure");
         BackgroundExecutors.execute(() -> System.exit(1));
       }
@@ -217,9 +217,9 @@ public final class TestService implements EventProcessor {
     if (IntaveControl.DEBUG_OUTPUT_FOR_TESTS) {
       IntaveLogger.logger().info("No problems found after " + MathHelper.formatDouble((System.currentTimeMillis() - start) / 1000d, 1) + "s.");
     } else {
-      IntaveLogger.logger().info("All self-tests completed successfully.");
+      IntaveLogger.logger().info("All integration tests completed successfully.");
     }
-    if (IS_TEST_RUN) {
+    if (IS_INTEGRATION_TEST_RUN) {
       IntaveLogger.logger().info("Shutting down server due to test success");
       Synchronizer.synchronizeDelayed(Bukkit::shutdown, 10);
     }
@@ -245,13 +245,13 @@ public final class TestService implements EventProcessor {
   public boolean environmentKnown() {
 //    System.out.println("Environment hash: " + environmentHash);
 //    System.out.println("Supported environments: " + supportedEnvironments);
-    return supportedEnvironments.containsKey(environmentHash) && !IS_TEST_RUN && !USE_DEBUG_LOCATE_RESOURCE;
+    return supportedEnvironments.containsKey(environmentHash) && !IS_INTEGRATION_TEST_RUN && !USE_DEBUG_LOCATE_RESOURCE;
   }
 
   private static final long MILLIS_IN_A_MONTH = 1000L * 60L * 60L * 24L * 30L;
 
   public void dontCheckThisEnvironmentAgain() {
-    if (IS_TEST_RUN) {
+    if (IS_INTEGRATION_TEST_RUN) {
       return;
     }
     long currentTimeMillis = System.currentTimeMillis();
@@ -263,10 +263,10 @@ public final class TestService implements EventProcessor {
 
   private static int testsInInstance = 0;
 
-  public void performTest(Class<? extends Tests> testsClass) {
+  public void performTest(Class<? extends IntegrationTests> testsClass) {
     try {
       testsInInstance++;
-      new Tester(testsClass).run();
+      new IntegrationTester(testsClass).run();
     } catch (Exception exception) {
       throw new RuntimeException(exception);
     }

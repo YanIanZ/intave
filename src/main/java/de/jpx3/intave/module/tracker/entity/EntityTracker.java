@@ -6,7 +6,6 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import de.jpx3.intave.IntaveControl;
-import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.adapter.MinecraftVersions;
@@ -116,7 +115,7 @@ public final class EntityTracker extends Module {
       int vehicleId = packet.getIntegers().read(0);
       Entity vehicle = UserRepository.userOf(player).meta().connection().entityBy(vehicleId);
       if (vehicle == null) {
-        IntaveLogger.logger().error("Vehicle entity not found in mount request: " + vehicleId);
+//        IntaveLogger.logger().error("Vehicle entity not found in mount request: " + vehicleId);
         detachEntity(user, vehicleId, -1);
         return;
       }

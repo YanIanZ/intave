@@ -33,7 +33,6 @@ public final class ExamplePhysicsTest {
 	private static final UUID EMPTY_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
 	private User testUser;
-	private Player player;
 	private final Collider collider = Colliders.anyCollider();
 	private final FluidFlow waterflow = Fluids.anyWaterflow();
 	private final SimpleCollider simpleCollider = Colliders.anySimpleCollider();
@@ -61,8 +60,8 @@ public final class ExamplePhysicsTest {
 			}
 		);
 
-		Location location = new Location(world, 0, 20, 0);
-		player = FakePlayerFactory.createPlayer(
+		Location location = new Location(world, 0, 50, 0);
+		Player player = FakePlayerFactory.createPlayer(
 			(methodName, args) -> {
 				switch (methodName) {
 					case "getWorld":
@@ -101,12 +100,14 @@ public final class ExamplePhysicsTest {
 	public void playerDoesNotFallThroughPlatform() {
 		Simulator simulator = Simulators.PLAYER;
 		MovementMetadata metadata = testUser.meta().movement();
-		metadata.sneaking = false;
-		MovementConfiguration config = MovementConfiguration.blank().pressingW();
+		metadata.sneaking = true;
+		MovementConfiguration configW = MovementConfiguration.blank().pressingW();
+		MovementConfiguration configS = MovementConfiguration.blank().pressingS();
 
-		for (int i = 0; i < 150; i++) {
-			simulator.simulate(testUser, metadata, config);
-			System.out.println(metadata.position() + " " + metadata.motion());
+		for (int i = 0; i < 500; i++) {
+			simulator.simulate(testUser, metadata, i % 2 == 1 ? configW : configS);
+
+			System.out.println(metadata.position() + " " + metadata.mutableBaseMotionCopy());
 			assertTrue(
 				metadata.verifiedPositionY() >= 1.0,
 				"Player fell through the platform at tick " + i + ": " + metadata.verifiedPosition()

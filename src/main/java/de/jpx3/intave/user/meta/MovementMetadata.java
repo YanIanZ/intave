@@ -27,8 +27,8 @@ import de.jpx3.intave.module.tracker.entity.Entity;
 import de.jpx3.intave.packet.Relative;
 import de.jpx3.intave.player.Effects;
 import de.jpx3.intave.player.ItemProperties;
-import de.jpx3.intave.player.attribute.WrappedAttribute;
-import de.jpx3.intave.player.attribute.WrappedAttributeModifier;
+import de.jpx3.intave.player.attribute.Attribute;
+import de.jpx3.intave.player.attribute.AttributeModifier;
 import de.jpx3.intave.player.collider.complex.ColliderResult;
 import de.jpx3.intave.share.*;
 import de.jpx3.intave.share.Rotation;
@@ -47,12 +47,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static de.jpx3.intave.IntaveControl.REPLACE_JOAP_SETBACK_WITH_CM;
 import static de.jpx3.intave.check.movement.physics.MoveMetric.*;
 import static de.jpx3.intave.check.movement.physics.MovementCharacteristics.resolveFriction;
-import static de.jpx3.intave.player.attribute.WrappedAttributeModifier.Operation.ADD_PERCENTAGE;
+import static de.jpx3.intave.player.attribute.AttributeModifier.Operation.ADD_PERCENTAGE;
 import static de.jpx3.intave.share.ClientMath.*;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.*;
 
 public final class MovementMetadata implements SimulationEnvironment {
-  public static final WrappedAttributeModifier SPRINTING_MODIFIER = WrappedAttributeModifier.newBuilder(
+  public static final AttributeModifier SPRINTING_MODIFIER = AttributeModifier.newBuilder(
     UUID.fromString("662A6B8D-DA3E-4C1C-8813-96EA6097278D")
   ).withAmount(0.3F).withOperation(ADD_PERCENTAGE).withName("Sprint Boost").build();
   private static final boolean ELYTRA_ENABLED = MinecraftVersions.VER1_9_0.atOrAbove();
@@ -713,7 +713,11 @@ public final class MovementMetadata implements SimulationEnvironment {
   }
 
   private float jumpUpwardsMotion() {
-    return hasJumpFactor ? 0.42f * jumpFactor() : 0.42f;
+	  float jumpStrength = (float) user.meta().abilities().attributeValue("generic.jump_strength");
+    if (Float.isNaN(jumpStrength) || jumpStrength < 0 || jumpStrength > 32) {
+      jumpStrength = 0.42f;
+    }
+    return hasJumpFactor ? jumpStrength * jumpFactor() : jumpStrength;
   }
 
   private float jumpFactor() {
@@ -968,9 +972,9 @@ public final class MovementMetadata implements SimulationEnvironment {
     activeTick(SPRINT_CHANGE);
 //    this.sprinting = false;
     AbilityMetadata abilities = user.meta().abilities();
-    WrappedAttribute movementSpeed = abilities.findAttribute("generic.movementSpeed");
+    Attribute movementSpeed = abilities.findAttribute("generic.movementSpeed");
 
-    List<WrappedAttributeModifier> movementSpeedModifiers = abilities.modifiersOf(movementSpeed);
+    List<AttributeModifier> movementSpeedModifiers = abilities.modifiersOf(movementSpeed);
     if (sprinting) {
       if (!movementSpeedModifiers.contains(SPRINTING_MODIFIER)) {
         movementSpeedModifiers.add(SPRINTING_MODIFIER);
