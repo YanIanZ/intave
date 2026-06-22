@@ -90,6 +90,7 @@ check:
       rotation-sensitivity: -1 # aimbot GCD desync (disabled by default; tune per server, see docs)
       rotation-reset: 3       # silent-aim: snap onto target then reset the view
       rotation-constant-speed: 0 # linear-aim: robotically constant turn velocity (0 = observe/corroborate-only; raise after tuning)
+      aim-smoothing: 0        # aimbot: robotically constant ease/smoothing factor toward the target (0 = observe/corroborate-only; raise after tuning)
 
       # Other
       inventory-rotations: 2  # inventory-aura: rotating while a container screen is open
@@ -100,6 +101,7 @@ check:
       tool-switch: 3 # prevents slot switches while breaking blocks
       fast-swap: 0 # auto-swap / weapon-combo macro: weapon swaps faster than one per tick (0 = observe/corroborate-only; raise after tuning)
       mace-fall-distance: 5 # mace smash with more server fall distance than its airtime physically allows (hard terminal-velocity invariant, 1.21+)
+      multi-aura: 0 # switch-aura: attacks land on distinct entities within one tick (0 = observe/corroborate-only; raise after tuning)
 
       # Meta
       # Escalates when several DISTINCT heuristics above corroborate on the same player within a

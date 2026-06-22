@@ -36,6 +36,8 @@ public enum HeuristicsClassicType {
   ROTATION_MODULO_RESET("rotation-reset"),
   /** Linear-aim / aimbot: angular (yaw) velocity stays robotically constant while tracking. */
   ROTATION_CONSTANT_SPEED("rotation-constant-speed"),
+  /** Aim-smoothing / aimbot: the per-tick ease ratio toward the target stays robotically constant. */
+  AIM_SMOOTHING("aim-smoothing"),
   /** Inventory-aura: sends look packets carrying rotation while an inventory screen is open. */
   INVENTORY_ROTATIONS("inventory-rotations"),
   /** Block-hit / fast-use (1.8): abuses sword blocking timing to gain defensive frames. */
@@ -52,6 +54,8 @@ public enum HeuristicsClassicType {
   FAST_SWAP("fast-swap"),
   /** Mace fall-distance spoof: a smash hit with more server fall distance than its airtime allows. */
   MACE_FALL_DISTANCE("mace-fall-distance"),
+  /** Multi-aura / switch-aura: attacks land on distinct entities within a single tick (super-human). */
+  MULTI_AURA("multi-aura"),
   /**
    * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
    * window. Independent detectors agreeing is far stronger evidence than one repeating, so this

@@ -55,12 +55,14 @@ public final class Heuristics extends Check {
     appendCheckPart(new RotationSensitivityHeuristic(this));
     appendCheckPart(new RotationModuloResetHeuristic(this));
     appendCheckPart(new RotationConstantSpeedHeuristic(this));
+    appendCheckPart(new AimSmoothingHeuristic(this));
     appendCheckPart(new PreAttackHeuristic(this));
 
     appendCheckPart(new AttackRequiredHeuristic(this));
     appendCheckPart(new ToolSwitchHeuristic(this));
     appendCheckPart(new FastSwapHeuristic(this));
     appendCheckPart(new MaceFallDistanceHeuristic(this));
+    appendCheckPart(new MultiAuraHeuristic(this));
 
     appendCheckPart(new PacketOrderSwingHeuristic(this));
     appendCheckPart(new PacketPlayerActionToggleHeuristic(this));

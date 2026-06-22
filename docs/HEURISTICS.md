@@ -32,6 +32,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `RotationSensitivityHeuristic` | `rotation-sensitivity` | aimbot | GCD of pitch deltas loses the stable step a real mouse sensitivity produces | all (**disabled by default**) |
 | `RotationModuloResetHeuristic` | `rotation-reset` | silent-aim | Snap onto target then a large jump back off it | all |
 | `RotationConstantSpeedHeuristic` | `rotation-constant-speed` | linear-aim / aimbot | Robotically uniform yaw velocity (low CV) while tracking; ships at `0` (observe) | all |
+| `AimSmoothingHeuristic` | `aim-smoothing` | aim-smoothing aimbot | Per-tick ease ratio toward the target stays robotically constant (low CV) while decelerating in; ships at `0` (observe) | all |
 | `PacketInventoryHeuristic` | `inventory-rotations` | inventory-aura / auto-item | Rotation sent while inventory open; open+close within one tick | all |
 | `BlockingHeuristic` | `blocking` | 1.8 block-hit | Illegitimate sword block/unblock timing | **1.8 only** |
 | `NoSwingHeuristic` | `no-swing` | no-swing aura | Attack lands in a tick with no arm-animation | all |
@@ -40,6 +41,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `ToolSwitchHeuristic` | `tool-switch` | auto-tool | Automated held-slot swap mid block-break | all |
 | `FastSwapHeuristic` | `fast-swap` | auto-swap / weapon-combo macro | In-combat weapon swaps faster than one per tick (mace/trident/spear-aware); ships at `0` (observe) | all |
 | `MaceFallDistanceHeuristic` | `mace-fall-distance` | mace fall-distance spoof | Smash hit whose server fall distance needs more airtime than terminal velocity allows (`fall / 4.0 > ticks since ground`) | **1.21+** |
+| `MultiAuraHeuristic` | `multi-aura` | switch-aura / multi-target aura | Attacks land on *distinct* entities within a single tick (sustained); ships at `0` (observe) | all |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
 | `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree within a short window (decaying, graded) | all |
 
@@ -84,6 +86,18 @@ all-or-nothing model, with no per-check threshold retuning (`1.0` reproduces the
 confidence quickly while isolated ones fade on their own — replacing the ad-hoc "+N on suspicion,
 −x otherwise" counters checks used to hand-roll. `consumeIfAtLeast(threshold)` is the idiomatic
 "release a flag whenever enough evidence has piled up, carrying the remainder forward".
+
+### Online statistics — `RollingStatistics`
+
+Many heuristics ask "how uniform is this sequence of measurements?" (turn speeds, aim step-ratios,
+inter-click intervals). `RollingStatistics` is the engine's reusable accumulator for that: it folds
+each sample into a running mean, variance, standard deviation and **coefficient of variation** using
+Welford's numerically-stable, constant-memory online algorithm. Checks `accept(...)` samples as
+packets arrive and read the derived statistic when their window is full — no growing `List`, no
+second pass, and no copy-pasted loop. `RotationConstantSpeedHeuristic` and `AimSmoothingHeuristic`
+both build on it; new "how robotic is this stream?" checks should too rather than hand-rolling a
+variance loop. By convention `coefficientOfVariation()` returns `Double.MAX_VALUE` for a
+non-positive mean, so a *low* value unambiguously means "robotically uniform".
 
 ### Cross-heuristic corroboration — `ConfidenceLedger`
 

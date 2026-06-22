@@ -1,11 +1,11 @@
 package de.jpx3.intave.check.combat.heuristics.combatpatterns.rotation;
 
 import com.comphenix.protocol.events.PacketEvent;
-import com.google.common.collect.Lists;
 import de.jpx3.intave.check.combat.Heuristics;
 import de.jpx3.intave.check.combat.heuristics.ClassicHeuristic;
 import de.jpx3.intave.check.combat.heuristics.ConfidenceBuffer;
 import de.jpx3.intave.check.combat.heuristics.HeuristicsClassicType;
+import de.jpx3.intave.check.combat.heuristics.RollingStatistics;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
@@ -16,8 +16,6 @@ import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import de.jpx3.intave.user.meta.MetadataBundle;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.entity.Player;
-
-import java.util.List;
 
 import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.LOOK;
@@ -82,13 +80,13 @@ public final class RotationConstantSpeedHeuristic extends ClassicHeuristic<Rotat
     }
 
     ConstantSpeedMeta heuristicMeta = metaOf(user);
-    heuristicMeta.yawSpeeds.add(yawSpeed);
-    if (heuristicMeta.yawSpeeds.size() < WINDOW) {
+    heuristicMeta.yawSpeeds.accept(yawSpeed);
+    if (heuristicMeta.yawSpeeds.count() < WINDOW) {
       return;
     }
 
-    double cv = coefficientOfVariation(heuristicMeta.yawSpeeds);
-    heuristicMeta.yawSpeeds.clear();
+    double cv = heuristicMeta.yawSpeeds.coefficientOfVariation();
+    heuristicMeta.yawSpeeds.reset();
 
     long now = System.currentTimeMillis();
     if (cv < CV_THRESHOLD) {
@@ -103,26 +101,8 @@ public final class RotationConstantSpeedHeuristic extends ClassicHeuristic<Rotat
     }
   }
 
-  private double coefficientOfVariation(List<Float> values) {
-    double sum = 0;
-    for (float value : values) {
-      sum += value;
-    }
-    double mean = sum / values.size();
-    if (mean <= 0) {
-      return Double.MAX_VALUE;
-    }
-    double squared = 0;
-    for (float value : values) {
-      double delta = value - mean;
-      squared += delta * delta;
-    }
-    double standardDeviation = Math.sqrt(squared / values.size());
-    return standardDeviation / mean;
-  }
-
   public static final class ConstantSpeedMeta extends CheckCustomMetadata {
-    private final List<Float> yawSpeeds = Lists.newArrayList();
+    private final RollingStatistics yawSpeeds = new RollingStatistics();
     private final ConfidenceBuffer evidence = new ConfidenceBuffer(BUFFER_HALF_LIFE_MILLIS);
   }
 }
