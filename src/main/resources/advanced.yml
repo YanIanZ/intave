@@ -89,6 +89,7 @@ check:
       rotation-snap: 5        # aimbot: instant yaw snap not mirrored by movement
       rotation-sensitivity: -1 # aimbot GCD desync (disabled by default; tune per server, see docs)
       rotation-reset: 3       # silent-aim: snap onto target then reset the view
+      rotation-constant-speed: 0 # linear-aim: robotically constant turn velocity (0 = observe/corroborate-only; raise after tuning)
 
       # Other
       inventory-rotations: 2  # inventory-aura: rotating while a container screen is open

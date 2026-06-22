@@ -34,6 +34,8 @@ public enum HeuristicsClassicType {
   ROTATION_SENSITIVITY("rotation-sensitivity"),
   /** Silent-aim: rotation snaps to the target then resets back to the player's view angle. */
   ROTATION_MODULO_RESET("rotation-reset"),
+  /** Linear-aim / aimbot: angular (yaw) velocity stays robotically constant while tracking. */
+  ROTATION_CONSTANT_SPEED("rotation-constant-speed"),
   /** Inventory-aura: sends look packets carrying rotation while an inventory screen is open. */
   INVENTORY_ROTATIONS("inventory-rotations"),
   /** Block-hit / fast-use (1.8): abuses sword blocking timing to gain defensive frames. */

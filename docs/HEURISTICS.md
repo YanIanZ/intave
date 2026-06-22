@@ -31,6 +31,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `RotationSnapHeuristic` | `rotation-snap` | aimbot | Single-tick yaw spike framed by stillness, not mirrored by movement keys ("silent move") | all |
 | `RotationSensitivityHeuristic` | `rotation-sensitivity` | aimbot | GCD of pitch deltas loses the stable step a real mouse sensitivity produces | all (**disabled by default**) |
 | `RotationModuloResetHeuristic` | `rotation-reset` | silent-aim | Snap onto target then a large jump back off it | all |
+| `RotationConstantSpeedHeuristic` | `rotation-constant-speed` | linear-aim / aimbot | Robotically uniform yaw velocity (low CV) while tracking; ships at `0` (observe) | all |
 | `PacketInventoryHeuristic` | `inventory-rotations` | inventory-aura / auto-item | Rotation sent while inventory open; open+close within one tick | all |
 | `BlockingHeuristic` | `blocking` | 1.8 block-hit | Illegitimate sword block/unblock timing | **1.8 only** |
 | `NoSwingHeuristic` | `no-swing` | no-swing aura | Attack lands in a tick with no arm-animation | all |
