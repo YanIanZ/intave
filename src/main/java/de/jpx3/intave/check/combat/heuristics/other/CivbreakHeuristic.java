@@ -13,18 +13,25 @@ import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.BLOCK_DIG;
 
+/**
+ * Cancels "civbreak", a fast-break exploit that abuses a server bug.
+ *
+ * <p>Civbreak instant-breaks a block on a position where a block was already destroyed by sending
+ * additional {@code STOP_DESTROY_BLOCK} packets without the preceding {@code START_DESTROY_BLOCK}.
+ * This heuristic tracks the mining state and drops the rogue stop packets so the duplicate break
+ * never reaches the server.
+ *
+ * <p><b>Version scope:</b> reliable only below 1.14 ({@code protocolVersion() < VER_1_14}). From
+ * 1.14 onward the client legitimately omits the start packet when breaking the same block
+ * repeatedly, so the two cases can no longer be told apart from the dig packets alone — see the
+ * inline TODO. Unlike the other entries here this is a pure mitigation (no violation level), so it
+ * extends {@link MetaCheckPart} directly rather than {@code ClassicHeuristic}.
+ */
 public final class CivbreakHeuristic extends MetaCheckPart<Heuristics, CivbreakHeuristic.CivbreakMeta> {
 
   public CivbreakHeuristic(Heuristics parentCheck) {
     super(parentCheck, CivbreakMeta.class);
   }
-
-  /*
-  What is civbreak?
-  Civbreak abuses a server bug where you can instant break a block on a block position where you
-  already destroyed one block. So civbreak only sends multiple STOP_DESTROY_BLOCK packets after the
-  player destroyed the block once.
-   */
   @PacketSubscription(
     packetsIn = {
       BLOCK_DIG

@@ -11,7 +11,8 @@ import org.bukkit.entity.Player;
 import java.util.*;
 
 public final class ProtocolMetadata {
-  public static int VER_26_1_1 = 775; // 26.1.1
+  public static int VER_26_2 = 776; // 26.2
+  public static int VER_26_1_1 = 775; // 26.1.1 (26.1.2 is a hotfix sharing this protocol)
   public static int VER_1_21_5 = 770; // 1.21.5
   public static int VER_1_21_3 = 768; // 1.21.3
   public static int VER_1_21 = 767; // 1.21
@@ -189,6 +190,9 @@ public final class ProtocolMetadata {
   }
 
   public boolean useItemMovementPacket() {
+    // The item-use state was piggy-backed onto movement packets between 1.17 and 1.21.5.
+    // From 1.21.6 onwards (including the 26.x line up to 26.2) the dedicated input packet
+    // carries this state instead, see #sendsInputs(), so the legacy path is bounded above.
     return protocolVersion >= VER_1_17 && protocolVersion <= VER_1_21_5;
   }
 
@@ -256,6 +260,12 @@ public final class ProtocolMetadata {
     return protocolVersion >= VER_1_20_2 && MinecraftVersions.VER1_20_2.atOrAbove();
   }
 
+  /**
+   * Since 1.21.3 the client streams its raw movement key inputs (forward/strafe/jump/sneak/
+   * sprint) in a dedicated input packet. All releases on the 26.x line up to and including
+   * 26.2 keep doing so, which lets the rotation heuristics read real key states instead of
+   * deriving them from motion.
+   */
   public boolean sendsInputs() {
     return protocolVersion >= VER_1_21_3;
   }

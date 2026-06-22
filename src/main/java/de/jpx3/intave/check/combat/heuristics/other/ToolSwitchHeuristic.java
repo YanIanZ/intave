@@ -16,6 +16,16 @@ import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
+/**
+ * Detects auto-tool: the automated held-slot swap performed mid block-break by fast-break cheats.
+ *
+ * <p>Auto-tool selects the optimal tool the instant a break starts and silently switches back,
+ * something a human cannot do within a single tick. The heuristic tracks the ticks since the last
+ * {@code START}/{@code STOP_DESTROY_BLOCK} action; a slot change one tick after a break starts,
+ * paired with a return to the original slot one tick around the break stopping, is the auto-tool
+ * fingerprint. It buffers a few occurrences before flagging and, if the pattern keeps recurring,
+ * applies a light damage nerf.
+ */
 public class ToolSwitchHeuristic extends ClassicHeuristic<ToolSwitchHeuristic.ToolSwitchHeuristicMeta> {
   public ToolSwitchHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.TOOL_SWITCH, ToolSwitchHeuristicMeta.class);

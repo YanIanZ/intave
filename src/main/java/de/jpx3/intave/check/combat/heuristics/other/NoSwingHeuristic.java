@@ -16,6 +16,18 @@ import org.bukkit.entity.Player;
 import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
+/**
+ * Detects "no-swing" combat hacks that deal damage without the visible arm-animation packet.
+ *
+ * <p>The vanilla client always emits an arm-animation (swing) packet alongside an attack. No-swing
+ * (a popular aura toggle that hides the swing so the attacker looks idle) sends the attack without
+ * it. Working per client tick, this heuristic counts swings and attacks; if an attack lands in a
+ * tick that carried no swing it flags and cancels the hit ({@code AttackNerfStrategy.CANCEL}),
+ * which both stops the exploit and avoids rewarding it.
+ *
+ * <p>Outdated (ViaVersion-translated) clients are skipped because the proxy can reorder or drop
+ * the swing packet, which would otherwise cause false positives.
+ */
 public final class NoSwingHeuristic extends ClassicHeuristic<NoSwingHeuristic.NoSwingMeta> {
 
   public NoSwingHeuristic(Heuristics parentCheck) {

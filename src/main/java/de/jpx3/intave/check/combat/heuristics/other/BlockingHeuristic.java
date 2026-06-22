@@ -28,6 +28,25 @@ import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_9;
 
+/**
+ * Detects illegitimate sword-blocking timing ("block-hit" / fast-block) on the 1.8 combat model.
+ *
+ * <p>1.8 sword blocking grants a damage reduction while the use-item is held. Cheats abuse this by
+ * toggling block/unblock around their own attacks faster than the client allows, so they are
+ * defended on virtually every tick. The heuristic watches the {@code RELEASE_USE_ITEM} /
+ * {@code BLOCK_PLACE} packet dance and flags several distinct abuses:
+ * <ul>
+ *   <li>unblocking on the very same tick a block began (no client ticks in between);</li>
+ *   <li>multiple blocking interactions inside one tick;</li>
+ *   <li>too few packets between successive block-toggle packets.</li>
+ * </ul>
+ * Each abuse applies a blocking nerf and, for the instant-unblock case, force-clears the blocking
+ * state via the entity data-watcher.
+ *
+ * <p>Scope: the legacy blocking mechanic is 1.8-only, so the relevant branches gate on
+ * {@code flyingPacketsAreSent()} / {@code protocolVersion() < VER_1_9}. On 1.9+ the shield (a
+ * separate item-use) is handled by the simulation checks, not here.
+ */
 public final class BlockingHeuristic extends ClassicHeuristic<BlockingHeuristic.BlockingMeta> {
 
 	public BlockingHeuristic(Heuristics parentCheck) {

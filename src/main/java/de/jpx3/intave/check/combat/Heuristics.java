@@ -17,6 +17,21 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Aggregating combat check that hosts every "classic" (on-premise) heuristic.
+ *
+ * <p>Unlike Intave's deterministic simulation checks, which prove a client broke the rules,
+ * the heuristics gathered here detect the <i>statistical fingerprints</i> that combat cheats
+ * (kill-aura, aimbot, auto-clicker, auto-blocker, scaffold-assist, …) leave behind. Each
+ * registered {@link de.jpx3.intave.check.combat.heuristics.ClassicHeuristic} contributes to a
+ * single, shared and decaying violation level so that independent weak signals can compound
+ * into a confident detection before any mitigation or punishment is applied.
+ *
+ * <p>The per-heuristic violation weights and the escalation thresholds are read from
+ * {@code heuristics.classic.*}; see {@link HeuristicsClassicType} for the mapping. All
+ * heuristics target the full supported protocol span (1.7 – 26.2); version-specific
+ * restrictions are documented on the individual heuristic classes.
+ */
 public final class Heuristics extends Check {
   private final Map<HeuristicsClassicType, Integer> classicViolationLevelMap = new HashMap<>();
 

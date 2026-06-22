@@ -19,6 +19,19 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION_LOOK;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_9;
 
+/**
+ * Detects sprint-reset cheats that keep sprinting while attacking on the 1.8 knock-back model.
+ *
+ * <p>On 1.8, attacking while sprinting cancels the sprint (the "sprint reset") so the attacker
+ * doesn't push the target away with the sprint knock-back bonus on follow-up hits. Cheats ignore
+ * this reset to maximise knock-back. The heuristic looks for a player who stays sprinting across
+ * an attack tick yet does not apply the expected attack-reduce slowdown.
+ *
+ * <p><b>Status:</b> experimental and currently <i>not registered</i> in
+ * {@link de.jpx3.intave.check.combat.Heuristics} — knock-back/sprint enforcement is presently
+ * handled by the movement simulation. Kept for reference; only meaningful below 1.9
+ * ({@code protocolVersion() < VER_1_9}).
+ */
 public final class AttackReduceIgnoreHeuristic extends MetaCheckPart<Heuristics, AttackReduceIgnoreHeuristic.AttackReduceMeta> {
   private final IntavePlugin plugin;
 

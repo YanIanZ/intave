@@ -74,24 +74,27 @@ check:
     # Sets the violation level increases for each classic check type.
     # - The number must be an integer and -1 disables the checks
     # - 0 keeps the check activated and combat nerfers will be applied but no violations are added
+    # All classic heuristics apply across the supported protocol range (1.7 through 26.2). A few
+    # are bound to a narrower range because the packet they rely on only exists there; see the
+    # per-check notes below and docs/HEURISTICS.md for the detection rationale of each entry.
     classic:
       # Attack Heuristics
-      attack-accuracy: 4
-      attack-required: 3
-      pre-attack: 4
+      attack-accuracy: 4   # auto-clicker / aura: implausibly high long-term hit accuracy
+      attack-required: 3   # 1.8 aura: swing on entity without the paired attack packet
+      pre-attack: 4        # aura: attacks fire without a cursor-on-target lead-in
 
       # Rotation Heuristics
-      rotation-accuracy: 4
-      rotation-exact: 10
-      rotation-snap: 5
-      rotation-sensitivity: -1
-      rotation-reset: 3
+      rotation-accuracy: 4    # aim-assist: tracks the perfect angle too tightly (multi-layer)
+      rotation-exact: 10      # aimbot: rotation lands exactly on the perfect angle
+      rotation-snap: 5        # aimbot: instant yaw snap not mirrored by movement
+      rotation-sensitivity: -1 # aimbot GCD desync (disabled by default; tune per server, see docs)
+      rotation-reset: 3       # silent-aim: snap onto target then reset the view
 
       # Other
-      inventory-rotations: 2
-      blocking: 0
-      no-swing: 0
-      swing-order: 3
+      inventory-rotations: 2  # inventory-aura: rotating while a container screen is open
+      blocking: 0             # 1.8 block-hit timing abuse
+      no-swing: 0             # damage without the arm-animation packet
+      swing-order: 3          # spoofed swing/attack packet ordering
       sprint-toggles: 2 # prevents spamming sprint packets to apply more knockback on targets
       tool-switch: 3 # prevents slot switches while breaking blocks
 

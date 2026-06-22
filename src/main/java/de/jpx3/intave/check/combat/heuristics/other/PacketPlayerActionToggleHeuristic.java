@@ -22,6 +22,19 @@ import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.entity.datawatcher.DataWatcherAccess.WATCHER_SNEAK_ID;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
+/**
+ * Detects sprint-/sneak-toggle spam used to manipulate knock-back and hit registration.
+ *
+ * <p>The client may legitimately change sprint or sneak state at most once per movement tick.
+ * Cheats that rapid-toggle sprint (to repeatedly trigger the sprint knock-back bonus, "w-tap"
+ * automation) or sneak (to desync the hit-box) send several toggle actions before the next
+ * flying packet closes the tick. This heuristic counts toggles between movement packets and
+ * flags the second-or-later one; once the pattern persists past a small threshold it cancels the
+ * sprint action or forces the sneak state back off as mitigation.
+ *
+ * <p>The tick boundary is derived from the flying-packet stream when available, with a motion
+ * fallback so it still works for clients that no longer emit idle flying packets.
+ */
 public final class PacketPlayerActionToggleHeuristic extends ClassicHeuristic<PacketPlayerActionToggleHeuristic.PacketSprintToggleHeuristicMeta> {
   public PacketPlayerActionToggleHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.SPRINT_TOGGLES, PacketSprintToggleHeuristicMeta.class);
