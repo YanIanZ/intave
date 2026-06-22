@@ -45,7 +45,13 @@ public enum HeuristicsClassicType {
   /** W-tap / sprint-reset bots: toggles sprint or sneak multiple times within a single tick. */
   SPRINT_TOGGLES("sprint-toggles"),
   /** Auto-tool / fast-break aura: swaps the held slot mid block-break in an automated pattern. */
-  TOOL_SWITCH("tool-switch");
+  TOOL_SWITCH("tool-switch"),
+  /**
+   * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
+   * window. Independent detectors agreeing is far stronger evidence than one repeating, so this
+   * escalates only when the shared {@link ConfidenceLedger} shows broad agreement.
+   */
+  CORROBORATION("corroboration");
 
   private final String configurationName;
 

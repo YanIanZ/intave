@@ -98,6 +98,12 @@ check:
       sprint-toggles: 2 # prevents spamming sprint packets to apply more knockback on targets
       tool-switch: 3 # prevents slot switches while breaking blocks
 
+      # Meta
+      # Escalates when several DISTINCT heuristics above corroborate on the same player within a
+      # short window (independent detectors agreeing is stronger evidence than one repeating).
+      # Conservative by design; set to 0 to observe it (log/verbose) without adding violation level.
+      corroboration: 3
+
       thresholds:
         20:
           - "intave internals storelog {player} {check} {vl}"

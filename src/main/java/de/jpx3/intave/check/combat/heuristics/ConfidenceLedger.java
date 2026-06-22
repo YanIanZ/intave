@@ -65,9 +65,26 @@ public final class ConfidenceLedger extends CheckCustomMetadata {
    * @return the number of <i>distinct</i> heuristic types that flagged this player within the window
    */
   public synchronized int corroboratingHeuristics(long windowMillis) {
+    return corroboratingHeuristics(windowMillis, null);
+  }
+
+  /**
+   * As {@link #corroboratingHeuristics(long)}, but ignores one heuristic type — used by a
+   * corroboration meta-detector so it does not count its own flags as corroboration.
+   *
+   * @param windowMillis how recently a heuristic must have flagged to count
+   * @param exclude      a type to ignore, or {@code null} to count all
+   * @return the number of distinct, non-excluded heuristics that flagged within the window
+   */
+  public synchronized int corroboratingHeuristics(long windowMillis, HeuristicsClassicType exclude) {
     long now = System.currentTimeMillis();
+    int excludeIndex = exclude == null ? -1 : exclude.ordinal();
     int count = 0;
-    for (long last : lastFlagMillis) {
+    for (int i = 0; i < lastFlagMillis.length; i++) {
+      if (i == excludeIndex) {
+        continue;
+      }
+      long last = lastFlagMillis[i];
       if (last != 0 && now - last <= windowMillis) {
         count++;
       }

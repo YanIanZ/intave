@@ -38,6 +38,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `PacketPlayerActionToggleHeuristic` | `sprint-toggles` | w-tap / sprint-reset bots | Multiple sprint/sneak toggles within one movement tick | all |
 | `ToolSwitchHeuristic` | `tool-switch` | auto-tool | Automated held-slot swap mid block-break | all |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
+| `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree within a short window (decaying, graded) | all |
 
 > `AttackReduceIgnoreHeuristic` exists for reference (1.8 sprint-reset) but is **not registered**;
 > sprint/knock-back enforcement currently lives in the movement simulation.
@@ -91,6 +92,12 @@ ledger exposes how many *distinct* heuristics flagged a player within a recent w
 heuristic corroborates, that count is surfaced on the violation for verbose triage. The ledger is an
 **additive** intelligence layer — by itself it changes no violation level, so existing tuning is
 preserved while new checks can consult corroboration to scale their own confidence.
+
+The ledger's first consumer is `CorroborationHeuristic` (config key `corroboration`): it flags only
+when several *distinct* heuristics agree on the same player within the window, accumulated in a
+decaying `ConfidenceBuffer` so isolated coincidences fade. Because it requires independent detectors
+to corroborate, it is inherently low-false-positive, and it flags with a graded confidence that
+scales with the breadth of agreement.
 
 ## Version support (through 26.2)
 
