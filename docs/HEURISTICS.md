@@ -60,6 +60,38 @@ The shared level then escalates through `heuristics.classic.thresholds` (default
 
 The cloud pipeline (`heuristics.cloud.thresholds`) escalates to a **ban** at level 50 when enabled.
 
+## Engine internals
+
+The classic heuristics share a small engine layer (`ClassicHeuristic` + `Heuristics`) that turns
+individual observations into a confident, corroborated verdict. New checks should build on it rather
+than reinventing accumulators.
+
+### Graded confidence
+
+`ClassicHeuristic#flag` accepts an optional confidence in `[0, 1]` that scales the violation level a
+flag contributes — `flag(player, details)` is exactly `flag(player, details, 1.0)`. A check that is
+only weakly suspicious can flag at, say, `0.3` and add proportionally less, instead of the
+all-or-nothing model, with no per-check threshold retuning (`1.0` reproduces the prior behaviour).
+
+### Decaying evidence — `ConfidenceBuffer`
+
+`ConfidenceBuffer` is the engine's reusable accumulator: evidence is *added* and the stored value
+*decays exponentially* with a configurable half-life. Bursts of corroborating observations raise
+confidence quickly while isolated ones fade on their own — replacing the ad-hoc "+N on suspicion,
+−x otherwise" counters checks used to hand-roll. `consumeIfAtLeast(threshold)` is the idiomatic
+"release a flag whenever enough evidence has piled up, carrying the remainder forward".
+
+### Cross-heuristic corroboration — `ConfidenceLedger`
+
+Every flag is recorded in a per-player `ConfidenceLedger` shared across all heuristics (keyed by
+class in the user metadata pool, so it is created lazily and released automatically). Because
+independent detectors agreeing is far stronger evidence than one noisy detector repeating, the
+ledger exposes how many *distinct* heuristics flagged a player within a recent window
+(`corroboratingHeuristics`) plus the combined, time-decayed `aggregateConfidence`; when more than one
+heuristic corroborates, that count is surfaced on the violation for verbose triage. The ledger is an
+**additive** intelligence layer — by itself it changes no violation level, so existing tuning is
+preserved while new checks can consult corroboration to scale their own confidence.
+
 ## Version support (through 26.2)
 
 The heuristics consume rotation/attack/movement packets common to every supported protocol, so the

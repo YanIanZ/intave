@@ -2,8 +2,10 @@ package de.jpx3.intave.check.combat.heuristics;
 
 import de.jpx3.intave.check.MetaCheckPart;
 import de.jpx3.intave.check.combat.Heuristics;
+import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.violation.Violation;
+import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
 import org.bukkit.entity.Player;
 
@@ -36,14 +38,59 @@ public class ClassicHeuristic<M extends CheckCustomMetadata> extends MetaCheckPa
     this.nerfId = type.verboseName();
   }
 
+  /**
+   * Flags this heuristic at full confidence. Equivalent to {@link #flag(Player, String, double)}
+   * with a confidence of {@code 1.0}.
+   */
   protected void flag(Player player, String details) {
-    Violation violation = Violation.builderFor(Heuristics.class)
+    flag(player, details, 1.0);
+  }
+
+  /**
+   * Flags this heuristic with a graded confidence in {@code [0, 1]}.
+   *
+   * <p>The confidence scales the violation level this flag contributes: weak, ambiguous evidence
+   * can flag at, say, {@code 0.3} and add proportionally less than a textbook detection at
+   * {@code 1.0}. This lets a check express <i>how sure</i> it is instead of the all-or-nothing
+   * model, without any per-check threshold retuning ({@code 1.0} reproduces the previous behaviour
+   * exactly). The flag is also recorded in the shared {@link ConfidenceLedger}, so the engine can
+   * weigh cross-heuristic corroboration; when more than one distinct heuristic has flagged the
+   * player recently, that corroboration count is attached to the violation for verbose output.
+   *
+   * @param confidence strength of the evidence, clamped to {@code [0, 1]}
+   */
+  protected void flag(Player player, String details, double confidence) {
+    double weight = MathHelper.minmax(0.0, confidence, 1.0);
+    ConfidenceLedger ledger = ledgerOf(userOf(player));
+    ledger.note(type, weight);
+
+    Violation.Builder builder = Violation.builderFor(Heuristics.class)
       .forPlayer(player).withMessage("failed " + type.verboseName())
       .withDetails(details)
-      .withVL(violationLevelIncrease)
-      .withCustomThreshold("classic.thresholds")
-      .build();
-    Modules.violationProcessor().processViolation(violation);
+      .withVL(violationLevelIncrease * weight)
+      .withCustomThreshold("classic.thresholds");
+
+    int corroboration = ledger.corroboratingHeuristics(ConfidenceLedger.DEFAULT_CORROBORATION_WINDOW_MILLIS);
+    if (corroboration > 1) {
+      builder.addGranular("corroboration", corroboration + " heuristics");
+    }
+    Modules.violationProcessor().processViolation(builder.build());
+  }
+
+  /**
+   * Resolves the player's shared cross-heuristic {@link ConfidenceLedger} (lazily created and
+   * lifecycle-managed by the user metadata pool). All heuristics share one ledger per player.
+   */
+  protected ConfidenceLedger ledgerOf(User user) {
+    return (ConfidenceLedger) user.checkMetadata(ConfidenceLedger.class, ignored -> new ConfidenceLedger());
+  }
+
+  /**
+   * @return how many distinct heuristics have flagged this player within the default corroboration
+   * window — a measure of how many independent detectors currently agree.
+   */
+  protected int corroboratingHeuristics(User user) {
+    return ledgerOf(user).corroboratingHeuristics(ConfidenceLedger.DEFAULT_CORROBORATION_WINDOW_MILLIS);
   }
 
   @Override
