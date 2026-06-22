@@ -63,7 +63,9 @@ The cloud pipeline (`heuristics.cloud.thresholds`) escalates to a **ban** at lev
 ## Version support (through 26.2)
 
 The heuristics consume rotation/attack/movement packets common to every supported protocol, so the
-default suite works unchanged from **1.7 through 26.2**. Version-specific behaviour is centralised:
+default suite works unchanged across the CI-validated range **1.7 through 26.1.2**, with 26.2
+version/protocol recognition in place (full 26.2 runtime support is a follow-up — see below).
+Version-specific behaviour is centralised:
 
 * **Server build** — registered in
   [`MinecraftVersions`](../src/main/java/de/jpx3/intave/adapter/MinecraftVersions.java)
@@ -84,6 +86,19 @@ on an older protocol are still covered by those legacy branches.
 Non-finite (`NaN`/`Infinite`) rotation packets are sanitised up-front by
 [`InvalidPitch`](../src/main/java/de/jpx3/intave/check/other/protocolscanner/InvalidPitch.java)
 in the protocol scanner, so they can never reach — and poison — the rotation maths here.
+
+### 26.2 runtime status
+
+Version and protocol **recognition** for 26.2 is in place (above), and the heuristic logic itself is
+packet-based and version-independent. Full 26.2 **runtime (NMS) support** is a tracked follow-up:
+26.2 is, at the time of writing, an alpha (`26.2.build.30-alpha`) that renames and relocates large
+parts of the server internals Intave reflects into — e.g. `ResourceLocation` was renamed to
+`Identifier`, `EntityType.byString(...)` was removed in favour of registry lookups
+(`BuiltInRegistries.ENTITY_TYPE`), the entity-id counter moved from `Entity` to `ServerLevel`
+(already handled in `IdentifierReserve`), and entity loading moved to the `ValueInput` API. Because
+those mappings keep shifting while 26.2 is in alpha, the CI self-test matrix is intentionally gated
+at **26.1.2** (matching upstream); 26.2 should be re-validated and the remaining `locate` mappings
+audited once it leaves alpha.
 
 ## Tuning notes
 
