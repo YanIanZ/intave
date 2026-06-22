@@ -50,4 +50,12 @@ public final class CombatItems {
       || name.equals("TRIDENT")
       || name.endsWith("SPEAR");
   }
+
+  public static boolean isMace(ItemStack item) {
+    return item != null && isMace(item.getType());
+  }
+
+  public static boolean isMace(Material material) {
+    return material != null && material.name().equals("MACE");
+  }
 }

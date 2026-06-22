@@ -39,6 +39,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `PacketPlayerActionToggleHeuristic` | `sprint-toggles` | w-tap / sprint-reset bots | Multiple sprint/sneak toggles within one movement tick | all |
 | `ToolSwitchHeuristic` | `tool-switch` | auto-tool | Automated held-slot swap mid block-break | all |
 | `FastSwapHeuristic` | `fast-swap` | auto-swap / weapon-combo macro | In-combat weapon swaps faster than one per tick (mace/trident/spear-aware); ships at `0` (observe) | all |
+| `MaceFallDistanceHeuristic` | `mace-fall-distance` | mace fall-distance spoof | Smash hit whose server fall distance needs more airtime than terminal velocity allows (`fall / 4.0 > ticks since ground`) | **1.21+** |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
 | `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree within a short window (decaying, graded) | all |
 

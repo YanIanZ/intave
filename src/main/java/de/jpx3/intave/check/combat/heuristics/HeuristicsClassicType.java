@@ -50,6 +50,8 @@ public enum HeuristicsClassicType {
   TOOL_SWITCH("tool-switch"),
   /** Auto-swap / weapon-combo macro: swaps the held weapon faster than one slot change per tick. */
   FAST_SWAP("fast-swap"),
+  /** Mace fall-distance spoof: a smash hit with more server fall distance than its airtime allows. */
+  MACE_FALL_DISTANCE("mace-fall-distance"),
   /**
    * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
    * window. Independent detectors agreeing is far stronger evidence than one repeating, so this
