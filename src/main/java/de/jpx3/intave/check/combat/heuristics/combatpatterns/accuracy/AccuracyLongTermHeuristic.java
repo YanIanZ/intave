@@ -18,7 +18,23 @@ import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
+/**
+ * Detects kill-aura / auto-clicker by the long-term ratio of <i>missed</i> swings to landed hits.
+ *
+ * <p>When a human fights a moving target a meaningful share of arm swings miss — the cursor drifts
+ * off the hit-box between clicks. Aura keeps the cursor glued to the target, so almost every swing
+ * connects. Over a window of {@link #ATTACK_SAMPLE_SIZE} registered attacks the heuristic computes
+ * the fail rate (swings that did not turn into an attack) and flags when it stays under
+ * {@link #MAX_FAIL_RATE_PERCENT}% — an accuracy no legitimate player sustains against a moving foe.
+ *
+ * <p>The window only counts swings/attacks against a long-lived ({@code ticksAlive >= 200}),
+ * moving, recently-attacked entity, which filters out target dummies and stationary mobs.
+ */
 public final class AccuracyLongTermHeuristic extends ClassicHeuristic<AccuracyLongTermHeuristic.ClickAccuracyMeta> {
+  // Window size (registered attacks) and the fail-rate ceiling (%) below which combat is flagged.
+  private static final int ATTACK_SAMPLE_SIZE = 80;
+  private static final double MAX_FAIL_RATE_PERCENT = 3.0;
+
   public AccuracyLongTermHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.ATTACK_ACCURACY, ClickAccuracyMeta.class);
   }
@@ -56,8 +72,8 @@ public final class AccuracyLongTermHeuristic extends ClassicHeuristic<AccuracyLo
         heuristicMeta.swings--;
         double failRate = (heuristicMeta.swings / heuristicMeta.attacks) * 100.0;
 //        Synchronizer.synchronize(() -> player.sendMessage(String.valueOf(failRate)));
-        if (heuristicMeta.attacks > 80) {
-          if (failRate >= 0 && failRate < 3) {
+        if (heuristicMeta.attacks > ATTACK_SAMPLE_SIZE) {
+          if (failRate >= 0 && failRate < MAX_FAIL_RATE_PERCENT) {
             flag(player, "player maintains high attack accuracy (failRate: " + MathHelper.formatDouble(failRate, 2) + "%)");
           }
           heuristicMeta.attacks = 0;

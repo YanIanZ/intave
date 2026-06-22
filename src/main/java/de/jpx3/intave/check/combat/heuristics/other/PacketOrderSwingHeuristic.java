@@ -16,6 +16,18 @@ import org.bukkit.entity.Player;
 
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
+/**
+ * Detects spoofed swing/attack packet ordering produced by some aura and packet-mimic cheats.
+ *
+ * <p>On clients that still stream flying packets (1.8 and ViaVersion-bridged 1.8), the vanilla
+ * client always sends the arm-animation in the <i>same</i> tick as the attack it belongs to.
+ * Cheats that inject the attack out of band leave the attack arriving in a tick with no
+ * preceding swing. The heuristic records whether the most recent packet in the tick was a swing
+ * and, on a flagged attack, reports the mismatch and applies a light damage nerf.
+ *
+ * <p>Limited to clients whose flying-packet stream is observable; modern clients that batch
+ * inputs differently are covered by {@link NoSwingHeuristic} instead.
+ */
 public final class PacketOrderSwingHeuristic extends ClassicHeuristic<PacketOrderSwingHeuristic.PacketOrderSwingHeuristicMeta> {
   private final IntavePlugin plugin;
 

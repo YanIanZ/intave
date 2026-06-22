@@ -27,9 +27,41 @@ import java.util.concurrent.atomic.AtomicLong;
 import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
+/**
+ * Detects the instantaneous rotation "snap" produced by aimbots and kill-aura.
+ *
+ * <p>A human turns by sweeping the mouse, so a large yaw change is spread over several ticks
+ * and is mirrored by the player's strafe/forward keys (you turn <i>and</i> walk in the new
+ * direction). An aimbot instead jumps the view onto the target in a single tick and then jumps
+ * straight back, leaving two tell-tale signatures this heuristic looks for:
+ *
+ * <ul>
+ *   <li><b>Spike-and-settle</b> — a large yaw delta on one tick ({@code yawMotions[0]}) framed
+ *       by near-zero deltas on the neighbouring ticks ({@code yawMotions[1]} and the current
+ *       {@code yawMotion}), coinciding with a recent swing or attack.</li>
+ *   <li><b>Silent movement</b> — the movement direction implied by the keys changes without a
+ *       matching change in the look direction, i.e. the body keeps walking straight while the
+ *       camera flicks. This is weighted heavily as it is extremely hard to reproduce legitimately.</li>
+ * </ul>
+ *
+ * <p>Evidence is accumulated into a decaying internal score; only once it exceeds
+ * {@link #VIOLATION_RELEASE_THRESHOLD} is a real flag emitted, which keeps single, sharp human
+ * flicks from being punished. A confirmed snap that re-aims onto the attacked entity's hit-box
+ * ("lookEn") or happens right after a block place is scored higher, as those are classic
+ * scaffold-/aura-assist tells.
+ */
 public final class RotationSnapHeuristic extends ClassicHeuristic<RotationSnapHeuristic.RotationSnapHeuristicMeta> {
-  // Defines how long after a block place, arm swing or attack the VL for mitigations should be increased. 
+  // Defines how long after a block place, arm swing or attack the VL for mitigations should be increased.
   private static final long VL_BOOST_MODIFIER_TIME = (1000 / 20) * 3; // Set to 3 ticks. (150ms)
+
+  // The check stays dormant until the player has streamed enough rotation packets and is far
+  // enough past their last teleport; both guards suppress join-/warp-time false positives.
+  private static final int MIN_ROTATION_PACKETS = 10;
+  private static final int MIN_TICKS_SINCE_TELEPORT = 7;
+  // Internal evidence score needed before a flag is released, and the floor above which debug
+  // (non-flagging) feedback is considered. The score decays while the player moves naturally.
+  private static final int VIOLATION_RELEASE_THRESHOLD = 30;
+  private static final int VIOLATION_DEBUG_THRESHOLD = 5;
 
   public RotationSnapHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.ROTATION_SNAP, RotationSnapHeuristicMeta.class);
@@ -142,11 +174,11 @@ public final class RotationSnapHeuristic extends ClassicHeuristic<RotationSnapHe
     }
 
     boolean isSuspicious = (meta.yawMotions[1] == 0 && meta.yawMotions[0] > 25 && yawMotion < 9);
-    boolean liteFlag = isSuspicious && meta.silentMovements[1] == KeyStates.SILENTMOVE && meta.rotationPacketCounter > 10 && movementData.ticksPast(TELEPORT) > 7;
+    boolean liteFlag = isSuspicious && meta.silentMovements[1] == KeyStates.SILENTMOVE && meta.rotationPacketCounter > MIN_ROTATION_PACKETS && movementData.ticksPast(TELEPORT) > MIN_TICKS_SINCE_TELEPORT;
 
     isSuspicious = meta.yawMotions[1] < 9 && meta.yawMotions[0] > 40 && yawMotion < 9;
 
-    if (isSuspicious && (wasRecent(meta.lastSwing) || wasRecent(meta.lastAttack)) && meta.rotationPacketCounter > 10 && movementData.ticksPast(TELEPORT) > 7) {
+    if (isSuspicious && (wasRecent(meta.lastSwing) || wasRecent(meta.lastAttack)) && meta.rotationPacketCounter > MIN_ROTATION_PACKETS && movementData.ticksPast(TELEPORT) > MIN_TICKS_SINCE_TELEPORT) {
       double valueOfSnap = meta.yawMotions[0];
       String description = "rotation snap ["
         + MathHelper.formatDouble(meta.yawMotions[1], 2)
@@ -216,15 +248,15 @@ public final class RotationSnapHeuristic extends ClassicHeuristic<RotationSnapHe
 
     meta.internalViolation += violationToAdd;
 
-    if (meta.internalViolation >= 30) {
-      meta.internalViolation -= 30;
+    if (meta.internalViolation >= VIOLATION_RELEASE_THRESHOLD) {
+      meta.internalViolation -= VIOLATION_RELEASE_THRESHOLD;
 
       if (user.protocolVersion() > 47) {
         description += " " + user.protocolVersion();
       }
 
       flag(player, description);
-    } else if (meta.internalViolation > 5) {
+    } else if (meta.internalViolation > VIOLATION_DEBUG_THRESHOLD) {
       // flag(player, description + " (debug)");
     }
   }

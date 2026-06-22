@@ -16,7 +16,25 @@ import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.LOOK;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION_LOOK;
 
+/**
+ * Detects "silent-aim" cheats that snap to a target for a single tick and then reset the view.
+ *
+ * <p>Silent-aim sends an attack while the camera momentarily faces the target, then restores the
+ * player's original look angle so the snap is invisible on screen. The reset shows up as a very
+ * large single-tick yaw jump ({@code receivedDistance > }{@link #SUSPICIOUS_RESET_YAW}) <i>back</i>
+ * to an angle that no longer has the entity in its line of sight.
+ *
+ * <p>The check is a two-stage state machine: stage&nbsp;2 arms when a large jump that still has the
+ * entity in sight is seen during recent combat; stage&nbsp;1 then confirms on the following packet
+ * if the entity is once again being looked at, indicating the camera bounced onto the target and
+ * straight back. It only runs for a stable, long-tracked target ({@code ticksPast(TELEPORT) >}
+ * {@link #MIN_TICKS_SINCE_TELEPORT}, no recent entity switch) to avoid legitimate flick-aims.
+ */
 public final class RotationModuloResetHeuristic extends ClassicHeuristic<RotationModuloResetHeuristic.RotationModuloResetHeuristicMeta> {
+  // A target must be tracked for this many ticks since the last teleport before the state machine
+  // engages, and the reset jump must exceed this many degrees in one packet to be considered.
+  private static final int MIN_TICKS_SINCE_TELEPORT = 100;
+  private static final float SUSPICIOUS_RESET_YAW = 100f;
 
 	public RotationModuloResetHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.ROTATION_MODULO_RESET, RotationModuloResetHeuristicMeta.class);
@@ -35,7 +53,7 @@ public final class RotationModuloResetHeuristic extends ClassicHeuristic<Rotatio
     RotationModuloResetHeuristicMeta heuristicMeta = metaOf(user);
 
     Entity attackedEntity = attackData.lastAttackedEntity();
-    if (attackedEntity == null || attackData.recentlySwitchedEntity(5000) || movementData.ticksPast(TELEPORT) < 100) {
+    if (attackedEntity == null || attackData.recentlySwitchedEntity(5000) || movementData.ticksPast(TELEPORT) < MIN_TICKS_SINCE_TELEPORT) {
       return;
     }
 
@@ -62,7 +80,7 @@ public final class RotationModuloResetHeuristic extends ClassicHeuristic<Rotatio
     if (attackData.recentlyAttacked(1000) && attackData.lastReach() > 1.0) {
       float receivedDistance = Math.abs(rotationYaw - lastRotationYaw);
       boolean roundingConditions = Math.abs(rotationYaw) <= 360 && Math.abs(lastRotationYaw) <= 360;
-      boolean suspiciousYaw = roundingConditions && receivedDistance > 100;
+      boolean suspiciousYaw = roundingConditions && receivedDistance > SUSPICIOUS_RESET_YAW;
 
       if (suspiciousYaw && entityInLineOfSight(user)) {
         heuristicMeta.roundedRotationLooking = true;
