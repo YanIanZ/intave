@@ -38,6 +38,8 @@ public enum HeuristicsClassicType {
   ROTATION_CONSTANT_SPEED("rotation-constant-speed"),
   /** Aim-smoothing / aimbot: the per-tick ease ratio toward the target stays robotically constant. */
   AIM_SMOOTHING("aim-smoothing"),
+  /** Linear-aim / aimbot: per-tick (yaw, pitch) steps are collinear — a straight path in angle space. */
+  ROTATION_LINEARITY("rotation-linearity"),
   /** Inventory-aura: sends look packets carrying rotation while an inventory screen is open. */
   INVENTORY_ROTATIONS("inventory-rotations"),
   /** Block-hit / fast-use (1.8): abuses sword blocking timing to gain defensive frames. */

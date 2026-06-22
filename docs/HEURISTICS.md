@@ -33,6 +33,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `RotationModuloResetHeuristic` | `rotation-reset` | silent-aim | Snap onto target then a large jump back off it | all |
 | `RotationConstantSpeedHeuristic` | `rotation-constant-speed` | linear-aim / aimbot | Robotically uniform yaw velocity (low CV) while tracking; ships at `0` (observe) | all |
 | `AimSmoothingHeuristic` | `aim-smoothing` | aim-smoothing aimbot | Per-tick ease ratio toward the target stays robotically constant (low CV) while decelerating in; ships at `0` (observe) | all |
+| `RotationLinearityHeuristic` | `rotation-linearity` | linear-interpolation aimbot | Per-tick `(Δyaw, Δpitch)` steps are collinear (\|r\| → 1) — a robotically straight aim path; ships at `0` (observe) | all |
 | `PacketInventoryHeuristic` | `inventory-rotations` | inventory-aura / auto-item | Rotation sent while inventory open; open+close within one tick | all |
 | `BlockingHeuristic` | `blocking` | 1.8 block-hit | Illegitimate sword block/unblock timing | **1.8 only** |
 | `NoSwingHeuristic` | `no-swing` | no-swing aura | Attack lands in a tick with no arm-animation | all |
@@ -98,6 +99,12 @@ second pass, and no copy-pasted loop. `RotationConstantSpeedHeuristic` and `AimS
 both build on it; new "how robotic is this stream?" checks should too rather than hand-rolling a
 variance loop. By convention `coefficientOfVariation()` returns `Double.MAX_VALUE` for a
 non-positive mean, so a *low* value unambiguously means "robotically uniform".
+
+`RollingCorrelation` is its two-variable companion: it folds `(x, y)` pairs into an online Welford
+co-moment and reports the Pearson `correlation()` of the stream — "do these two measurements move
+together on a straight line?". `RotationLinearityHeuristic` uses it to spot collinear
+`(Δyaw, Δpitch)` aim paths. It reports `0` for the degenerate near-zero-variance case, so a *high*
+magnitude unambiguously means "robotically collinear".
 
 ### Cross-heuristic corroboration — `ConfidenceLedger`
 
