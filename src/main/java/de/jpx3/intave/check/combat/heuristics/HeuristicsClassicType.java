@@ -48,6 +48,8 @@ public enum HeuristicsClassicType {
   SPRINT_TOGGLES("sprint-toggles"),
   /** Auto-tool / fast-break aura: swaps the held slot mid block-break in an automated pattern. */
   TOOL_SWITCH("tool-switch"),
+  /** Auto-swap / weapon-combo macro: swaps the held weapon faster than one slot change per tick. */
+  FAST_SWAP("fast-swap"),
   /**
    * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
    * window. Independent detectors agreeing is far stronger evidence than one repeating, so this

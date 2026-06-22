@@ -59,6 +59,7 @@ public final class Heuristics extends Check {
 
     appendCheckPart(new AttackRequiredHeuristic(this));
     appendCheckPart(new ToolSwitchHeuristic(this));
+    appendCheckPart(new FastSwapHeuristic(this));
 
     appendCheckPart(new PacketOrderSwingHeuristic(this));
     appendCheckPart(new PacketPlayerActionToggleHeuristic(this));

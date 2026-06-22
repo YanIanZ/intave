@@ -98,6 +98,7 @@ check:
       swing-order: 3          # spoofed swing/attack packet ordering
       sprint-toggles: 2 # prevents spamming sprint packets to apply more knockback on targets
       tool-switch: 3 # prevents slot switches while breaking blocks
+      fast-swap: 0 # auto-swap / weapon-combo macro: weapon swaps faster than one per tick (0 = observe/corroborate-only; raise after tuning)
 
       # Meta
       # Escalates when several DISTINCT heuristics above corroborate on the same player within a

@@ -38,6 +38,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `PacketOrderSwingHeuristic` | `swing-order` | packet-mimic aura | Attack packet arrives in a tick with no preceding swing | flying-packet clients |
 | `PacketPlayerActionToggleHeuristic` | `sprint-toggles` | w-tap / sprint-reset bots | Multiple sprint/sneak toggles within one movement tick | all |
 | `ToolSwitchHeuristic` | `tool-switch` | auto-tool | Automated held-slot swap mid block-break | all |
+| `FastSwapHeuristic` | `fast-swap` | auto-swap / weapon-combo macro | In-combat weapon swaps faster than one per tick (mace/trident/spear-aware); ships at `0` (observe) | all |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
 | `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree within a short window (decaying, graded) | all |
 
