@@ -101,6 +101,21 @@ decaying `ConfidenceBuffer` so isolated coincidences fade. Because it requires i
 to corroborate, it is inherently low-false-positive, and it flags with a graded confidence that
 scales with the breadth of agreement.
 
+## Bedrock (Geyser/Floodgate) players
+
+Players who join from Bedrock Edition through Geyser/Floodgate use a different input model — touch
+and controller schemes with built-in aim assist — and their actions reach the server only after
+Geyser translates them. Java-style aim/rotation/packet-cadence analysis does not apply to that
+translated input, so the engine **exempts Bedrock players from the classic heuristics**:
+`ClassicHeuristic#flag` early-returns for them (no violation level, no corroboration recording). The
+deterministic checks outside this engine — reach, movement simulation, ray-tracing — still guard
+Bedrock players against cheating.
+
+Detection uses `BedrockPlayers#isBedrock`, which queries the Floodgate API **reflectively** (no
+compile- or load-time dependency): it reports `false` when Floodgate is absent, so Bedrock cannot be
+identified in a Geyser-only setup without Floodgate. This complements the `TrustFactor.BYPASS` that
+Floodgate players already receive and applies even where that trust bypass is reconfigured.
+
 ## Version support (through 26.2)
 
 The heuristics consume rotation/attack/movement packets common to every supported protocol, so the
