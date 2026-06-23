@@ -40,6 +40,8 @@ public enum HeuristicsClassicType {
   AIM_SMOOTHING("aim-smoothing"),
   /** Linear-aim / aimbot: per-tick (yaw, pitch) steps are collinear — a straight path in angle space. */
   ROTATION_LINEARITY("rotation-linearity"),
+  /** Aimbot: the rotation stream is robotically repetitive — too little entropy to be human motor noise. */
+  ROTATION_ENTROPY("rotation-entropy"),
   /** Inventory-aura: sends look packets carrying rotation while an inventory screen is open. */
   INVENTORY_ROTATIONS("inventory-rotations"),
   /** Block-hit / fast-use (1.8): abuses sword blocking timing to gain defensive frames. */

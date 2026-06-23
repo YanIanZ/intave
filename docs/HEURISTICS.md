@@ -34,6 +34,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `RotationConstantSpeedHeuristic` | `rotation-constant-speed` | linear-aim / aimbot | Robotically uniform yaw velocity (low CV) while tracking; ships at `0` (observe) | all |
 | `AimSmoothingHeuristic` | `aim-smoothing` | aim-smoothing aimbot | Per-tick ease ratio toward the target stays robotically constant (low CV) while decelerating in; ships at `0` (observe) | all |
 | `RotationLinearityHeuristic` | `rotation-linearity` | linear-interpolation aimbot | Per-tick `(Δyaw, Δpitch)` steps are collinear (\|r\| → 1) — a robotically straight aim path; ships at `0` (observe) | all |
+| `RotationEntropyHeuristic` | `rotation-entropy` | aimbot (ML-style) | Rotation stream is robotically repetitive — normalised Shannon entropy of the step distribution too low to be human motor noise; ships at `0` (observe) | all |
 | `PacketInventoryHeuristic` | `inventory-rotations` | inventory-aura / auto-item | Rotation sent while inventory open; open+close within one tick | all |
 | `BlockingHeuristic` | `blocking` | 1.8 block-hit | Illegitimate sword block/unblock timing | **1.8 only** |
 | `NoSwingHeuristic` | `no-swing` | no-swing aura | Attack lands in a tick with no arm-animation | all |
@@ -143,6 +144,20 @@ coverage), accumulated in a decaying buffer, it concludes the player is running 
 clients are not penalised — it only colours a verdict the behavioural breadth already reached. It is
 stricter than `corroboration` (four *base* tells vs three of any), making it a very low-false-positive
 "this is a cheat client" signal; lower it to `0` to identify/log without adding violation level.
+
+### ML-style detection — rotation entropy
+
+Modern ML anticheats (e.g. the open-source MX project, which trains a Bi-LSTM on rotation/movement
+history) ultimately key on one property: a human's aim is *high-entropy* — driven by irregular motor
+noise — while an aimbot's computed rotation stream is regular and **low-entropy**.
+`RotationEntropyHeuristic` (config `rotation-entropy`) brings that feature into the engine *without* a
+model or training data: while the player tracks a moving target it quantises each rotation step
+magnitude, and over a window measures the normalised Shannon entropy of the distribution; a value too
+low to be human motor noise flags. It is inherently hard to bypass — reproducing human entropy means
+reproducing human motor noise — and complements the moment-based rotation tells (snap, constant-speed,
+smoothing, linearity) with an information-theoretic one. Intave also has a separate cloud ML pipeline
+(`module/nayoro`) that records labelled combat samples for off-server classification; this heuristic
+is the lightweight, on-premise, explainable analogue.
 
 ## Bedrock (Geyser/Floodgate) players
 
