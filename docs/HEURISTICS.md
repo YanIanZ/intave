@@ -44,6 +44,8 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `FastSwapHeuristic` | `fast-swap` | auto-swap / weapon-combo macro | In-combat weapon swaps faster than one per tick (mace/trident/spear-aware); ships at `0` (observe) | all |
 | `MaceFallDistanceHeuristic` | `mace-fall-distance` | mace fall-distance spoof | Smash hit whose server fall distance needs more airtime than terminal velocity allows (`fall / 4.0 > ticks since ground`) | **1.21+** |
 | `MultiAuraHeuristic` | `multi-aura` | switch-aura / multi-target aura | Attacks land on *distinct* entities within a single tick (sustained); ships at `0` (observe) | all |
+| `CrystalAuraHeuristic` | `crystal-aura` | crystal-aura | Detonates an end crystal ≤2 ticks after it spawns — super-human reaction (sustained); ships at `0` (observe) | 1.9+ |
+| `SpearAttackSpeedHeuristic` | `spear-attack-speed` | spear auto-attack | Spear (heavy weapon) hits land closer than its cooldown allows for a full-power attack (sustained); ships at `0` (observe) | 1.9+ |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
 | `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree within a short window (decaying, graded) | all |
 | `GhostClientHeuristic` | `ghost-client` | ghost/cheat clients e.g. Vape (meta) | ≥4 *distinct base* heuristics agree (cheat client running several modules); client brand folded in for attribution | all |

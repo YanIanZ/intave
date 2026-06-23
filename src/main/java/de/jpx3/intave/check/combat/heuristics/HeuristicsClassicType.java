@@ -60,6 +60,10 @@ public enum HeuristicsClassicType {
   MACE_FALL_DISTANCE("mace-fall-distance"),
   /** Multi-aura / switch-aura: attacks land on distinct entities within a single tick (super-human). */
   MULTI_AURA("multi-aura"),
+  /** Crystal-aura: detonates an end crystal within a tick or two of it appearing (super-human reaction). */
+  CRYSTAL_AURA("crystal-aura"),
+  /** Auto-attack: spear (heavy weapon) hits land faster than its cooldown allows for a full-power attack. */
+  SPEAR_ATTACK_SPEED("spear-attack-speed"),
   /**
    * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
    * window. Independent detectors agreeing is far stronger evidence than one repeating, so this

@@ -58,4 +58,12 @@ public final class CombatItems {
   public static boolean isMace(Material material) {
     return material != null && material.name().equals("MACE");
   }
+
+  public static boolean isSpear(ItemStack item) {
+    return item != null && isSpear(item.getType());
+  }
+
+  public static boolean isSpear(Material material) {
+    return material != null && material.name().endsWith("SPEAR");
+  }
 }
