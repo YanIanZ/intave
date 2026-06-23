@@ -110,6 +110,14 @@ check:
       # Conservative by design; set to 0 to observe it (log/verbose) without adding violation level.
       corroboration: 3
 
+      # Ghost-/cheat-client verdict: identifies a player running a cheat CLIENT (e.g. a "ghost"
+      # client such as Vape) rather than one isolated cheat, by the breadth of independent base
+      # heuristics that agree (kill-aura, reach, velocity, auto-clicker each leak into a different
+      # one). Folds in the minecraft:brand fingerprint for attribution (a spoofed/hidden "vanilla"
+      # brand under heavy cheating is surfaced). Stricter than corroboration and very low false
+      # positive; set to 0 to only identify/log it without adding violation level.
+      ghost-client: 5
+
       thresholds:
         20:
           - "intave internals storelog {player} {check} {vl}"

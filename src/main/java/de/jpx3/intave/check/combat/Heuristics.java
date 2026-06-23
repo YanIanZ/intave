@@ -6,6 +6,7 @@ import de.jpx3.intave.check.CheckConfiguration;
 import de.jpx3.intave.check.combat.heuristics.HeuristicsClassicType;
 import de.jpx3.intave.check.combat.heuristics.combatpatterns.AttackRequiredHeuristic;
 import de.jpx3.intave.check.combat.heuristics.combatpatterns.CorroborationHeuristic;
+import de.jpx3.intave.check.combat.heuristics.combatpatterns.GhostClientHeuristic;
 import de.jpx3.intave.check.combat.heuristics.combatpatterns.PreAttackHeuristic;
 import de.jpx3.intave.check.combat.heuristics.combatpatterns.accuracy.AccuracyHitboxCornerHeuristic;
 import de.jpx3.intave.check.combat.heuristics.combatpatterns.accuracy.AccuracyLongTermHeuristic;
@@ -72,9 +73,11 @@ public final class Heuristics extends Check {
     appendCheckPart(new NoSwingHeuristic(this));
     appendCheckPart(new CivbreakHeuristic(this));
 
-    // Meta-detector: weighs the combination of the above via the shared confidence ledger.
-    // Registered last so it is the final attack-packet listener in the cluster.
+    // Meta-detectors: weigh the combination of the above via the shared confidence ledger.
+    // Registered last so they are the final attack-packet listeners in the cluster; the
+    // ghost-client verdict reads the breadth of agreement the corroboration detector also consults.
     appendCheckPart(new CorroborationHeuristic(this));
+    appendCheckPart(new GhostClientHeuristic(this));
   }
 
   private void loadClassicConfiguration() {

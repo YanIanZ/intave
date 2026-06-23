@@ -63,7 +63,13 @@ public enum HeuristicsClassicType {
    * window. Independent detectors agreeing is far stronger evidence than one repeating, so this
    * escalates only when the shared {@link ConfidenceLedger} shows broad agreement.
    */
-  CORROBORATION("corroboration");
+  CORROBORATION("corroboration"),
+  /**
+   * Ghost-/cheat-client verdict: several <i>distinct base</i> heuristics agree, the fingerprint of a
+   * client running multiple cheat modules at once (kill-aura, reach, velocity, auto-clicker) rather
+   * than one isolated cheat. Folds in the {@code minecraft:brand} fingerprint for attribution.
+   */
+  GHOST_CLIENT("ghost-client");
 
   private final String configurationName;
 

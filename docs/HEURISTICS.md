@@ -45,6 +45,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `MultiAuraHeuristic` | `multi-aura` | switch-aura / multi-target aura | Attacks land on *distinct* entities within a single tick (sustained); ships at `0` (observe) | all |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
 | `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree within a short window (decaying, graded) | all |
+| `GhostClientHeuristic` | `ghost-client` | ghost/cheat clients e.g. Vape (meta) | ≥4 *distinct base* heuristics agree (cheat client running several modules); client brand folded in for attribution | all |
 
 > `AttackReduceIgnoreHeuristic` exists for reference (1.8 sprint-reset) but is **not registered**;
 > sprint/knock-back enforcement currently lives in the movement simulation.
@@ -122,6 +123,26 @@ when several *distinct* heuristics agree on the same player within the window, a
 decaying `ConfidenceBuffer` so isolated coincidences fade. Because it requires independent detectors
 to corroborate, it is inherently low-false-positive, and it flags with a graded confidence that
 scales with the breadth of agreement.
+
+### Ghost / cheat-client identification — `GhostClientHeuristic`
+
+A "ghost client" (e.g. Vape) is an external cheat client built to evade screenshare and look
+vanilla. A server-side anticheat cannot inspect its process, so it is **never caught by one magic
+signature** — it is caught by the *aggregate* of its modules' behavioural tells. A cheat client runs
+several modules at once (kill-aura, reach, velocity, auto-clicker) and each one leaks into a
+different heuristic, so several *independent* detectors fire where a borderline-legitimate player
+trips at most one.
+
+`GhostClientHeuristic` (config `ghost-client`) consumes the ledger to turn that breadth into an
+explicit verdict: when at least **four distinct base heuristics** agree within the window (the
+corroboration and ghost meta-detectors themselves excluded, so the count reflects genuine module
+coverage), accumulated in a decaying buffer, it concludes the player is running a cheat *client*. The
+`minecraft:brand` Intave already records is folded in for **attribution**: a ghost spoofing a
+`vanilla`/blank brand while clearly cheating raises the confidence and is surfaced on the violation
+(`brand=… (claims vanilla)`). The brand never triggers on its own, so honest Forge/Lunar/Badlion
+clients are not penalised — it only colours a verdict the behavioural breadth already reached. It is
+stricter than `corroboration` (four *base* tells vs three of any), making it a very low-false-positive
+"this is a cheat client" signal; lower it to `0` to identify/log without adding violation level.
 
 ## Bedrock (Geyser/Floodgate) players
 
