@@ -94,6 +94,7 @@ check:
       aim-smoothing: 0        # aimbot: robotically constant ease/smoothing factor toward the target (0 = observe/corroborate-only; raise after tuning)
       rotation-linearity: 0   # aimbot: collinear (yaw, pitch) steps — a robotically straight aim path (0 = observe/corroborate-only; raise after tuning)
       rotation-entropy: 0     # aimbot: rotation stream too repetitive (low entropy) to be human motor noise (0 = observe/corroborate-only; raise after tuning)
+      rotation-jitter: 0      # aimbot: added aim jitter is artificial/white (uncorrelated deltas) where human tremor is autocorrelated (0 = observe/corroborate-only; raise after tuning)
 
       # Other
       inventory-rotations: 2  # inventory-aura: rotating while a container screen is open

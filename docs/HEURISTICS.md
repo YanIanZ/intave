@@ -36,6 +36,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `AimSmoothingHeuristic` | `aim-smoothing` | aim-smoothing aimbot | Per-tick ease ratio toward the target stays robotically constant (low CV) while decelerating in; ships at `0` (observe) | all |
 | `RotationLinearityHeuristic` | `rotation-linearity` | linear-interpolation aimbot | Per-tick `(Δyaw, Δpitch)` steps are collinear (\|r\| → 1) — a robotically straight aim path; ships at `0` (observe) | all |
 | `RotationEntropyHeuristic` | `rotation-entropy` | aimbot (ML-style) | Rotation stream is robotically repetitive — normalised Shannon entropy of the step distribution too low to be human motor noise; ships at `0` (observe) | all |
+| `RotationJitterHeuristic` | `rotation-jitter` | aimbot (anti-smoothness evasion) | Added aim jitter is statistically artificial — lag-1 autocorrelation of signed yaw deltas near zero/negative (white noise) where human tremor is autocorrelated; complements the smoothness tells; ships at `0` (observe) | all |
 | `PacketInventoryHeuristic` | `inventory-rotations` | inventory-aura / auto-item | Rotation sent while inventory open; open+close within one tick | all |
 | `BlockingHeuristic` | `blocking` | 1.8 block-hit | Illegitimate sword block/unblock timing | **1.8 only** |
 | `NoSwingHeuristic` | `no-swing` | no-swing aura | Attack lands in a tick with no arm-animation | all |

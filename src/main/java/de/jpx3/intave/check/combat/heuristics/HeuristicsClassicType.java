@@ -45,6 +45,9 @@ public enum HeuristicsClassicType {
   ROTATION_LINEARITY("rotation-linearity"),
   /** Aimbot: the rotation stream is robotically repetitive — too little entropy to be human motor noise. */
   ROTATION_ENTROPY("rotation-entropy"),
+  /** Aimbot (anti-smoothness evasion): added aim "jitter" is statistically <i>artificial</i> — its per-tick
+   *  deltas are uncorrelated/white, where genuine human motor tremor is temporally autocorrelated. */
+  ROTATION_JITTER("rotation-jitter"),
   /** Inventory-aura: sends look packets carrying rotation while an inventory screen is open. */
   INVENTORY_ROTATIONS("inventory-rotations"),
   /** Block-hit / fast-use (1.8): abuses sword blocking timing to gain defensive frames. */
