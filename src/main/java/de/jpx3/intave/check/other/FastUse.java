@@ -3,6 +3,7 @@ package de.jpx3.intave.check.other;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.check.Check;
 import de.jpx3.intave.check.CheckViolationLevelDecrementer;
+import de.jpx3.intave.check.other.fastuse.FastBow;
 import de.jpx3.intave.check.other.fastuse.FastConsume;
 import de.jpx3.intave.executor.TaskTracker;
 import de.jpx3.intave.user.UserRepository;
@@ -15,7 +16,9 @@ import org.bukkit.Bukkit;
  * consumable (dried kelp) still takes ~0.865s, and ordinary food/potions take ~1.6s. A fast-use cheat
  * finishes in a tick or two regardless. {@link FastConsume} measures the time between the right-click
  * that begins a use and the resulting {@link org.bukkit.event.player.PlayerItemConsumeEvent}, and a
- * completion below the hard physical floor cannot be produced by a legitimate client.
+ * completion below the hard physical floor cannot be produced by a legitimate client. {@link FastBow}
+ * applies the same idea to bows: a (near) full-power shot — read from the launched arrow's velocity —
+ * after too short a draw is likewise impossible.
  *
  * <p>Like {@link de.jpx3.intave.check.world.BreakSpeedLimiter} this is shipped notify-only with a
  * decaying violation level, so only sustained fast-use accumulates toward the staff notification.
@@ -40,5 +43,6 @@ public final class FastUse extends Check {
 
   private void setupParts() {
     appendCheckPart(new FastConsume(this));
+    appendCheckPart(new FastBow(this));
   }
 }
