@@ -193,6 +193,14 @@ check:
     thresholds:
       100: "intave internals sendnotify &c{player}&7/{trust-color}&7 is breaking blocks too quickly"
 
+  fastuse:
+    enabled: true
+    # Flags consuming items (food/potions) faster than physically possible.
+    # Conservative by default: notify only, no ban. Lower the threshold to notify sooner.
+    # BAN NOT NECESSARY
+    thresholds:
+      100: "intave internals sendnotify &c{player}&7/{trust-color}&7 is using items too quickly"
+
   protocolscanner:
     enabled: true
     invokant: false
