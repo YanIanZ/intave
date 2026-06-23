@@ -32,6 +32,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `RotationSensitivityHeuristic` | `rotation-sensitivity` | aimbot | GCD of pitch deltas loses the stable step a real mouse sensitivity produces | all (**disabled by default**) |
 | `RotationModuloResetHeuristic` | `rotation-reset` | silent-aim | Snap onto target then a large jump back off it | all |
 | `RotationConstantSpeedHeuristic` | `rotation-constant-speed` | linear-aim / aimbot | Robotically uniform yaw velocity (low CV) while tracking; ships at `0` (observe) | all |
+| `RotationAccelerationHeuristic` | `rotation-acceleration` | linear-aim / aimbot | Robotically constant yaw *acceleration* — a steady speed ramp with near-zero jerk (low sd, non-trivial mean), which neither constant-speed nor geometric easing describes; ships at `0` (observe) | all |
 | `AimSmoothingHeuristic` | `aim-smoothing` | aim-smoothing aimbot | Per-tick ease ratio toward the target stays robotically constant (low CV) while decelerating in; ships at `0` (observe) | all |
 | `RotationLinearityHeuristic` | `rotation-linearity` | linear-interpolation aimbot | Per-tick `(Δyaw, Δpitch)` steps are collinear (\|r\| → 1) — a robotically straight aim path; ships at `0` (observe) | all |
 | `RotationEntropyHeuristic` | `rotation-entropy` | aimbot (ML-style) | Rotation stream is robotically repetitive — normalised Shannon entropy of the step distribution too low to be human motor noise; ships at `0` (observe) | all |
@@ -47,8 +48,8 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `CrystalAuraHeuristic` | `crystal-aura` | crystal-aura | Detonates an end crystal ≤2 ticks after it spawns — super-human reaction (sustained); ships at `0` (observe) | 1.9+ |
 | `SpearAttackSpeedHeuristic` | `spear-attack-speed` | spear auto-attack | Spear (heavy weapon) hits land closer than its cooldown allows for a full-power attack (sustained); ships at `0` (observe) | 1.9+ |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
-| `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree within a short window (decaying, graded) | all |
-| `GhostClientHeuristic` | `ghost-client` | ghost/cheat clients e.g. Vape (meta) | ≥4 *distinct base* heuristics agree (cheat client running several modules); client brand folded in for attribution | all |
+| `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree (breadth gate), then fuses their **confidence-weighted** evidence — strong/broad agreement escalates fast, weak/broad barely moves (decaying, graded) | all |
+| `GhostClientHeuristic` | `ghost-client` | ghost/cheat clients e.g. Vape (meta) | ≥4 *distinct base* heuristics agree, then fuses their **confidence-weighted** module coverage (cheat client running several modules); client brand folded in for attribution | all |
 
 > `AttackReduceIgnoreHeuristic` exists for reference (1.8 sprint-reset) but is **not registered**;
 > sprint/knock-back enforcement currently lives in the movement simulation.
@@ -116,16 +117,22 @@ Every flag is recorded in a per-player `ConfidenceLedger` shared across all heur
 class in the user metadata pool, so it is created lazily and released automatically). Because
 independent detectors agreeing is far stronger evidence than one noisy detector repeating, the
 ledger exposes how many *distinct* heuristics flagged a player within a recent window
-(`corroboratingHeuristics`) plus the combined, time-decayed `aggregateConfidence`; when more than one
-heuristic corroborates, that count is surfaced on the violation for verbose triage. The ledger is an
+(`corroboratingHeuristics`), the **confidence-weighted** agreement among them
+(`weightedCorroboration` — the basis of the meta-detectors' evidence fusion), and the combined,
+time-decayed `aggregateConfidence`; when more than one heuristic corroborates, that breadth is
+surfaced on the violation for verbose triage. The ledger is an
 **additive** intelligence layer — by itself it changes no violation level, so existing tuning is
 preserved while new checks can consult corroboration to scale their own confidence.
 
 The ledger's first consumer is `CorroborationHeuristic` (config key `corroboration`): it flags only
-when several *distinct* heuristics agree on the same player within the window, accumulated in a
-decaying `ConfidenceBuffer` so isolated coincidences fade. Because it requires independent detectors
-to corroborate, it is inherently low-false-positive, and it flags with a graded confidence that
-scales with the breadth of agreement.
+when several *distinct* heuristics agree on the same player within the window (a breadth gate), then
+fuses their **confidence-weighted** evidence via `ConfidenceLedger#weightedCorroboration` — the
+summed, time-decayed confidence of the agreeing detectors — rather than a raw count. It reinforces by
+how *strongly* they agreed, above the baseline the minimum breadth contributes at trivial confidence,
+so weak-but-broad agreement barely moves the decaying `ConfidenceBuffer` (strictly more conservative
+than a count, where false positives live) while strong, broad agreement escalates quickly. Because it
+requires independent detectors to corroborate, it is inherently low-false-positive, and it flags with
+a graded confidence that scales with the fused weight.
 
 ### Ghost / cheat-client identification — `GhostClientHeuristic`
 
@@ -139,7 +146,9 @@ trips at most one.
 `GhostClientHeuristic` (config `ghost-client`) consumes the ledger to turn that breadth into an
 explicit verdict: when at least **four distinct base heuristics** agree within the window (the
 corroboration and ghost meta-detectors themselves excluded, so the count reflects genuine module
-coverage), accumulated in a decaying buffer, it concludes the player is running a cheat *client*. The
+coverage), it fuses their **confidence-weighted** module coverage (`weightedCorroboration` with both
+meta-detectors excluded) in a decaying buffer — weak-but-broad leakage barely moves it, strong/broad
+coverage escalates fast — and concludes the player is running a cheat *client*. The
 `minecraft:brand` Intave already records is folded in for **attribution**: a ghost spoofing a
 `vanilla`/blank brand while clearly cheating raises the confidence and is surfaced on the violation
 (`brand=… (claims vanilla)`). The brand never triggers on its own, so honest Forge/Lunar/Badlion
