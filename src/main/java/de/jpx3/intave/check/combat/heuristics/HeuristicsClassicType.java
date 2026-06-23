@@ -70,6 +70,9 @@ public enum HeuristicsClassicType {
   CRYSTAL_AURA("crystal-aura"),
   /** Auto-attack: spear (heavy weapon) hits land faster than its cooldown allows for a full-power attack. */
   SPEAR_ATTACK_SPEED("spear-attack-speed"),
+  /** Kill-aura: lands repeated attacks while still consuming an item (eating/drinking) — the first
+   *  attack should interrupt the consume, so a sustained run during one continuous use is impossible. */
+  ATTACK_WHILE_CONSUMING("attack-while-consuming"),
   /**
    * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
    * window. Independent detectors agreeing is far stronger evidence than one repeating, so this

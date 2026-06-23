@@ -48,6 +48,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `MultiAuraHeuristic` | `multi-aura` | switch-aura / multi-target aura | Attacks land on *distinct* entities within a single tick (sustained); ships at `0` (observe) | all |
 | `CrystalAuraHeuristic` | `crystal-aura` | crystal-aura | Detonates an end crystal ≤2 ticks after it spawns — super-human reaction (sustained); ships at `0` (observe) | 1.9+ |
 | `SpearAttackSpeedHeuristic` | `spear-attack-speed` | spear auto-attack | Spear (heavy weapon) hits land closer than its cooldown allows for a full-power attack (sustained); ships at `0` (observe) | 1.9+ |
+| `AttackWhileConsumingHeuristic` | `attack-while-consuming` | kill-aura | Sustained entity attacks while the hand is still consuming food/drink — the first attack should interrupt the consume, so a run during one continuous use is impossible; ships at `0` (observe) | all |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
 | `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree (breadth gate), then fuses their **confidence-weighted** evidence — strong/broad agreement escalates fast, weak/broad barely moves (decaying, graded) | all |
 | `GhostClientHeuristic` | `ghost-client` | ghost/cheat clients e.g. Vape (meta) | ≥4 *distinct base* heuristics agree, then fuses their **confidence-weighted** module coverage (cheat client running several modules); client brand folded in for attribution | all |

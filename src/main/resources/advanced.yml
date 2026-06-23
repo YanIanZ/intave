@@ -108,6 +108,7 @@ check:
       multi-aura: 0 # switch-aura: attacks land on distinct entities within one tick (0 = observe/corroborate-only; raise after tuning)
       crystal-aura: 0 # crystal-aura: detonates an end crystal a tick or two after it spawns (super-human reaction; 0 = observe/corroborate-only; raise after tuning)
       spear-attack-speed: 0 # auto-attack: spear hits faster than its cooldown allows (0 = observe/corroborate-only; raise after tuning to your spear's cooldown)
+      attack-while-consuming: 0 # kill-aura: sustained attacks while still eating/drinking — the first attack should interrupt the consume (0 = observe/corroborate-only; raise after tuning)
 
       # Meta
       # Escalates when several DISTINCT heuristics above corroborate on the same player within a
