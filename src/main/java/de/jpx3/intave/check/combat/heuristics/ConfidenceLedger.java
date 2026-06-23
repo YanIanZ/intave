@@ -93,6 +93,36 @@ public final class ConfidenceLedger extends CheckCustomMetadata {
   }
 
   /**
+   * The confidence-weighted counterpart to {@link #corroboratingHeuristics(long, HeuristicsClassicType)}:
+   * instead of merely counting the distinct heuristics that flagged within the window, it sums their
+   * current decayed confidence. This lets a meta-detector weigh not just <i>how many</i> heuristics
+   * agree but <i>how strongly</i> — broad agreement among confident detectors scores far higher than the
+   * same number of borderline ones, which is the basis of a more powerful evidence fusion.
+   *
+   * @param windowMillis how recently a heuristic must have flagged to contribute
+   * @param exclude      a type to ignore, or {@code null} to weigh all
+   * @return the summed decayed confidence of the distinct, non-excluded heuristics that flagged in window
+   */
+  public synchronized double weightedCorroboration(long windowMillis, HeuristicsClassicType exclude) {
+    long now = System.currentTimeMillis();
+    int excludeIndex = exclude == null ? -1 : exclude.ordinal();
+    double weighted = 0;
+    for (int i = 0; i < lastFlagMillis.length; i++) {
+      if (i == excludeIndex) {
+        continue;
+      }
+      long last = lastFlagMillis[i];
+      if (last != 0 && now - last <= windowMillis) {
+        ConfidenceBuffer buffer = perType[i];
+        if (buffer != null) {
+          weighted += buffer.value(now);
+        }
+      }
+    }
+    return weighted;
+  }
+
+  /**
    * As {@link #corroboratingHeuristics(long)}, but ignores up to two heuristic types — used by the
    * ghost-client meta-detector to count distinct <i>base</i> module tells while excluding both itself
    * and the corroboration meta-detector (which is derived from the base detectors).
