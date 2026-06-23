@@ -36,6 +36,9 @@ public enum HeuristicsClassicType {
   ROTATION_MODULO_RESET("rotation-reset"),
   /** Linear-aim / aimbot: angular (yaw) velocity stays robotically constant while tracking. */
   ROTATION_CONSTANT_SPEED("rotation-constant-speed"),
+  /** Linear-aim / aimbot: angular (yaw) <i>acceleration</i> stays robotically constant — a steady speed
+   *  ramp with near-zero jerk, which neither constant-speed nor geometric easing describes. */
+  ROTATION_ACCELERATION("rotation-acceleration"),
   /** Aim-smoothing / aimbot: the per-tick ease ratio toward the target stays robotically constant. */
   AIM_SMOOTHING("aim-smoothing"),
   /** Linear-aim / aimbot: per-tick (yaw, pitch) steps are collinear — a straight path in angle space. */

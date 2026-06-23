@@ -35,9 +35,11 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Client.USE_ENTITY;
  * brand is not penalised — it only colours a verdict the behavioural breadth already reached.
  *
  * <p>It is deliberately false-positive resistant: it requires several <i>independent</i> detectors to
- * agree, accumulates that agreement in a decaying {@link ConfidenceBuffer} so a one-off coincidence
- * fades, and flags with a {@linkplain ClassicHeuristic#flag(org.bukkit.entity.Player, String, double)
- * graded confidence}. Its violation weight is configured under {@code heuristics.classic.ghost-client}.
+ * agree, then fuses their {@linkplain ConfidenceLedger#weightedCorroboration confidence-weighted}
+ * evidence — weak-but-broad agreement barely moves the needle, strong module coverage escalates
+ * quickly — accumulates that in a decaying {@link ConfidenceBuffer} so a one-off coincidence fades,
+ * and flags with a {@linkplain ClassicHeuristic#flag(org.bukkit.entity.Player, String, double) graded
+ * confidence}. Its violation weight is configured under {@code heuristics.classic.ghost-client}.
  */
 public final class GhostClientHeuristic extends ClassicHeuristic<GhostClientHeuristic.GhostClientMeta> {
   private static final long WINDOW_MILLIS = ConfidenceLedger.DEFAULT_CORROBORATION_WINDOW_MILLIS;
@@ -46,6 +48,10 @@ public final class GhostClientHeuristic extends ClassicHeuristic<GhostClientHeur
   /** Accumulated agreement required before a verdict is released (i.e. sustained, not a coincidence). */
   private static final double RELEASE_THRESHOLD = 4.0d;
   private static final double BUFFER_HALF_LIFE_MILLIS = 8_000d;
+  /** Per-heuristic confidence treated as "minimally meaningful"; baselines the weighted agreement. */
+  private static final double MIN_FLAG_CONFIDENCE = 0.3d;
+  /** Weighted module-tell agreement that maps to full reported confidence. */
+  private static final double FULL_CONFIDENCE_WEIGHT = 8.0d;
 
   public GhostClientHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.GHOST_CLIENT, GhostClientMeta.class);
@@ -60,16 +66,22 @@ public final class GhostClientHeuristic extends ClassicHeuristic<GhostClientHeur
     if (!reader.isAttackPacket()) {
       return;
     }
-    int moduleTells = ledgerOf(user).corroboratingHeuristics(
+    ConfidenceLedger ledger = ledgerOf(user);
+    int moduleTells = ledger.corroboratingHeuristics(
       WINDOW_MILLIS, HeuristicsClassicType.GHOST_CLIENT, HeuristicsClassicType.CORROBORATION);
     if (moduleTells < MIN_MODULE_TELLS) {
-      return;
+      return; // breadth gate — a cheat client runs several modules at once (FP-resistant, unchanged)
     }
 
     long now = System.currentTimeMillis();
+    double weighted = ledger.weightedCorroboration(
+      WINDOW_MILLIS, HeuristicsClassicType.GHOST_CLIENT, HeuristicsClassicType.CORROBORATION);
     GhostClientMeta meta = metaOf(user);
-    // Broader agreement reinforces faster; the buffer decays so isolated coincidences fade.
-    meta.evidence.add(moduleTells - MIN_MODULE_TELLS + 1, now);
+    // Confidence-weighted fusion: reinforce by how strongly the modules leaked, above the baseline the
+    // minimum breadth contributes at trivial confidence. Weak-but-broad agreement barely moves the
+    // buffer (more conservative than a raw count); strong, broad module coverage escalates quickly.
+    double reinforcement = Math.max(0d, weighted - MIN_MODULE_TELLS * MIN_FLAG_CONFIDENCE);
+    meta.evidence.add(reinforcement, now);
     if (!meta.evidence.consumeIfAtLeast(RELEASE_THRESHOLD, now)) {
       return;
     }
@@ -77,7 +89,7 @@ public final class GhostClientHeuristic extends ClassicHeuristic<GhostClientHeur
     String brand = user.meta().protocol().clientBrand();
     boolean hidesBrand = brand == null || brand.isEmpty()
       || brand.equalsIgnoreCase("Unknown") || brand.equalsIgnoreCase("vanilla");
-    double base = MathHelper.minmax(0.4d, (moduleTells - 3) / 4.0d, 1.0d);
+    double base = MathHelper.minmax(0.4d, weighted / FULL_CONFIDENCE_WEIGHT, 1.0d);
     double confidence = MathHelper.minmax(0.4d, hidesBrand ? base + 0.15d : base, 1.0d);
 
     String brandDisplay = (brand == null || brand.isEmpty()) ? "<none>" : brand;

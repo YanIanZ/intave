@@ -90,6 +90,7 @@ check:
       rotation-sensitivity: -1 # aimbot GCD desync (disabled by default; tune per server, see docs)
       rotation-reset: 3       # silent-aim: snap onto target then reset the view
       rotation-constant-speed: 0 # linear-aim: robotically constant turn velocity (0 = observe/corroborate-only; raise after tuning)
+      rotation-acceleration: 0 # linear-aim: robotically constant turn acceleration / steady speed ramp (0 = observe/corroborate-only; raise after tuning)
       aim-smoothing: 0        # aimbot: robotically constant ease/smoothing factor toward the target (0 = observe/corroborate-only; raise after tuning)
       rotation-linearity: 0   # aimbot: collinear (yaw, pitch) steps — a robotically straight aim path (0 = observe/corroborate-only; raise after tuning)
       rotation-entropy: 0     # aimbot: rotation stream too repetitive (low entropy) to be human motor noise (0 = observe/corroborate-only; raise after tuning)
