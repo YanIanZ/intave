@@ -105,11 +105,11 @@ check:
       tool-switch: 3 # prevents slot switches while breaking blocks
       fast-swap: 0 # auto-swap / weapon-combo macro: weapon swaps faster than one per tick (0 = observe/corroborate-only; raise after tuning)
       mace-fall-distance: 5 # mace smash with more server fall distance than its airtime physically allows (hard terminal-velocity invariant, 1.21+)
-      multi-aura: 0 # switch-aura: attacks land on distinct entities within one tick (0 = observe/corroborate-only; raise after tuning)
+      multi-aura: 4 # switch-aura: attacks land on distinct entities within one tick — hard invariant, sustained + lag-gated (enforced; ~5 fires to notify, ~13 to kick)
       crystal-aura: 0 # crystal-aura: detonates an end crystal a tick or two after it spawns (super-human reaction; 0 = observe/corroborate-only; raise after tuning)
       spear-attack-speed: 0 # auto-attack: spear hits faster than its cooldown allows (0 = observe/corroborate-only; raise after tuning to your spear's cooldown)
-      attack-while-consuming: 0 # kill-aura: sustained attacks while still eating/drinking — the first attack should interrupt the consume (0 = observe/corroborate-only; raise after tuning)
-      attack-while-bow-draw: 0 # kill-aura/bow-aura: sustained melee attacks while drawing a bow/crossbow — the draw occupies the hand (0 = observe/corroborate-only; raise after tuning)
+      attack-while-consuming: 5 # kill-aura: sustained attacks while still eating/drinking — the first attack should interrupt the consume; hard invariant, sustained-gated (enforced)
+      attack-while-bow-draw: 5 # kill-aura/bow-aura: sustained melee attacks while drawing a bow/crossbow — the draw occupies the hand; hard invariant, sustained-gated (enforced)
 
       # Meta
       # Escalates when several DISTINCT heuristics above corroborate on the same player within a
