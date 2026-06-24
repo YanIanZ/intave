@@ -51,7 +51,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `AttackWhileConsumingHeuristic` | `attack-while-consuming` | kill-aura | Sustained entity attacks while the hand is still consuming food/drink — the first attack should interrupt the consume, so a run during one continuous use is impossible; ships at `0` (observe) | all |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
 | `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree (breadth gate), then fuses their **confidence-weighted** evidence — strong/broad agreement escalates fast, weak/broad barely moves (decaying, graded) | all |
-| `GhostClientHeuristic` | `ghost-client` | ghost/cheat clients e.g. Vape (meta) | ≥4 *distinct base* heuristics agree, then fuses their **confidence-weighted** module coverage (cheat client running several modules); client brand folded in for attribution | all |
+| `GhostClientHeuristic` | `ghost-client` | ghost/cheat clients e.g. Vape (meta) | ≥4 *distinct base* heuristics agree, then fuses their **confidence-weighted** module coverage + **cross-domain** breadth (read-only movement/packet/world VLs) (cheat client running several modules); client brand folded in for attribution | all |
 
 > `AttackReduceIgnoreHeuristic` exists for reference (1.8 sprint-reset) but is **not registered**;
 > sprint/knock-back enforcement currently lives in the movement simulation.
@@ -150,7 +150,12 @@ explicit verdict: when at least **four distinct base heuristics** agree within t
 corroboration and ghost meta-detectors themselves excluded, so the count reflects genuine module
 coverage), it fuses their **confidence-weighted** module coverage (`weightedCorroboration` with both
 meta-detectors excluded) in a decaying buffer — weak-but-broad leakage barely moves it, strong/broad
-coverage escalates fast — and concludes the player is running a cheat *client*. The
+coverage escalates fast — and concludes the player is running a cheat *client*. The breadth is read
+**across domains**: the player's current violation level on the non-combat checks (movement/`Physics`,
+packet/`ProtocolScanner`, world, …) is consulted **read-only** from the shared per-player VL the
+violation processor already maintains, and each tripping module folds in as cross-domain corroboration.
+It never lowers the combat gate — a pure-combat flag is unchanged — it only sharpens an already-reached
+verdict when a true multi-module client (aim + movement + packet) leaks across domains. The
 `minecraft:brand` Intave already records is folded in for **attribution**: a ghost spoofing a
 `vanilla`/blank brand while clearly cheating raises the confidence and is surfaced on the violation
 (`brand=… (claims vanilla)`). The brand never triggers on its own, so honest Forge/Lunar/Badlion
