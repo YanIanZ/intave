@@ -110,6 +110,7 @@ check:
       spear-attack-speed: 0 # auto-attack: spear hits faster than its cooldown allows (0 = observe/corroborate-only; raise after tuning to your spear's cooldown)
       attack-while-consuming: 5 # kill-aura: sustained attacks while still eating/drinking — the first attack should interrupt the consume; hard invariant, sustained-gated (enforced)
       attack-while-bow-draw: 5 # kill-aura/bow-aura: sustained melee attacks while drawing a bow/crossbow — the draw occupies the hand; hard invariant, sustained-gated (enforced)
+      attack-while-inventory: 0 # kill-aura/inventory-aura: sustained attacks while a container GUI is open — vanilla routes the mouse to the screen (hard invariant; 0 = observe/corroborate-only; raise after tuning)
 
       # Meta
       # Escalates when several DISTINCT heuristics above corroborate on the same player within a

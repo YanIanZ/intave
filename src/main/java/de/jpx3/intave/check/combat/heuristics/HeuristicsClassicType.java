@@ -76,6 +76,9 @@ public enum HeuristicsClassicType {
   /** Kill-aura / bow-aura: lands melee attacks while a bow or crossbow is being drawn — the draw
    *  occupies the hand, so a sustained run of melee hits during one continuous draw is impossible. */
   ATTACK_WHILE_BOW_DRAW("attack-while-bow-draw"),
+  /** Kill-aura / inventory-aura: lands attacks while a container GUI is open — vanilla routes the
+   *  mouse to the screen, so a sustained run of attacks through an open inventory is impossible. */
+  ATTACK_WHILE_INVENTORY_OPEN("attack-while-inventory"),
   /**
    * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
    * window. Independent detectors agreeing is far stronger evidence than one repeating, so this
