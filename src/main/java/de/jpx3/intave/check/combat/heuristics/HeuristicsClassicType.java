@@ -80,6 +80,14 @@ public enum HeuristicsClassicType {
    *  mouse to the screen, so a sustained run of attacks through an open inventory is impossible. */
   ATTACK_WHILE_INVENTORY_OPEN("attack-while-inventory"),
   /**
+   * Meta-detector (definitive, zero-false-positive by construction): at least two <i>distinct</i>
+   * physical-impossibility tells (multi-aura, attack-while-consuming / -bow-draw / -inventory,
+   * mace-fall-distance) agree on the same player within a short window. A legitimate player trips
+   * <i>none</i> of these — each is something the game does not physically allow — so two coinciding is
+   * a certain cheat verdict, stronger than the statistical corroboration below.
+   */
+  IMPOSSIBLE_COMBO("impossible-combo"),
+  /**
    * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
    * window. Independent detectors agreeing is far stronger evidence than one repeating, so this
    * escalates only when the shared {@link ConfidenceLedger} shows broad agreement.

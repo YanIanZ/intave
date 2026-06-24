@@ -179,6 +179,27 @@ public final class ConfidenceLedger extends CheckCustomMetadata {
     return weighted;
   }
 
+  /**
+   * Counts how many of a <i>specific set</i> of heuristic types flagged this player within the window
+   * — used by the impossible-combo meta-detector to count distinct <i>physical-impossibility</i> tells
+   * (a subset) rather than all heuristics.
+   *
+   * @param windowMillis how recently a type must have flagged to count
+   * @param types        the types to look for
+   * @return how many of {@code types} flagged within the window
+   */
+  public synchronized int distinctRecent(long windowMillis, HeuristicsClassicType... types) {
+    long now = System.currentTimeMillis();
+    int count = 0;
+    for (HeuristicsClassicType type : types) {
+      long last = lastFlagMillis[type.ordinal()];
+      if (last != 0 && now - last <= windowMillis) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   /** @return the combined, time-decayed confidence across every heuristic type */
   public synchronized double aggregateConfidence() {
     long now = System.currentTimeMillis();
