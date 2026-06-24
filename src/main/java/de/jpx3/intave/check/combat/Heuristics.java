@@ -71,6 +71,7 @@ public final class Heuristics extends Check {
     appendCheckPart(new CrystalAuraHeuristic(this));
     appendCheckPart(new SpearAttackSpeedHeuristic(this));
     appendCheckPart(new AttackWhileConsumingHeuristic(this));
+    appendCheckPart(new AttackWhileBowDrawHeuristic(this));
 
     appendCheckPart(new PacketOrderSwingHeuristic(this));
     appendCheckPart(new PacketPlayerActionToggleHeuristic(this));

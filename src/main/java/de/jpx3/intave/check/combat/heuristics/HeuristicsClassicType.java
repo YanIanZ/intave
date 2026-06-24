@@ -73,6 +73,9 @@ public enum HeuristicsClassicType {
   /** Kill-aura: lands repeated attacks while still consuming an item (eating/drinking) — the first
    *  attack should interrupt the consume, so a sustained run during one continuous use is impossible. */
   ATTACK_WHILE_CONSUMING("attack-while-consuming"),
+  /** Kill-aura / bow-aura: lands melee attacks while a bow or crossbow is being drawn — the draw
+   *  occupies the hand, so a sustained run of melee hits during one continuous draw is impossible. */
+  ATTACK_WHILE_BOW_DRAW("attack-while-bow-draw"),
   /**
    * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
    * window. Independent detectors agreeing is far stronger evidence than one repeating, so this
