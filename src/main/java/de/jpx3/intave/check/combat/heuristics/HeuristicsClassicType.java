@@ -68,6 +68,9 @@ public enum HeuristicsClassicType {
   MULTI_AURA("multi-aura"),
   /** Crystal-aura: detonates an end crystal within a tick or two of it appearing (super-human reaction). */
   CRYSTAL_AURA("crystal-aura"),
+  /** Anchor-/bed-aura (Nether/End PvP): runs the place-then-detonate cycle of a respawn anchor or bed
+   *  explosive faster than a human can place and re-aim — only counted where the block actually explodes. */
+  ANCHOR_BED_AURA("anchor-bed-aura"),
   /** Auto-attack: spear (heavy weapon) hits land faster than its cooldown allows for a full-power attack. */
   SPEAR_ATTACK_SPEED("spear-attack-speed"),
   /** Auto-attack (1.21+ weapons): mace / trident hits land faster than a heavy weapon's cooldown allows
