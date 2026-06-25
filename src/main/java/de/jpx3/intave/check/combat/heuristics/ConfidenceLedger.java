@@ -65,9 +65,134 @@ public final class ConfidenceLedger extends CheckCustomMetadata {
    * @return the number of <i>distinct</i> heuristic types that flagged this player within the window
    */
   public synchronized int corroboratingHeuristics(long windowMillis) {
+    return corroboratingHeuristics(windowMillis, null);
+  }
+
+  /**
+   * As {@link #corroboratingHeuristics(long)}, but ignores one heuristic type — used by a
+   * corroboration meta-detector so it does not count its own flags as corroboration.
+   *
+   * @param windowMillis how recently a heuristic must have flagged to count
+   * @param exclude      a type to ignore, or {@code null} to count all
+   * @return the number of distinct, non-excluded heuristics that flagged within the window
+   */
+  public synchronized int corroboratingHeuristics(long windowMillis, HeuristicsClassicType exclude) {
+    long now = System.currentTimeMillis();
+    int excludeIndex = exclude == null ? -1 : exclude.ordinal();
+    int count = 0;
+    for (int i = 0; i < lastFlagMillis.length; i++) {
+      if (i == excludeIndex) {
+        continue;
+      }
+      long last = lastFlagMillis[i];
+      if (last != 0 && now - last <= windowMillis) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /**
+   * The confidence-weighted counterpart to {@link #corroboratingHeuristics(long, HeuristicsClassicType)}:
+   * instead of merely counting the distinct heuristics that flagged within the window, it sums their
+   * current decayed confidence. This lets a meta-detector weigh not just <i>how many</i> heuristics
+   * agree but <i>how strongly</i> — broad agreement among confident detectors scores far higher than the
+   * same number of borderline ones, which is the basis of a more powerful evidence fusion.
+   *
+   * @param windowMillis how recently a heuristic must have flagged to contribute
+   * @param exclude      a type to ignore, or {@code null} to weigh all
+   * @return the summed decayed confidence of the distinct, non-excluded heuristics that flagged in window
+   */
+  public synchronized double weightedCorroboration(long windowMillis, HeuristicsClassicType exclude) {
+    long now = System.currentTimeMillis();
+    int excludeIndex = exclude == null ? -1 : exclude.ordinal();
+    double weighted = 0;
+    for (int i = 0; i < lastFlagMillis.length; i++) {
+      if (i == excludeIndex) {
+        continue;
+      }
+      long last = lastFlagMillis[i];
+      if (last != 0 && now - last <= windowMillis) {
+        ConfidenceBuffer buffer = perType[i];
+        if (buffer != null) {
+          weighted += buffer.value(now);
+        }
+      }
+    }
+    return weighted;
+  }
+
+  /**
+   * As {@link #corroboratingHeuristics(long)}, but ignores up to two heuristic types — used by the
+   * ghost-client meta-detector to count distinct <i>base</i> module tells while excluding both itself
+   * and the corroboration meta-detector (which is derived from the base detectors).
+   *
+   * @param windowMillis how recently a heuristic must have flagged to count
+   * @param excludeA     a type to ignore, or {@code null}
+   * @param excludeB     a second type to ignore, or {@code null}
+   * @return the number of distinct, non-excluded heuristics that flagged within the window
+   */
+  public synchronized int corroboratingHeuristics(long windowMillis, HeuristicsClassicType excludeA, HeuristicsClassicType excludeB) {
+    long now = System.currentTimeMillis();
+    int excludeIndexA = excludeA == null ? -1 : excludeA.ordinal();
+    int excludeIndexB = excludeB == null ? -1 : excludeB.ordinal();
+    int count = 0;
+    for (int i = 0; i < lastFlagMillis.length; i++) {
+      if (i == excludeIndexA || i == excludeIndexB) {
+        continue;
+      }
+      long last = lastFlagMillis[i];
+      if (last != 0 && now - last <= windowMillis) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /**
+   * As {@link #weightedCorroboration(long, HeuristicsClassicType)}, but ignores up to two types — used
+   * by the ghost-client meta-detector so it weighs only distinct <i>base</i> module tells, excluding
+   * both itself and the corroboration meta-detector.
+   *
+   * @param windowMillis how recently a heuristic must have flagged to contribute
+   * @param excludeA     a type to ignore, or {@code null}
+   * @param excludeB     a second type to ignore, or {@code null}
+   * @return the summed decayed confidence of the distinct, non-excluded heuristics that flagged in window
+   */
+  public synchronized double weightedCorroboration(long windowMillis, HeuristicsClassicType excludeA, HeuristicsClassicType excludeB) {
+    long now = System.currentTimeMillis();
+    int excludeIndexA = excludeA == null ? -1 : excludeA.ordinal();
+    int excludeIndexB = excludeB == null ? -1 : excludeB.ordinal();
+    double weighted = 0;
+    for (int i = 0; i < lastFlagMillis.length; i++) {
+      if (i == excludeIndexA || i == excludeIndexB) {
+        continue;
+      }
+      long last = lastFlagMillis[i];
+      if (last != 0 && now - last <= windowMillis) {
+        ConfidenceBuffer buffer = perType[i];
+        if (buffer != null) {
+          weighted += buffer.value(now);
+        }
+      }
+    }
+    return weighted;
+  }
+
+  /**
+   * Counts how many of a <i>specific set</i> of heuristic types flagged this player within the window
+   * — used by the impossible-combo meta-detector to count distinct <i>physical-impossibility</i> tells
+   * (a subset) rather than all heuristics.
+   *
+   * @param windowMillis how recently a type must have flagged to count
+   * @param types        the types to look for
+   * @return how many of {@code types} flagged within the window
+   */
+  public synchronized int distinctRecent(long windowMillis, HeuristicsClassicType... types) {
     long now = System.currentTimeMillis();
     int count = 0;
-    for (long last : lastFlagMillis) {
+    for (HeuristicsClassicType type : types) {
+      long last = lastFlagMillis[type.ordinal()];
       if (last != 0 && now - last <= windowMillis) {
         count++;
       }

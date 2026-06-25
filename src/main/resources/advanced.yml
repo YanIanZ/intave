@@ -89,6 +89,12 @@ check:
       rotation-snap: 5        # aimbot: instant yaw snap not mirrored by movement
       rotation-sensitivity: -1 # aimbot GCD desync (disabled by default; tune per server, see docs)
       rotation-reset: 3       # silent-aim: snap onto target then reset the view
+      rotation-constant-speed: 0 # linear-aim: robotically constant turn velocity (0 = observe/corroborate-only; raise after tuning)
+      rotation-acceleration: 0 # linear-aim: robotically constant turn acceleration / steady speed ramp (0 = observe/corroborate-only; raise after tuning)
+      aim-smoothing: 0        # aimbot: robotically constant ease/smoothing factor toward the target (0 = observe/corroborate-only; raise after tuning)
+      rotation-linearity: 0   # aimbot: collinear (yaw, pitch) steps — a robotically straight aim path (0 = observe/corroborate-only; raise after tuning)
+      rotation-entropy: 0     # aimbot: rotation stream too repetitive (low entropy) to be human motor noise (0 = observe/corroborate-only; raise after tuning)
+      rotation-jitter: 0      # aimbot: added aim jitter is artificial/white (uncorrelated deltas) where human tremor is autocorrelated (0 = observe/corroborate-only; raise after tuning)
 
       # Other
       inventory-rotations: 2  # inventory-aura: rotating while a container screen is open
@@ -97,6 +103,36 @@ check:
       swing-order: 3          # spoofed swing/attack packet ordering
       sprint-toggles: 2 # prevents spamming sprint packets to apply more knockback on targets
       tool-switch: 3 # prevents slot switches while breaking blocks
+      fast-swap: 0 # auto-swap / weapon-combo macro: weapon swaps faster than one per tick (0 = observe/corroborate-only; raise after tuning)
+      mace-fall-distance: 5 # mace smash with more server fall distance than its airtime physically allows (hard terminal-velocity invariant, 1.21+)
+      multi-aura: 4 # switch-aura: attacks land on distinct entities within one tick — hard invariant, sustained + lag-gated (enforced; ~5 fires to notify, ~13 to kick)
+      crystal-aura: 0 # crystal-aura: detonates an end crystal a tick or two after it spawns (super-human reaction; 0 = observe/corroborate-only; raise after tuning)
+      anchor-bed-aura: 0 # anchor/bed-aura (Nether/End PvP): place-then-detonate cycle of a respawn anchor or bed faster than a human can place and re-aim (0 = observe/corroborate-only; raise after tuning)
+      spear-attack-speed: 0 # auto-attack: spear hits faster than its cooldown allows (0 = observe/corroborate-only; raise after tuning to your spear's cooldown)
+      heavy-attack-speed: 0 # auto-attack (1.21+): mace/trident hits faster than a heavy weapon's cooldown allows (0 = observe/corroborate-only; raise after tuning)
+      attack-while-consuming: 5 # kill-aura: sustained attacks while still eating/drinking — the first attack should interrupt the consume; hard invariant, sustained-gated (enforced)
+      attack-while-bow-draw: 5 # kill-aura/bow-aura: sustained melee attacks while drawing a bow/crossbow — the draw occupies the hand; hard invariant, sustained-gated (enforced)
+      attack-while-inventory: 4 # kill-aura/inventory-aura: sustained attacks while a container GUI is open — vanilla routes the mouse to the screen; hard invariant, sustained-gated (enforced)
+
+      # Meta
+      # Definitive verdict: fires when >= 2 DISTINCT physical-impossibility tells (multi-aura,
+      # attack-while-consuming/-bow-draw/-inventory, mace-fall-distance) coincide on the same player.
+      # A legitimate player trips none of these, so two at once is certain — zero false positive by
+      # construction, which is why it ships enforced (stronger than the statistical corroboration).
+      impossible-combo: 15
+
+      # Escalates when several DISTINCT heuristics above corroborate on the same player within a
+      # short window (independent detectors agreeing is stronger evidence than one repeating).
+      # Conservative by design; set to 0 to observe it (log/verbose) without adding violation level.
+      corroboration: 3
+
+      # Ghost-/cheat-client verdict: identifies a player running a cheat CLIENT (e.g. a "ghost"
+      # client such as Vape) rather than one isolated cheat, by the breadth of independent base
+      # heuristics that agree (kill-aura, reach, velocity, auto-clicker each leak into a different
+      # one). Folds in the minecraft:brand fingerprint for attribution (a spoofed/hidden "vanilla"
+      # brand under heavy cheating is surfaced). Stricter than corroboration and very low false
+      # positive; set to 0 to only identify/log it without adding violation level.
+      ghost-client: 5
 
       thresholds:
         20:
@@ -169,6 +205,14 @@ check:
     # BAN NOT NECESSARY
     thresholds:
       100: "intave internals sendnotify &c{player}&7/{trust-color}&7 is breaking blocks too quickly"
+
+  fastuse:
+    enabled: true
+    # Flags consuming items (food/potions) faster than physically possible.
+    # Conservative by default: notify only, no ban. Lower the threshold to notify sooner.
+    # BAN NOT NECESSARY
+    thresholds:
+      100: "intave internals sendnotify &c{player}&7/{trust-color}&7 is using items too quickly"
 
   protocolscanner:
     enabled: true

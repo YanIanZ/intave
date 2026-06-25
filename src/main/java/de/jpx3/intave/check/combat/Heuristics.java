@@ -5,6 +5,9 @@ import de.jpx3.intave.check.Check;
 import de.jpx3.intave.check.CheckConfiguration;
 import de.jpx3.intave.check.combat.heuristics.HeuristicsClassicType;
 import de.jpx3.intave.check.combat.heuristics.combatpatterns.AttackRequiredHeuristic;
+import de.jpx3.intave.check.combat.heuristics.combatpatterns.CorroborationHeuristic;
+import de.jpx3.intave.check.combat.heuristics.combatpatterns.GhostClientHeuristic;
+import de.jpx3.intave.check.combat.heuristics.combatpatterns.ImpossibleComboHeuristic;
 import de.jpx3.intave.check.combat.heuristics.combatpatterns.PreAttackHeuristic;
 import de.jpx3.intave.check.combat.heuristics.combatpatterns.accuracy.AccuracyHitboxCornerHeuristic;
 import de.jpx3.intave.check.combat.heuristics.combatpatterns.accuracy.AccuracyLongTermHeuristic;
@@ -53,10 +56,26 @@ public final class Heuristics extends Check {
     appendCheckPart(new AccuracyHitboxCornerHeuristic(this));
     appendCheckPart(new RotationSensitivityHeuristic(this));
     appendCheckPart(new RotationModuloResetHeuristic(this));
+    appendCheckPart(new RotationConstantSpeedHeuristic(this));
+    appendCheckPart(new RotationAccelerationHeuristic(this));
+    appendCheckPart(new AimSmoothingHeuristic(this));
+    appendCheckPart(new RotationLinearityHeuristic(this));
+    appendCheckPart(new RotationEntropyHeuristic(this));
+    appendCheckPart(new RotationJitterHeuristic(this));
     appendCheckPart(new PreAttackHeuristic(this));
 
     appendCheckPart(new AttackRequiredHeuristic(this));
     appendCheckPart(new ToolSwitchHeuristic(this));
+    appendCheckPart(new FastSwapHeuristic(this));
+    appendCheckPart(new MaceFallDistanceHeuristic(this));
+    appendCheckPart(new MultiAuraHeuristic(this));
+    appendCheckPart(new CrystalAuraHeuristic(this));
+    appendCheckPart(new AnchorBedAuraHeuristic(this));
+    appendCheckPart(new SpearAttackSpeedHeuristic(this));
+    appendCheckPart(new HeavyHitterAttackSpeedHeuristic(this));
+    appendCheckPart(new AttackWhileConsumingHeuristic(this));
+    appendCheckPart(new AttackWhileBowDrawHeuristic(this));
+    appendCheckPart(new AttackWhileInventoryOpenHeuristic(this));
 
     appendCheckPart(new PacketOrderSwingHeuristic(this));
     appendCheckPart(new PacketPlayerActionToggleHeuristic(this));
@@ -64,6 +83,13 @@ public final class Heuristics extends Check {
     appendCheckPart(new BlockingHeuristic(this));
     appendCheckPart(new NoSwingHeuristic(this));
     appendCheckPart(new CivbreakHeuristic(this));
+
+    // Meta-detectors: weigh the combination of the above via the shared confidence ledger.
+    // Registered last so they are the final attack-packet listeners in the cluster; the
+    // ghost-client verdict reads the breadth of agreement the corroboration detector also consults.
+    appendCheckPart(new ImpossibleComboHeuristic(this));
+    appendCheckPart(new CorroborationHeuristic(this));
+    appendCheckPart(new GhostClientHeuristic(this));
   }
 
   private void loadClassicConfiguration() {

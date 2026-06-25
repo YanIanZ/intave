@@ -34,6 +34,20 @@ public enum HeuristicsClassicType {
   ROTATION_SENSITIVITY("rotation-sensitivity"),
   /** Silent-aim: rotation snaps to the target then resets back to the player's view angle. */
   ROTATION_MODULO_RESET("rotation-reset"),
+  /** Linear-aim / aimbot: angular (yaw) velocity stays robotically constant while tracking. */
+  ROTATION_CONSTANT_SPEED("rotation-constant-speed"),
+  /** Linear-aim / aimbot: angular (yaw) <i>acceleration</i> stays robotically constant — a steady speed
+   *  ramp with near-zero jerk, which neither constant-speed nor geometric easing describes. */
+  ROTATION_ACCELERATION("rotation-acceleration"),
+  /** Aim-smoothing / aimbot: the per-tick ease ratio toward the target stays robotically constant. */
+  AIM_SMOOTHING("aim-smoothing"),
+  /** Linear-aim / aimbot: per-tick (yaw, pitch) steps are collinear — a straight path in angle space. */
+  ROTATION_LINEARITY("rotation-linearity"),
+  /** Aimbot: the rotation stream is robotically repetitive — too little entropy to be human motor noise. */
+  ROTATION_ENTROPY("rotation-entropy"),
+  /** Aimbot (anti-smoothness evasion): added aim "jitter" is statistically <i>artificial</i> — its per-tick
+   *  deltas are uncorrelated/white, where genuine human motor tremor is temporally autocorrelated. */
+  ROTATION_JITTER("rotation-jitter"),
   /** Inventory-aura: sends look packets carrying rotation while an inventory screen is open. */
   INVENTORY_ROTATIONS("inventory-rotations"),
   /** Block-hit / fast-use (1.8): abuses sword blocking timing to gain defensive frames. */
@@ -45,7 +59,52 @@ public enum HeuristicsClassicType {
   /** W-tap / sprint-reset bots: toggles sprint or sneak multiple times within a single tick. */
   SPRINT_TOGGLES("sprint-toggles"),
   /** Auto-tool / fast-break aura: swaps the held slot mid block-break in an automated pattern. */
-  TOOL_SWITCH("tool-switch");
+  TOOL_SWITCH("tool-switch"),
+  /** Auto-swap / weapon-combo macro: swaps the held weapon faster than one slot change per tick. */
+  FAST_SWAP("fast-swap"),
+  /** Mace fall-distance spoof: a smash hit with more server fall distance than its airtime allows. */
+  MACE_FALL_DISTANCE("mace-fall-distance"),
+  /** Multi-aura / switch-aura: attacks land on distinct entities within a single tick (super-human). */
+  MULTI_AURA("multi-aura"),
+  /** Crystal-aura: detonates an end crystal within a tick or two of it appearing (super-human reaction). */
+  CRYSTAL_AURA("crystal-aura"),
+  /** Anchor-/bed-aura (Nether/End PvP): runs the place-then-detonate cycle of a respawn anchor or bed
+   *  explosive faster than a human can place and re-aim — only counted where the block actually explodes. */
+  ANCHOR_BED_AURA("anchor-bed-aura"),
+  /** Auto-attack: spear (heavy weapon) hits land faster than its cooldown allows for a full-power attack. */
+  SPEAR_ATTACK_SPEED("spear-attack-speed"),
+  /** Auto-attack (1.21+ weapons): mace / trident hits land faster than a heavy weapon's cooldown allows
+   *  for a full-power attack — the modern heavy-hitters the spear check does not cover. */
+  HEAVY_ATTACK_SPEED("heavy-attack-speed"),
+  /** Kill-aura: lands repeated attacks while still consuming an item (eating/drinking) — the first
+   *  attack should interrupt the consume, so a sustained run during one continuous use is impossible. */
+  ATTACK_WHILE_CONSUMING("attack-while-consuming"),
+  /** Kill-aura / bow-aura: lands melee attacks while a bow or crossbow is being drawn — the draw
+   *  occupies the hand, so a sustained run of melee hits during one continuous draw is impossible. */
+  ATTACK_WHILE_BOW_DRAW("attack-while-bow-draw"),
+  /** Kill-aura / inventory-aura: lands attacks while a container GUI is open — vanilla routes the
+   *  mouse to the screen, so a sustained run of attacks through an open inventory is impossible. */
+  ATTACK_WHILE_INVENTORY_OPEN("attack-while-inventory"),
+  /**
+   * Meta-detector (definitive, zero-false-positive by construction): at least two <i>distinct</i>
+   * physical-impossibility tells (multi-aura, attack-while-consuming / -bow-draw / -inventory,
+   * mace-fall-distance) agree on the same player within a short window. A legitimate player trips
+   * <i>none</i> of these — each is something the game does not physically allow — so two coinciding is
+   * a certain cheat verdict, stronger than the statistical corroboration below.
+   */
+  IMPOSSIBLE_COMBO("impossible-combo"),
+  /**
+   * Meta-detector: several <i>distinct</i> heuristics corroborate on the same player within a short
+   * window. Independent detectors agreeing is far stronger evidence than one repeating, so this
+   * escalates only when the shared {@link ConfidenceLedger} shows broad agreement.
+   */
+  CORROBORATION("corroboration"),
+  /**
+   * Ghost-/cheat-client verdict: several <i>distinct base</i> heuristics agree, the fingerprint of a
+   * client running multiple cheat modules at once (kill-aura, reach, velocity, auto-clicker) rather
+   * than one isolated cheat. Folds in the {@code minecraft:brand} fingerprint for attribution.
+   */
+  GHOST_CLIENT("ghost-client");
 
   private final String configurationName;
 

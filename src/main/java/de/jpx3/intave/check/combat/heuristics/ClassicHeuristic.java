@@ -57,9 +57,17 @@ public class ClassicHeuristic<M extends CheckCustomMetadata> extends MetaCheckPa
    * weigh cross-heuristic corroboration; when more than one distinct heuristic has flagged the
    * player recently, that corroboration count is attached to the violation for verbose output.
    *
+   * <p>Bedrock (Geyser/Floodgate) players are exempt: their input is translated touch/controller aim
+   * with built-in assist, which these Java-style heuristics cannot analyse without false positives.
+   * Their flags are skipped entirely — no violation level and no ledger recording — while reach,
+   * movement and ray-trace checks outside this engine still guard them.
+   *
    * @param confidence strength of the evidence, clamped to {@code [0, 1]}
    */
   protected void flag(Player player, String details, double confidence) {
+    if (BedrockPlayers.isBedrock(player)) {
+      return;
+    }
     double weight = MathHelper.minmax(0.0, confidence, 1.0);
     ConfidenceLedger ledger = ledgerOf(userOf(player));
     ledger.note(type, weight);

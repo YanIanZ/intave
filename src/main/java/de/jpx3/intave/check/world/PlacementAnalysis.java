@@ -53,6 +53,8 @@ public final class PlacementAnalysis extends Check {
 
     appendPlayerCheckPart(AngleSnap.class);
     appendPlayerCheckPart(RotationFlick.class);
+    appendPlayerCheckPart(CursorStability.class);
+    appendPlayerCheckPart(KeepYPlace.class);
   }
 
   @BukkitEventSubscription
