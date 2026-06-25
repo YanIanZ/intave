@@ -70,6 +70,9 @@ public enum HeuristicsClassicType {
   CRYSTAL_AURA("crystal-aura"),
   /** Auto-attack: spear (heavy weapon) hits land faster than its cooldown allows for a full-power attack. */
   SPEAR_ATTACK_SPEED("spear-attack-speed"),
+  /** Auto-attack (1.21+ weapons): mace / trident hits land faster than a heavy weapon's cooldown allows
+   *  for a full-power attack — the modern heavy-hitters the spear check does not cover. */
+  HEAVY_ATTACK_SPEED("heavy-attack-speed"),
   /** Kill-aura: lands repeated attacks while still consuming an item (eating/drinking) — the first
    *  attack should interrupt the consume, so a sustained run during one continuous use is impossible. */
   ATTACK_WHILE_CONSUMING("attack-while-consuming"),
