@@ -110,6 +110,7 @@ check:
       anchor-bed-aura: 0 # anchor/bed-aura (Nether/End PvP): place-then-detonate cycle of a respawn anchor or bed faster than a human can place and re-aim (0 = observe/corroborate-only; raise after tuning)
       spear-attack-speed: 0 # auto-attack: spear hits faster than its cooldown allows (0 = observe/corroborate-only; raise after tuning to your spear's cooldown)
       heavy-attack-speed: 0 # auto-attack (1.21+): mace/trident hits faster than a heavy weapon's cooldown allows (0 = observe/corroborate-only; raise after tuning)
+      bow-aim-accuracy: 0 # bow-aura/projectile-aimbot: arrows hit players at a super-human rate (the melee aim suite is dark during bow combat) (0 = observe/corroborate-only; raise after tuning)
       attack-while-consuming: 5 # kill-aura: sustained attacks while still eating/drinking — the first attack should interrupt the consume; hard invariant, sustained-gated (enforced)
       attack-while-bow-draw: 5 # kill-aura/bow-aura: sustained melee attacks while drawing a bow/crossbow — the draw occupies the hand; hard invariant, sustained-gated (enforced)
       attack-while-inventory: 4 # kill-aura/inventory-aura: sustained attacks while a container GUI is open — vanilla routes the mouse to the screen; hard invariant, sustained-gated (enforced)

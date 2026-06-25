@@ -76,6 +76,9 @@ public enum HeuristicsClassicType {
   /** Auto-attack (1.21+ weapons): mace / trident hits land faster than a heavy weapon's cooldown allows
    *  for a full-power attack — the modern heavy-hitters the spear check does not cover. */
   HEAVY_ATTACK_SPEED("heavy-attack-speed"),
+  /** Bow-aura / projectile-aimbot: arrows land on players far more often than a human can aim, while the
+   *  melee-gated rotation suite is dark during bow combat — the projectile analog of attack-accuracy. */
+  BOW_AIM_ACCURACY("bow-aim-accuracy"),
   /** Kill-aura: lands repeated attacks while still consuming an item (eating/drinking) — the first
    *  attack should interrupt the consume, so a sustained run during one continuous use is impossible. */
   ATTACK_WHILE_CONSUMING("attack-while-consuming"),

@@ -73,6 +73,7 @@ public final class Heuristics extends Check {
     appendCheckPart(new AnchorBedAuraHeuristic(this));
     appendCheckPart(new SpearAttackSpeedHeuristic(this));
     appendCheckPart(new HeavyHitterAttackSpeedHeuristic(this));
+    appendCheckPart(new BowAimAccuracyHeuristic(this));
     appendCheckPart(new AttackWhileConsumingHeuristic(this));
     appendCheckPart(new AttackWhileBowDrawHeuristic(this));
     appendCheckPart(new AttackWhileInventoryOpenHeuristic(this));
