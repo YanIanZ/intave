@@ -37,6 +37,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `RotationLinearityHeuristic` | `rotation-linearity` | linear-interpolation aimbot | Per-tick `(Δyaw, Δpitch)` steps are collinear (\|r\| → 1) — a robotically straight aim path; ships at `0` (observe) | all |
 | `RotationEntropyHeuristic` | `rotation-entropy` | aimbot (ML-style) | Rotation stream is robotically repetitive — normalised Shannon entropy of the step distribution too low to be human motor noise; ships at `0` (observe) | all |
 | `RotationJitterHeuristic` | `rotation-jitter` | aimbot (anti-smoothness evasion) | Added aim jitter is statistically artificial — lag-1 autocorrelation of signed yaw deltas near zero/negative (white noise) where human tremor is autocorrelated; complements the smoothness tells; ships at `0` (observe) | all |
+| `FailRotationHeuristic` | `fail-rotation` | aim-assist (anti-accuracy evasion) | A robotically tight aim (residual to target ~0) punctuated by deliberate, bounded, self-reverting "miss" pulses of uniform magnitude — the fingerprint of a fail-rotation processor (e.g. LiquidBounce) added to beat the accuracy/jitter/entropy tells; the pulses ride a baseline far tighter than human motor noise; ships at `0` (observe) | all |
 | `PacketInventoryHeuristic` | `inventory-rotations` | inventory-aura / auto-item | Rotation sent while inventory open; open+close within one tick | all |
 | `BlockingHeuristic` | `blocking` | 1.8 block-hit | Illegitimate sword block/unblock timing | **1.8 only** |
 | `NoSwingHeuristic` | `no-swing` | no-swing aura | Attack lands in a tick with no arm-animation | all |
@@ -53,6 +54,8 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `AttackWhileConsumingHeuristic` | `attack-while-consuming` | kill-aura | Sustained entity attacks while the hand is still consuming food/drink — the first attack should interrupt the consume, so a run during one continuous use is impossible; hard invariant, **enforced** (`5`) | all |
 | `AttackWhileBowDrawHeuristic` | `attack-while-bow-draw` | kill-aura / bow-aura | Sustained melee attacks while a bow/crossbow is being drawn — the draw occupies the hand (a click would release the shot), so a melee run during one continuous draw is impossible; hard invariant, **enforced** (`5`) | all |
 | `AttackWhileInventoryOpenHeuristic` | `attack-while-inventory` | kill-aura / inventory-aura | Sustained attacks while a container GUI is open — vanilla routes the mouse to the screen, so attacking entities through an open inventory is impossible; distinct from inventory-*rotations*; hard invariant, **enforced** (`4`) | all |
+| `InventoryCloseAttackHeuristic` | `inventory-close-attack` | kill-aura / inventory-aura (anti-detection) | Sustained run of attacks landing within one tick of a container `CLOSE_WINDOW` — the signature of a client that closes (and reopens) the GUI around each attack so the server never sees it open at attack time (e.g. LiquidBounce's `simulateInventoryClosing`), the countermeasure to `attack-while-inventory`; a deliberate human close-then-attack takes far longer than a tick; hard invariant, sustained-gated, **enforced** (`4`) | all |
+| `BaritoneHeuristic` | `baritone` | pathfinding bot (Baritone) | Attacks land while the player is auto-pathing with the yaw heading-locked through turns (the movement-domain `Pathfinder`/`HeadingLock` tell — see below); a human breaks bot-perfect travel to fight, so attacking *during* it is the combination; records to the ledger to corroborate; ships at `0` (observe) | all |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
 | `ImpossibleComboHeuristic` | `impossible-combo` | definitive cheat verdict (meta) | ≥2 *distinct physical-impossibility* tells coincide (multi-aura, attack-while-consuming/-bow-draw/-inventory, mace-fall-distance) — a legit player trips none, so two at once is certain; zero-FP by construction, ships **enforced** (`15`) | all |
 | `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree (breadth gate), then fuses their **confidence-weighted** evidence — strong/broad agreement escalates fast, weak/broad barely moves (decaying, graded) | all |
@@ -196,6 +199,55 @@ Detection uses `BedrockPlayers#isBedrock`, which queries the Floodgate API **ref
 compile- or load-time dependency): it reports `false` when Floodgate is absent, so Bedrock cannot be
 identified in a Geyser-only setup without Floodgate. This complements the `TrustFactor.BYPASS` that
 Floodgate players already receive and applies even where that trust bypass is reconfigured.
+
+## Pathfinding bot (Baritone) detection
+
+Baritone is a pathfinding **bot**, not a combat cheat, so the combat heuristics above never see it on
+their own. It is caught in how it *travels*, by a dedicated movement-domain check —
+[`Pathfinder`](../src/main/java/de/jpx3/intave/check/movement/pathfinder/Pathfinder.java) (config key
+`pathfinder`).
+
+Its detector,
+[`HeadingLock`](../src/main/java/de/jpx3/intave/check/movement/pathfinder/HeadingLock.java), targets
+Baritone's most stable, server-observable signature: with `antiCheatCompatibility` enabled (its
+default) Baritone forces the transmitted yaw to face the direction it is walking so it never sprints
+sideways, and it steers along computed routes. The angular **residual** between the yaw and the heading
+implied by the horizontal motion therefore stays near zero — *even while the bot is turning*. A human
+walking straight has a small residual too, so the discriminator is the residual staying pinned **through
+turns**: over a sprint window the check requires the cumulative yaw change to clear a threshold (the
+player genuinely curved) while the mean residual and its spread both stay within a few degrees — a real
+player over-/under-shoots when they curve, a bot tracks the route exactly. The pure geometry lives in
+[`BaritoneMovementMath`](../src/main/java/de/jpx3/intave/check/movement/pathfinder/BaritoneMovementMath.java)
+and is unit-tested.
+
+Because it reads only motion and yaw, it is **version-independent** and covers every Baritone branch
+(1.13.2 → 1.21.11) without per-version gating. The `Pathfinder` violation level it accumulates is folded
+into `GhostClientHeuristic`'s cross-domain breadth automatically (a cheat client that *also* auto-paths
+trips it alongside its combat tells), and each robotic window stamps the player so the combat-domain
+[`BaritoneHeuristic`](../src/main/java/de/jpx3/intave/check/combat/heuristics/other/BaritoneHeuristic.java)
+(config `baritone`) can fuse "bot-pathing while fighting" into the ledger. The check ships notify/log-only
+(no kick); raise an action in `check.pathfinder.thresholds` after confirming no false positives.
+
+> Considered and rejected: a block-break/place **cadence** sub-check. Vanilla block-break time is
+> deterministic per block/tool, so a human repeatedly mining one block type is just as periodic as a
+> bot — cadence uniformity is not a discriminator and would be false-positive-prone.
+
+## LiquidBounce bypass resistance
+
+A few heuristics above were added specifically to close evasion paths in current cheat clients
+(LiquidBounce ships Intave-targeted modules):
+
+* **`inventory-close-attack`** answers `simulateInventoryClosing` (closing the container a tick before
+  each attack to dodge `attack-while-inventory`).
+* **`fail-rotation`** answers the fail-rotation processor (injected uniform "misses" to beat the
+  accuracy / jitter / entropy tells).
+* **Silent-aim with `RotationTiming.ON_TICK`** (rotate → attack → rotate-back inside one tick) is
+  already covered by the existing layers and needs no new detector: a *pure* silent rotation that never
+  faces the target fails the reach **ray-trace** (a simulation check, angle-aware), which forces the
+  client to briefly face the target; that brief snap-then-revert is caught by `rotation-reset`
+  (`RotationModuloResetHeuristic`) on a sustained target and by `pre-attack` (`PreAttackHeuristic`),
+  which sees no genuine cursor-on-target lead-in over its window. A dedicated attack-anchored sandwich
+  detector was evaluated and skipped as redundant and false-positive-prone.
 
 ## Version support (through 26.2)
 

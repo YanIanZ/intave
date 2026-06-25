@@ -84,6 +84,9 @@ public final class MovementMetadata implements SimulationEnvironment {
   public long invalidVehiclePositionTicks = 0;
   // Timestamps
   public long lastTimeSneaking, lastTimeJumped, lastMovement, lastRotation;
+  // Set by the Pathfinder check's HeadingLock when robotic heading-lock-through-turns is observed, so
+  // the combat-domain BaritoneHeuristic can fuse "bot-pathing while fighting" into the ledger.
+  public long lastPathfinderHeadingLockMillis = 0;
   public Motion emulationVelocity;
   public Motion sneakPatchVelocity;
   public Motion setbackOverrideVelocity = Motion.newEmpty();
