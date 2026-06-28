@@ -76,7 +76,7 @@ public final class InventoryCloseAttackHeuristic extends ClassicHeuristic<Invent
     CloseAttackMeta meta = metaOf(user);
     long now = System.currentTimeMillis();
     long sinceClose = now - meta.lastCloseMillis;
-    if (meta.lastCloseMillis == 0L || sinceClose > CLOSE_TO_ATTACK_MILLIS) {
+    if (!withinCloseWindow(meta.lastCloseMillis, now)) {
       return;
     }
     // consume this close so the same window-close cannot arm two attacks
@@ -87,6 +87,14 @@ public final class InventoryCloseAttackHeuristic extends ClassicHeuristic<Invent
       flag(user.player(), "attacked " + sinceClose + "ms after closing a container (streak "
         + meta.detector.streak() + ") — simulated inventory close", confidence);
     }
+  }
+
+  /**
+   * Pure tell: an attack at {@code now} falls within one tick of a real container close. A zero
+   * timestamp means no close is armed (already consumed or none seen).
+   */
+  static boolean withinCloseWindow(long lastCloseMillis, long now) {
+    return lastCloseMillis != 0L && now - lastCloseMillis <= CLOSE_TO_ATTACK_MILLIS;
   }
 
   public static final class CloseAttackMeta extends CheckCustomMetadata {

@@ -78,6 +78,17 @@ final class PulseTrackerTest {
   }
 
   @Test
+  void excursionLongerThanTheCapIsNotAPulse() {
+    PulseTracker tracker = new PulseTracker();
+    // stays off-target for 5 ticks (> MAX_PULSE_TICKS) before returning — a sustained turn, not a fail
+    double[] stream = {0.3, 0.3, 6.0, 6.0, 6.0, 6.0, 6.0, 0.3, 0.3};
+    for (double residual : stream) {
+      tracker.accept(residual);
+    }
+    assertEquals(0, tracker.pulseCount());
+  }
+
+  @Test
   void resetClearsState() {
     PulseTracker tracker = new PulseTracker();
     tracker.accept(0.3d);

@@ -63,11 +63,8 @@ public final class MultiActionHeuristic extends ClassicHeuristic<MultiActionHeur
     packetsIn = {USE_ITEM_ON, BLOCK_PLACE}
   )
   public void onPlace(User user) {
-    if (isCreative(user)) {
-      return;
-    }
     // a place while a block-break is still in progress: vanilla would have stopped/aborted the break
-    if (user.meta().attack().inBreakProcess) {
+    if (placeOverlapsBreak(isCreative(user), user.meta().attack().inBreakProcess)) {
       note(user, "placed a block while still breaking one");
     }
   }
@@ -77,14 +74,22 @@ public final class MultiActionHeuristic extends ClassicHeuristic<MultiActionHeur
     packetsIn = {BLOCK_DIG}
   )
   public void onDig(User user, PacketEvent event) {
-    if (isCreative(user)) {
-      return;
-    }
     EnumWrappers.PlayerDigType digType = event.getPacket().getPlayerDigTypes().readSafely(0);
+    boolean startDestroy = digType == EnumWrappers.PlayerDigType.START_DESTROY_BLOCK;
     // a block-break starting while an item is in active use: the hand is occupied
-    if (digType == EnumWrappers.PlayerDigType.START_DESTROY_BLOCK && user.meta().inventory().handActive()) {
+    if (digStartOverlapsUse(isCreative(user), startDestroy, user.meta().inventory().handActive())) {
       note(user, "started breaking a block while using an item");
     }
+  }
+
+  /** Pure tell: placing a block while a break is in progress (creative does instant breaks, exempt). */
+  static boolean placeOverlapsBreak(boolean creative, boolean inBreakProcess) {
+    return !creative && inBreakProcess;
+  }
+
+  /** Pure tell: starting a block-break while an item is in active use (creative exempt). */
+  static boolean digStartOverlapsUse(boolean creative, boolean startDestroy, boolean handActive) {
+    return !creative && startDestroy && handActive;
   }
 
   private void note(User user, String details) {
