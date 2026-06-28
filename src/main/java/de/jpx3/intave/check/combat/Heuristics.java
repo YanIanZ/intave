@@ -79,6 +79,7 @@ public final class Heuristics extends Check {
     appendCheckPart(new AttackWhileInventoryOpenHeuristic(this));
     appendCheckPart(new InventoryCloseAttackHeuristic(this));
     appendCheckPart(new BaritoneHeuristic(this));
+    appendCheckPart(new MultiActionHeuristic(this));
 
     appendCheckPart(new PacketOrderSwingHeuristic(this));
     appendCheckPart(new PacketPlayerActionToggleHeuristic(this));
