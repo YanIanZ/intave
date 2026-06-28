@@ -62,6 +62,7 @@ public final class Heuristics extends Check {
     appendCheckPart(new RotationLinearityHeuristic(this));
     appendCheckPart(new RotationEntropyHeuristic(this));
     appendCheckPart(new RotationJitterHeuristic(this));
+    appendCheckPart(new FailRotationHeuristic(this));
     appendCheckPart(new PreAttackHeuristic(this));
 
     appendCheckPart(new AttackRequiredHeuristic(this));
@@ -76,6 +77,8 @@ public final class Heuristics extends Check {
     appendCheckPart(new AttackWhileConsumingHeuristic(this));
     appendCheckPart(new AttackWhileBowDrawHeuristic(this));
     appendCheckPart(new AttackWhileInventoryOpenHeuristic(this));
+    appendCheckPart(new InventoryCloseAttackHeuristic(this));
+    appendCheckPart(new BaritoneHeuristic(this));
 
     appendCheckPart(new PacketOrderSwingHeuristic(this));
     appendCheckPart(new PacketPlayerActionToggleHeuristic(this));

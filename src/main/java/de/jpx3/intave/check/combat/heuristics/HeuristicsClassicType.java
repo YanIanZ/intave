@@ -48,6 +48,10 @@ public enum HeuristicsClassicType {
   /** Aimbot (anti-smoothness evasion): added aim "jitter" is statistically <i>artificial</i> — its per-tick
    *  deltas are uncorrelated/white, where genuine human motor tremor is temporally autocorrelated. */
   ROTATION_JITTER("rotation-jitter"),
+  /** Aim-assist (anti-accuracy evasion): a robotically tight aim punctuated by deliberate, bounded,
+   *  self-reverting "miss" pulses (e.g. LiquidBounce's fail-rotation processor) to defeat the accuracy,
+   *  entropy and jitter tells — the pulses ride on a baseline far tighter than human motor noise. */
+  FAIL_ROTATION("fail-rotation"),
   /** Inventory-aura: sends look packets carrying rotation while an inventory screen is open. */
   INVENTORY_ROTATIONS("inventory-rotations"),
   /** Block-hit / fast-use (1.8): abuses sword blocking timing to gain defensive frames. */
@@ -85,6 +89,13 @@ public enum HeuristicsClassicType {
   /** Kill-aura / inventory-aura: lands attacks while a container GUI is open — vanilla routes the
    *  mouse to the screen, so a sustained run of attacks through an open inventory is impossible. */
   ATTACK_WHILE_INVENTORY_OPEN("attack-while-inventory"),
+  /** Kill-aura / inventory-aura (anti-detection): closes the container GUI a tick before each attack
+   *  and reopens it (e.g. LiquidBounce's {@code simulateInventoryClosing}) so the server never sees the
+   *  GUI open at attack time. A sustained run of close-then-attack within one tick is automation. */
+  INVENTORY_CLOSE_ATTACK("inventory-close-attack"),
+  /** Pathfinding bot (e.g. Baritone): attacks while travelling with the transmitted yaw robotically
+   *  locked to the movement heading through turns — a human decouples view from travel when fighting. */
+  BARITONE("baritone"),
   /**
    * Meta-detector (definitive, zero-false-positive by construction): at least two <i>distinct</i>
    * physical-impossibility tells (multi-aura, attack-while-consuming / -bow-draw / -inventory,

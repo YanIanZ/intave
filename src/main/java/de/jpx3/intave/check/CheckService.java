@@ -11,6 +11,7 @@ import de.jpx3.intave.check.combat.ClickSpeedLimiter;
 import de.jpx3.intave.check.combat.Heuristics;
 import de.jpx3.intave.check.movement.Physics;
 import de.jpx3.intave.check.movement.Timer;
+import de.jpx3.intave.check.movement.pathfinder.Pathfinder;
 import de.jpx3.intave.check.other.FastUse;
 import de.jpx3.intave.check.other.InventoryClickAnalysis;
 import de.jpx3.intave.check.other.ProtocolScanner;
@@ -65,6 +66,7 @@ public final class CheckService {
     addCheck(ClickPatterns.class);
     addCheck(ClickSpeedLimiter.class);
     addCheck(Timer.class);
+    addCheck(Pathfinder.class);
     addCheck(BreakSpeedLimiter.class);
     addCheck(ProtocolScanner.class);
     addCheck(PlacementAnalysis.class);

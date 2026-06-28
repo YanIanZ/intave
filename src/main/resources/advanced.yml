@@ -68,6 +68,22 @@ check:
       100:
         - $ban$
 
+  # Pathfinding-bot detection (e.g. Baritone). Catches robotic "heading-lock through turns": the
+  # transmitted yaw stays welded to the movement heading while the player curves along a route, which
+  # a human (who decouples view from travel) does not sustain. Version-independent (reads only motion
+  # and yaw), so it covers every Baritone branch (1.13.2 - 1.21.11). Ships notify/log-only (no kick)
+  # until tuned; its violation level still feeds the ghost-client cross-domain breadth.
+  pathfinder:
+    enabled: true
+
+    thresholds:
+      20:
+        - "intave internals storelog {player} {check} {vl}"
+        - "intave internals sendnotify &e{player}&7 is moving like a pathfinding bot (baritone) #1"
+      40:
+        - "intave internals sendnotify &e{player}&7 is moving like a pathfinding bot (baritone) #2"
+      # Raise an action here (e.g. $kick$) after confirming no false positives on your server.
+
   heuristics:
     enabled: true
 
@@ -95,6 +111,7 @@ check:
       rotation-linearity: 0   # aimbot: collinear (yaw, pitch) steps — a robotically straight aim path (0 = observe/corroborate-only; raise after tuning)
       rotation-entropy: 0     # aimbot: rotation stream too repetitive (low entropy) to be human motor noise (0 = observe/corroborate-only; raise after tuning)
       rotation-jitter: 0      # aimbot: added aim jitter is artificial/white (uncorrelated deltas) where human tremor is autocorrelated (0 = observe/corroborate-only; raise after tuning)
+      fail-rotation: 0        # aim-assist: bounded, self-reverting "miss" pulses on a robotically tight aim — defeats accuracy/jitter/entropy (e.g. LiquidBounce fail-rotation); (0 = observe/corroborate-only; raise after tuning)
 
       # Other
       inventory-rotations: 2  # inventory-aura: rotating while a container screen is open
@@ -113,6 +130,8 @@ check:
       attack-while-consuming: 5 # kill-aura: sustained attacks while still eating/drinking — the first attack should interrupt the consume; hard invariant, sustained-gated (enforced)
       attack-while-bow-draw: 5 # kill-aura/bow-aura: sustained melee attacks while drawing a bow/crossbow — the draw occupies the hand; hard invariant, sustained-gated (enforced)
       attack-while-inventory: 4 # kill-aura/inventory-aura: sustained attacks while a container GUI is open — vanilla routes the mouse to the screen; hard invariant, sustained-gated (enforced)
+      inventory-close-attack: 4 # kill-aura/inventory-aura: closes the container a tick before each attack and reopens it (e.g. LiquidBounce simulateInventoryClosing) — sustained close-then-attack within one tick; hard invariant, sustained-gated (enforced)
+      baritone: 0 # pathfinding bot: attacks while auto-pathing with the yaw heading-locked through turns (see check.pathfinder); (0 = observe/corroborate-only; raise after tuning)
 
       # Meta
       # Definitive verdict: fires when >= 2 DISTINCT physical-impossibility tells (multi-aura,
