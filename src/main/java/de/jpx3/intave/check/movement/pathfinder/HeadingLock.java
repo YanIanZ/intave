@@ -101,9 +101,7 @@ public final class HeadingLock extends MetaCheckPart<Pathfinder, HeadingLock.Hea
     meta.reset();
 
     long now = System.currentTimeMillis();
-    boolean robotic = totalTurn >= MIN_TOTAL_TURN_DEG
-      && meanResidual <= MAX_MEAN_RESIDUAL_DEG
-      && residualSpread <= MAX_RESIDUAL_SD_DEG;
+    boolean robotic = indicatesHeadingLock(totalTurn, meanResidual, residualSpread);
     if (!robotic) {
       meta.evidence.value(now);
       decrementer.decrement(user, 0.05d);
@@ -126,6 +124,17 @@ public final class HeadingLock extends MetaCheckPart<Pathfinder, HeadingLock.Hea
         .build();
       Modules.violationProcessor().processViolation(violation);
     }
+  }
+
+  /**
+   * Pure window verdict: the player genuinely turned (cumulative yaw change cleared
+   * {@link #MIN_TOTAL_TURN_DEG}) yet the transmitted yaw stayed welded to the travel heading
+   * (mean residual and its spread both within tolerance) — robotic heading-lock-through-turns.
+   */
+  static boolean indicatesHeadingLock(double totalTurn, double meanResidual, double residualSpread) {
+    return totalTurn >= MIN_TOTAL_TURN_DEG
+      && meanResidual <= MAX_MEAN_RESIDUAL_DEG
+      && residualSpread <= MAX_RESIDUAL_SD_DEG;
   }
 
   public static final class HeadingLockMeta extends CheckCustomMetadata {

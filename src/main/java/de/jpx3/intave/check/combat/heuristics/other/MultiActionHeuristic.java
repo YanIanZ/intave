@@ -4,9 +4,8 @@ import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import de.jpx3.intave.check.combat.Heuristics;
 import de.jpx3.intave.check.combat.heuristics.ClassicHeuristic;
-import de.jpx3.intave.check.combat.heuristics.ConfidenceBuffer;
 import de.jpx3.intave.check.combat.heuristics.HeuristicsClassicType;
-import de.jpx3.intave.math.MathHelper;
+import de.jpx3.intave.check.combat.heuristics.SustainedStreakDetector;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.user.User;
@@ -89,14 +88,10 @@ public final class MultiActionHeuristic extends ClassicHeuristic<MultiActionHeur
   }
 
   private void note(User user, String details) {
-    long now = System.currentTimeMillis();
     MultiActionMeta meta = metaOf(user);
-    meta.streak = now - meta.lastOverlapMillis < STREAK_GAP_MILLIS ? meta.streak + 1 : 1;
-    meta.lastOverlapMillis = now;
-    meta.evidence.add(1.0d, now);
-    if (meta.evidence.consumeIfAtLeast(RELEASE_THRESHOLD, now)) {
-      double confidence = MathHelper.minmax(0.4d, meta.streak / SUSTAINED_STREAK, 1.0d);
-      flag(user.player(), details + " (streak " + meta.streak + ") — multi-action exploit", confidence);
+    double confidence = meta.detector.note(System.currentTimeMillis());
+    if (confidence != SustainedStreakDetector.NO_FLAG) {
+      flag(user.player(), details + " (streak " + meta.detector.streak() + ") — multi-action exploit", confidence);
     }
   }
 
@@ -106,8 +101,7 @@ public final class MultiActionHeuristic extends ClassicHeuristic<MultiActionHeur
   }
 
   public static final class MultiActionMeta extends CheckCustomMetadata {
-    private long lastOverlapMillis;
-    private int streak;
-    private final ConfidenceBuffer evidence = new ConfidenceBuffer(BUFFER_HALF_LIFE_MILLIS);
+    private final SustainedStreakDetector detector =
+      new SustainedStreakDetector(BUFFER_HALF_LIFE_MILLIS, RELEASE_THRESHOLD, STREAK_GAP_MILLIS, SUSTAINED_STREAK, 0.4d);
   }
 }
