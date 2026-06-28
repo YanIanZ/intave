@@ -55,7 +55,7 @@ covered by dedicated code that literally names the exploit (e.g. `InvalidRelease
 | LinearAngleSmooth | COVERED | `RotationConstantSpeedHeuristic` / `RotationLinearityHeuristic` (observe-0; corroborate) |
 | Sigmoid/InterpolationAngleSmooth | WEAK | `AimSmoothing`/`RotationAcceleration`/`RotationEntropy` (observe-0; rely on corroboration) |
 | AccelerationAngleSmooth + injected error | WEAK | entropy backstop; injected 0.1° degrades the acceleration heuristic, sits under jitter's 1.5° gate |
-| `ShortStopRotationProcessor` (micro-pauses) | **GAP** | none — see Residual/Follow-ups |
+| `ShortStopRotationProcessor` (micro-pauses) | RESIDUAL | `ConstantSpeed`/`Entropy` stay tolerant; 4 sequence-based tells lose sensitivity (no FP-safe fix) — see below |
 | AiAngleSmooth (ML, human-like) | **RESIDUAL** | `RotationEntropyHeuristic` is a soft backstop; cross-domain `GhostClient` catches multi-module users |
 | GCD `normalize()` | RESIDUAL | `RotationSensitivityHeuristic` exists but ships disabled (`-1`); GCD-align is a direct counter |
 
@@ -94,14 +94,22 @@ unseen ores — out of scope here.)
    block place while `inBreakProcess`, or a `START_DESTROY_BLOCK` while `inventory.handActive()`.
    Hard invariant (vanilla = one hand action per tick), so false positives need a sustained run.
 
-2. **`ShortStopRotationProcessor` (micro-pauses)** — *open follow-up (documented, not rushed).* The
-   windowed rotation heuristics (`RotationConstantSpeed`, `AimSmoothing`, `RotationAcceleration`,
-   `RotationLinearity`, `RotationJitter`) `reset()` their window on any still tick, so injected 1–2
-   tick pauses fragment them. **Recommended fix:** give each window a small still-gap tolerance —
-   skip ≤2 consecutive still ticks (preserving the last real delta, not resetting), reset only on a
-   longer gap. This is pure robustness (it cannot newly flag a human; it only stops a cheat from
-   fragmenting detectors it was already subject to). Deferred deliberately: it touches five
-   FP-sensitive files and the heuristics ship at VL 0, so a rushed change is higher risk than value.
+2. **`ShortStopRotationProcessor` (micro-pauses) — RESIDUAL, no FP-safe code fix.** Verified against
+   the actual code (correcting an earlier over-generalisation):
+   * `RotationConstantSpeedHeuristic` does **not** reset on a still tick — it skips the sample and
+     keeps the accumulator (`RotationConstantSpeedHeuristic.java:78-80`); CV is order-independent, so
+     it already catches ShortStop-fragmented constant-velocity aim.
+   * `RotationEntropyHeuristic` skips idle ticks without resetting → also tolerant.
+   * `AimSmoothing`, `RotationAcceleration`, `RotationLinearity`, `RotationJitter` **do** reset on a
+     still tick (`*.java` ~ lines 91-95, 88, 98) — and they *must*: they consume **contiguous**
+     samples (step-ratios, accelerations, the (Δyaw,Δpitch) path, lag-1 autocorrelation). Skipping a
+     pause and pairing non-adjacent ticks would corrupt those statistics and *introduce* false
+     positives. So a naive "still-gap tolerance" is **not** a safe fix for these four.
+
+   Net: ShortStop lowers the sensitivity of those four behavioural tells but cannot fragment
+   `ConstantSpeed` or `Entropy`, and the enforcing rotation heuristics + cross-domain `GhostClient`
+   remain. There is no false-positive-safe code change here, so none is made — this is a documented
+   residual, not an open fix.
 
 3. **AiAngleSmooth (ML) / GCD normalize — RESIDUAL.** An ML rotator trained to emit human-like aim,
    plus GCD alignment, can stay under the statistical rotation tells; this is an industry-wide hard
