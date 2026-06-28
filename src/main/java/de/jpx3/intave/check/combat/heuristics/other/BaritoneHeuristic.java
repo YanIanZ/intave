@@ -2,9 +2,8 @@ package de.jpx3.intave.check.combat.heuristics.other;
 
 import de.jpx3.intave.check.combat.Heuristics;
 import de.jpx3.intave.check.combat.heuristics.ClassicHeuristic;
-import de.jpx3.intave.check.combat.heuristics.ConfidenceBuffer;
 import de.jpx3.intave.check.combat.heuristics.HeuristicsClassicType;
-import de.jpx3.intave.math.MathHelper;
+import de.jpx3.intave.check.combat.heuristics.SustainedStreakDetector;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.packet.reader.EntityUseReader;
@@ -64,19 +63,15 @@ public final class BaritoneHeuristic extends ClassicHeuristic<BaritoneHeuristic.
     }
 
     BaritoneMeta meta = metaOf(user);
-    meta.streak = now - meta.lastAttackMillis < PATHING_RECENCY_MILLIS ? meta.streak + 1 : 1;
-    meta.lastAttackMillis = now;
-    meta.evidence.add(1.0d, now);
-    if (meta.evidence.consumeIfAtLeast(RELEASE_THRESHOLD, now)) {
-      double confidence = MathHelper.minmax(0.4d, meta.streak / SUSTAINED_STREAK, 1.0d);
+    double confidence = meta.detector.note(now);
+    if (confidence != SustainedStreakDetector.NO_FLAG) {
       flag(user.player(), "attacked while auto-pathing (heading-locked " + sinceLock
-        + "ms ago, streak " + meta.streak + ")", confidence);
+        + "ms ago, streak " + meta.detector.streak() + ")", confidence);
     }
   }
 
   public static final class BaritoneMeta extends CheckCustomMetadata {
-    private long lastAttackMillis;
-    private int streak;
-    private final ConfidenceBuffer evidence = new ConfidenceBuffer(BUFFER_HALF_LIFE_MILLIS);
+    private final SustainedStreakDetector detector =
+      new SustainedStreakDetector(BUFFER_HALF_LIFE_MILLIS, RELEASE_THRESHOLD, PATHING_RECENCY_MILLIS, SUSTAINED_STREAK, 0.4d);
   }
 }

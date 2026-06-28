@@ -91,13 +91,13 @@ public final class FailRotationHeuristic extends ClassicHeuristic<FailRotationHe
       return;
     }
 
-    boolean tightBaseline = heuristicMeta.tracker.tinyTickRatio() >= MIN_TINY_RATIO;
+    double tinyRatio = heuristicMeta.tracker.tinyTickRatio();
     int pulses = heuristicMeta.tracker.pulseCount();
     double peakCv = heuristicMeta.tracker.peakMagnitudeCv();
     heuristicMeta.tracker.reset();
 
     long now = System.currentTimeMillis();
-    if (tightBaseline && pulses >= MIN_PULSES && peakCv <= MAX_PEAK_CV) {
+    if (indicatesFailInjection(tinyRatio, pulses, peakCv)) {
       heuristicMeta.evidence.add(1.0d, now);
       if (heuristicMeta.evidence.consumeIfAtLeast(RELEASE_THRESHOLD, now)) {
         double confidence = MathHelper.minmax(0.3d, pulses / 6.0d, 1.0d);
@@ -108,6 +108,14 @@ public final class FailRotationHeuristic extends ClassicHeuristic<FailRotationHe
       // human-noisy or no clean pulses this window — let the evidence decay
       heuristicMeta.evidence.value(now);
     }
+  }
+
+  /**
+   * Pure window verdict: a tight aim-assist baseline ({@link #MIN_TINY_RATIO}) punctuated by enough
+   * ({@link #MIN_PULSES}) uniform ({@link #MAX_PEAK_CV}) revert pulses is artificial fail injection.
+   */
+  static boolean indicatesFailInjection(double tinyRatio, int pulseCount, double peakCv) {
+    return tinyRatio >= MIN_TINY_RATIO && pulseCount >= MIN_PULSES && peakCv <= MAX_PEAK_CV;
   }
 
   public static final class FailRotationMeta extends CheckCustomMetadata {
