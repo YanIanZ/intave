@@ -81,22 +81,24 @@ public final class RotationJitterHeuristic extends ClassicHeuristic<RotationJitt
     MovementMetadata movementData = meta.movement();
     AttackMetadata attackData = meta.attack();
     Entity entity = attackData.lastAttackedEntity();
+    JitterMeta heuristicMeta = metaOf(user);
 
     if (entity == null
       || movementData.ticksPast(TELEPORT) < 20
       || !attackData.recentlyAttacked(1000)
       || !entity.moving(0.05)) {
+      heuristicMeta.reset();
       return;
     }
 
     float delta = signedYawDelta(movementData.lastRotationYaw, movementData.rotationYaw);
-    JitterMeta heuristicMeta = metaOf(user);
     float previousDelta = heuristicMeta.lastDelta;
     heuristicMeta.lastDelta = delta;
 
-    // A still / non-turning tick breaks the run; only contiguous turning steps form delta pairs.
+    // A short still gap (e.g. an injected short-stop pause) skips the cross-gap pair but does NOT
+    // discard the window; only the per-engagement gate above clears it, so a 1–2 tick pause can no
+    // longer fragment the run the way ShortStopRotationProcessor intends.
     if (Math.abs(delta) < MIN_TURN_SPEED || Math.abs(previousDelta) < MIN_TURN_SPEED) {
-      heuristicMeta.reset();
       return;
     }
 

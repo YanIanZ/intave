@@ -74,22 +74,23 @@ public final class AimSmoothingHeuristic extends ClassicHeuristic<AimSmoothingHe
     MovementMetadata movementData = meta.movement();
     AttackMetadata attackData = meta.attack();
     Entity entity = attackData.lastAttackedEntity();
+    SmoothingMeta heuristicMeta = metaOf(user);
 
     if (entity == null
       || movementData.ticksPast(TELEPORT) < 20
       || !attackData.recentlyAttacked(1000)
       || !entity.moving(0.05)) {
+      heuristicMeta.ratios.reset();
       return;
     }
 
     float yawSpeed = MathHelper.distanceInDegrees(movementData.rotationYaw, movementData.lastRotationYaw);
-    SmoothingMeta heuristicMeta = metaOf(user);
     float previous = heuristicMeta.lastYawSpeed;
     heuristicMeta.lastYawSpeed = yawSpeed;
 
-    // A still / non-turning tick breaks the easing sweep; only contiguous turning steps form ratios.
+    // A short still gap (e.g. an injected short-stop pause) skips the cross-gap ratio but does not
+    // discard the window; only the per-engagement gate above clears it.
     if (yawSpeed < MIN_TURN_SPEED || previous < MIN_TURN_SPEED) {
-      heuristicMeta.ratios.reset();
       return;
     }
 
