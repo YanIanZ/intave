@@ -70,22 +70,23 @@ public final class RotationLinearityHeuristic extends ClassicHeuristic<RotationL
     MovementMetadata movementData = meta.movement();
     AttackMetadata attackData = meta.attack();
     Entity entity = attackData.lastAttackedEntity();
+    LinearityMeta heuristicMeta = metaOf(user);
 
     if (entity == null
       || movementData.ticksPast(TELEPORT) < 20
       || !attackData.recentlyAttacked(1000)
       || !entity.moving(0.05)) {
+      heuristicMeta.path.reset();
       return;
     }
 
     float deltaYaw = wrapDegrees(movementData.rotationYaw - movementData.lastRotationYaw);
     float deltaPitch = movementData.rotationPitch - movementData.lastRotationPitch;
-    LinearityMeta heuristicMeta = metaOf(user);
 
-    // Need genuine rotation on *both* axes; a near-zero axis makes the linear fit degenerate and
-    // breaks the contiguous path so only sustained 2D tracking is judged.
+    // Need genuine rotation on *both* axes; a near-zero axis makes the linear fit degenerate. A short
+    // still gap (e.g. an injected short-stop pause) skips the degenerate sample but does not discard
+    // the window; only the per-engagement gate above clears it.
     if (Math.abs(deltaYaw) < MIN_AXIS_DELTA || Math.abs(deltaPitch) < MIN_AXIS_DELTA) {
-      heuristicMeta.path.reset();
       return;
     }
 

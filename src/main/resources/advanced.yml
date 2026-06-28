@@ -112,6 +112,7 @@ check:
       rotation-entropy: 0     # aimbot: rotation stream too repetitive (low entropy) to be human motor noise (0 = observe/corroborate-only; raise after tuning)
       rotation-jitter: 0      # aimbot: added aim jitter is artificial/white (uncorrelated deltas) where human tremor is autocorrelated (0 = observe/corroborate-only; raise after tuning)
       fail-rotation: 0        # aim-assist: bounded, self-reverting "miss" pulses on a robotically tight aim — defeats accuracy/jitter/entropy (e.g. LiquidBounce fail-rotation); (0 = observe/corroborate-only; raise after tuning)
+      rotation-pause: 0       # aimbot: injected total aim freezes mid-track to fragment the smoothness tells (e.g. LiquidBounce short-stop) — freeze right after an active turn while the target keeps moving; (0 = observe/corroborate-only; raise after tuning)
 
       # Other
       inventory-rotations: 2  # inventory-aura: rotating while a container screen is open

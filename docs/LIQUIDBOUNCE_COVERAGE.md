@@ -55,7 +55,7 @@ covered by dedicated code that literally names the exploit (e.g. `InvalidRelease
 | LinearAngleSmooth | COVERED | `RotationConstantSpeedHeuristic` / `RotationLinearityHeuristic` (observe-0; corroborate) |
 | Sigmoid/InterpolationAngleSmooth | WEAK | `AimSmoothing`/`RotationAcceleration`/`RotationEntropy` (observe-0; rely on corroboration) |
 | AccelerationAngleSmooth + injected error | WEAK | entropy backstop; injected 0.1° degrades the acceleration heuristic, sits under jitter's 1.5° gate |
-| `ShortStopRotationProcessor` (micro-pauses) | RESIDUAL | `ConstantSpeed`/`Entropy` stay tolerant; 4 sequence-based tells lose sensitivity (no FP-safe fix) — see below |
+| `ShortStopRotationProcessor` (micro-pauses) | **COVERED+** | `RotationPauseHeuristic` detects the freeze-mid-track; the 4 windowed tells now keep their window across short gaps (this work) — see below |
 | AiAngleSmooth (ML, human-like) | **RESIDUAL** | `RotationEntropyHeuristic` is a soft backstop; cross-domain `GhostClient` catches multi-module users |
 | GCD `normalize()` | RESIDUAL | `RotationSensitivityHeuristic` exists but ships disabled (`-1`); GCD-align is a direct counter |
 
@@ -94,22 +94,22 @@ unseen ores — out of scope here.)
    block place while `inBreakProcess`, or a `START_DESTROY_BLOCK` while `inventory.handActive()`.
    Hard invariant (vanilla = one hand action per tick), so false positives need a sustained run.
 
-2. **`ShortStopRotationProcessor` (micro-pauses) — RESIDUAL, no FP-safe code fix.** Verified against
-   the actual code (correcting an earlier over-generalisation):
-   * `RotationConstantSpeedHeuristic` does **not** reset on a still tick — it skips the sample and
-     keeps the accumulator (`RotationConstantSpeedHeuristic.java:78-80`); CV is order-independent, so
-     it already catches ShortStop-fragmented constant-velocity aim.
-   * `RotationEntropyHeuristic` skips idle ticks without resetting → also tolerant.
-   * `AimSmoothing`, `RotationAcceleration`, `RotationLinearity`, `RotationJitter` **do** reset on a
-     still tick (`*.java` ~ lines 91-95, 88, 98) — and they *must*: they consume **contiguous**
-     samples (step-ratios, accelerations, the (Δyaw,Δpitch) path, lag-1 autocorrelation). Skipping a
-     pause and pairing non-adjacent ticks would corrupt those statistics and *introduce* false
-     positives. So a naive "still-gap tolerance" is **not** a safe fix for these four.
+2. **`ShortStopRotationProcessor` (micro-pauses) — CLOSED (this work).** Addressed from both sides:
+   * **Detected** — `RotationPauseHeuristic` (config `rotation-pause: 0`) flags the injection itself:
+     a tick that was actively turning followed by a tick frozen on *both* axes while the target keeps
+     moving, sustained via `SustainedStreakDetector`. It turns the short-stop's own evasion mechanism
+     into a behavioural tell and adds breadth to the ledger (so a heavily-smoothed aim still reaches
+     corroboration).
+   * **Made resilient** — the four sequence-based tells (`RotationJitter`, `AimSmoothing`,
+     `RotationAcceleration`, `RotationLinearity`) no longer discard their whole window on a still tick.
+     The fix is FP-safe by construction: the cross-gap sample (the pair/ratio/acceleration spanning
+     the pause) is still skipped — never paired across the gap, so no statistic is corrupted — but the
+     valid samples already collected are kept, and the window is now cleared only by the per-engagement
+     gate (no target / not recently attacked / target not moving). A 1–2 tick pause therefore costs a
+     couple of samples instead of the entire window, so it can no longer fragment the run.
+     `RotationConstantSpeed` and `RotationEntropy` were already gap-tolerant.
 
-   Net: ShortStop lowers the sensitivity of those four behavioural tells but cannot fragment
-   `ConstantSpeed` or `Entropy`, and the enforcing rotation heuristics + cross-domain `GhostClient`
-   remain. There is no false-positive-safe code change here, so none is made — this is a documented
-   residual, not an open fix.
+   Net: ShortStop is now a tell in its own right and can no longer neutralise the smoothness tells.
 
 3. **AiAngleSmooth (ML) / GCD normalize — RESIDUAL.** An ML rotator trained to emit human-like aim,
    plus GCD alignment, can stay under the statistical rotation tells; this is an industry-wide hard

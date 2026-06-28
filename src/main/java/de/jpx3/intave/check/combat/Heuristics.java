@@ -63,6 +63,7 @@ public final class Heuristics extends Check {
     appendCheckPart(new RotationEntropyHeuristic(this));
     appendCheckPart(new RotationJitterHeuristic(this));
     appendCheckPart(new FailRotationHeuristic(this));
+    appendCheckPart(new RotationPauseHeuristic(this));
     appendCheckPart(new PreAttackHeuristic(this));
 
     appendCheckPart(new AttackRequiredHeuristic(this));

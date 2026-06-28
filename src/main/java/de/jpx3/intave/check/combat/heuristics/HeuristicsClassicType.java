@@ -52,6 +52,10 @@ public enum HeuristicsClassicType {
    *  self-reverting "miss" pulses (e.g. LiquidBounce's fail-rotation processor) to defeat the accuracy,
    *  entropy and jitter tells — the pulses ride on a baseline far tighter than human motor noise. */
   FAIL_ROTATION("fail-rotation"),
+  /** Aimbot (anti-detection): injects brief total rotation freezes mid-track (e.g. LiquidBounce's
+   *  short-stop) to fragment the windowed smoothness tells — a freeze right after an active turn while
+   *  the target keeps moving is itself unnatural. */
+  ROTATION_PAUSE("rotation-pause"),
   /** Inventory-aura: sends look packets carrying rotation while an inventory screen is open. */
   INVENTORY_ROTATIONS("inventory-rotations"),
   /** Block-hit / fast-use (1.8): abuses sword blocking timing to gain defensive frames. */
