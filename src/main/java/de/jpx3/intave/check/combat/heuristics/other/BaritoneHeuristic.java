@@ -53,14 +53,11 @@ public final class BaritoneHeuristic extends ClassicHeuristic<BaritoneHeuristic.
     }
     MovementMetadata movementData = user.meta().movement();
     long lock = movementData.lastPathfinderHeadingLockMillis;
-    if (lock == 0L) {
-      return;
-    }
     long now = System.currentTimeMillis();
-    long sinceLock = now - lock;
-    if (sinceLock > PATHING_RECENCY_MILLIS) {
+    if (!withinPathingRecency(lock, now)) {
       return;
     }
+    long sinceLock = now - lock;
 
     BaritoneMeta meta = metaOf(user);
     double confidence = meta.detector.note(now);
@@ -68,6 +65,14 @@ public final class BaritoneHeuristic extends ClassicHeuristic<BaritoneHeuristic.
       flag(user.player(), "attacked while auto-pathing (heading-locked " + sinceLock
         + "ms ago, streak " + meta.detector.streak() + ")", confidence);
     }
+  }
+
+  /**
+   * Pure tell: an attack at {@code now} happens while a robotic heading-lock window was stamped
+   * recently. A zero timestamp means the pathfinder has never flagged this player.
+   */
+  static boolean withinPathingRecency(long lockMillis, long now) {
+    return lockMillis != 0L && now - lockMillis <= PATHING_RECENCY_MILLIS;
   }
 
   public static final class BaritoneMeta extends CheckCustomMetadata {
