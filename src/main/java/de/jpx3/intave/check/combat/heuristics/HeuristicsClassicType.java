@@ -112,6 +112,10 @@ public enum HeuristicsClassicType {
    *  client claims to be airborne to pass the server's critical-hit test while collision proves it is
    *  genuinely on the ground with no real fall — the inverse of NoFall, sustained-gated, crit nerfed. */
   CRITICALS("criticals"),
+  /** Kill-aura (wallbang): lands an attack on an entity behind a solid block — the swing is a valid
+   *  hit-box hit when terrain is ignored but the same ray is stopped by a block before it reaches the
+   *  target, which vanilla line-of-sight forbids. Sustained-gated against block-update/lag desync. */
+  ATTACK_THROUGH_WALL("attack-through-wall"),
   /**
    * Meta-detector (definitive, zero-false-positive by construction): at least two <i>distinct</i>
    * physical-impossibility tells (multi-aura, attack-while-consuming / -bow-draw / -inventory,

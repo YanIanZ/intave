@@ -83,6 +83,7 @@ public final class Heuristics extends Check {
     appendCheckPart(new BaritoneHeuristic(this));
     appendCheckPart(new MultiActionHeuristic(this));
     appendCheckPart(new CriticalsHeuristic(this));
+    appendCheckPart(new AttackThroughWallHeuristic(this));
 
     appendCheckPart(new PacketOrderSwingHeuristic(this));
     appendCheckPart(new PacketPlayerActionToggleHeuristic(this));
