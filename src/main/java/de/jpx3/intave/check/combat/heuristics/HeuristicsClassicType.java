@@ -108,6 +108,10 @@ public enum HeuristicsClassicType {
    *  one of per tick — placing a block mid block-break, or starting a block-break while an item is in
    *  active use (eating/drinking/drawing/blocking). Sustained overlap is a hard invariant. */
   MULTI_ACTION("multi-action"),
+  /** Packet/spoofed criticals (e.g. Wurst Criticals PACKET mode, LiquidBounce packet criticals): the
+   *  client claims to be airborne to pass the server's critical-hit test while collision proves it is
+   *  genuinely on the ground with no real fall — the inverse of NoFall, sustained-gated, crit nerfed. */
+  CRITICALS("criticals"),
   /**
    * Meta-detector (definitive, zero-false-positive by construction): at least two <i>distinct</i>
    * physical-impossibility tells (multi-aura, attack-while-consuming / -bow-draw / -inventory,

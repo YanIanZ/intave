@@ -135,6 +135,7 @@ check:
       baritone: 0 # pathfinding bot: attacks while auto-pathing with the yaw heading-locked through turns (see check.pathfinder); (0 = observe/corroborate-only; raise after tuning)
       baritone-rotation: 0 # pathfinding bot (rotation side, works while travelling not fighting): pitch frozen across a window while large yaw turning accumulates — bot steers a path by yaw alone (ported from MX-Project BaritoneCheck); (0 = observe/corroborate-only; raise after tuning)
       multi-action: 4 # multi-action exploit (e.g. LiquidBounce MultiActions): sustained place-while-breaking or break-while-using-item — vanilla allows one hand action per tick; hard invariant, sustained-gated, creative-exempt (enforced)
+      criticals: 0 # packet/spoofed criticals (e.g. Wurst Criticals PACKET mode, LiquidBounce packet criticals): claims airborne while collision proves grounded to force a crit — sustained-gated, strips the crit on a confirmed run; (0 = observe/corroborate+nerf-only; raise after tuning)
 
       # Meta
       # Definitive verdict: fires when >= 2 DISTINCT physical-impossibility tells (multi-aura,

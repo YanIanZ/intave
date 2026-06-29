@@ -65,6 +65,10 @@ public final class MovementMetadata implements SimulationEnvironment {
   public boolean elytraFlying;
   public int fireworkRocketsPower = 1;
   public boolean onGround, lastOnGround, step, onGroundWithRiptide;
+  // The raw on-ground flag the client transmitted in its last flying packet, kept alongside the
+  // collision-validated {@link #onGround} so checks can detect a client claiming a state that
+  // disagrees with the truth (e.g. claiming airborne while genuinely grounded — packet criticals).
+  public boolean lastClaimedOnGround;
   public boolean collidedHorizontally, collidedVertically;
   public float artificialFallDistance;
   public boolean dealCustomFallDamage;
