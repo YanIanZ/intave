@@ -134,6 +134,7 @@ check:
       inventory-close-attack: 4 # kill-aura/inventory-aura: closes the container a tick before each attack and reopens it (e.g. LiquidBounce simulateInventoryClosing) — sustained close-then-attack within one tick; hard invariant, sustained-gated (enforced)
       baritone: 0 # pathfinding bot: attacks while auto-pathing with the yaw heading-locked through turns (see check.pathfinder); (0 = observe/corroborate-only; raise after tuning)
       multi-action: 4 # multi-action exploit (e.g. LiquidBounce MultiActions): sustained place-while-breaking or break-while-using-item — vanilla allows one hand action per tick; hard invariant, sustained-gated, creative-exempt (enforced)
+      criticals: 0 # packet/spoofed criticals (e.g. Wurst Criticals PACKET mode, LiquidBounce packet criticals): claims airborne while collision proves grounded to force a crit — sustained-gated, strips the crit on a confirmed run; (0 = observe/corroborate+nerf-only; raise after tuning)
 
       # Meta
       # Definitive verdict: fires when >= 2 DISTINCT physical-impossibility tells (multi-aura,

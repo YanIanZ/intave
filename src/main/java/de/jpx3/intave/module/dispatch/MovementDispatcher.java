@@ -663,6 +663,7 @@ public final class MovementDispatcher extends Module {
 	  boolean hasMovement = reader.hasMovement();
     boolean hasRotation = reader.hasRotation();
     boolean claimsToBeOnGround = vehicleMove ? player.isOnGround() : reader.onGround();
+    movement.lastClaimedOnGround = claimsToBeOnGround;
 
     if (player.isDead() || movement.awaitTeleport) {
       return;
