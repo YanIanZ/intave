@@ -1,0 +1,55 @@
+name: Build
+
+# Produces a downloadable Intave.jar artifact for every push and pull request on any branch.
+# Complements:
+#   - tests.yml   (per-version self-tests on every push/PR)
+#   - release.yml (master/tag/nightly builds + GitHub releases)
+# so feature branches get a ready-to-run jar without waiting for a release.
+
+on:
+  push:
+  pull_request:
+
+# A newer push to the same ref cancels the previous, still-running build.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build shaded jar
+        run: ./gradlew shadowJar --no-daemon
+
+      - name: Resolve short SHA
+        id: vars
+        env:
+          FULL_SHA: ${{ github.sha }}
+        run: echo "sha_short=$(echo "$FULL_SHA" | cut -c1-7)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload jar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Intave-${{ steps.vars.outputs.sha_short }}
+          path: build/libs/Intave.jar
+          if-no-files-found: error
+          retention-days: 14
