@@ -56,6 +56,7 @@ the combination of small tells that characterise modern, well-obfuscated cheats.
 | `AttackWhileInventoryOpenHeuristic` | `attack-while-inventory` | kill-aura / inventory-aura | Sustained attacks while a container GUI is open — vanilla routes the mouse to the screen, so attacking entities through an open inventory is impossible; distinct from inventory-*rotations*; hard invariant, **enforced** (`4`) | all |
 | `InventoryCloseAttackHeuristic` | `inventory-close-attack` | kill-aura / inventory-aura (anti-detection) | Sustained run of attacks landing within one tick of a container `CLOSE_WINDOW` — the signature of a client that closes (and reopens) the GUI around each attack so the server never sees it open at attack time (e.g. LiquidBounce's `simulateInventoryClosing`), the countermeasure to `attack-while-inventory`; a deliberate human close-then-attack takes far longer than a tick; hard invariant, sustained-gated, **enforced** (`4`) | all |
 | `BaritoneHeuristic` | `baritone` | pathfinding bot (Baritone) | Attacks land while the player is auto-pathing with the yaw heading-locked through turns (the movement-domain `Pathfinder`/`HeadingLock` tell — see below); a human breaks bot-perfect travel to fight, so attacking *during* it is the combination; records to the ledger to corroborate; ships at `0` (observe) | all |
+| `BaritonePathingRotationHeuristic` | `baritone-rotation` | pathfinding bot (Baritone), rotation side | Works **while travelling, not fighting** — the gap every combat-gated rotation tell leaves open. Over a window of travelling ticks the pitch is frozen (tiny range, ≤3 distinct steps) while a large amount of yaw turning accumulates: the bot steers a path by yaw alone. A human sweeping that much yaw tilts the view, so the conjunction is unnatural. Ported from the open-source MX project's `BaritoneCheck`; stamps the player on release so `BaritoneHeuristic` corroborates a bot that also fights; ships at `0` (observe) | all |
 | `CivbreakHeuristic` | *(mitigation only)* | civbreak fast-break | Drops rogue `STOP_DESTROY_BLOCK` packets | **< 1.14** |
 | `ImpossibleComboHeuristic` | `impossible-combo` | definitive cheat verdict (meta) | ≥2 *distinct physical-impossibility* tells coincide (multi-aura, attack-while-consuming/-bow-draw/-inventory, mace-fall-distance) — a legit player trips none, so two at once is certain; zero-FP by construction, ships **enforced** (`15`) | all |
 | `CorroborationHeuristic` | `corroboration` | multi-tell cheats (meta) | ≥3 *distinct* heuristics agree (breadth gate), then fuses their **confidence-weighted** evidence — strong/broad agreement escalates fast, weak/broad barely moves (decaying, graded) | all |
@@ -227,6 +228,20 @@ trips it alongside its combat tells), and each robotic window stamps the player 
 [`BaritoneHeuristic`](../src/main/java/de/jpx3/intave/check/combat/heuristics/other/BaritoneHeuristic.java)
 (config `baritone`) can fuse "bot-pathing while fighting" into the ledger. The check ships notify/log-only
 (no kick); raise an action in `check.pathfinder.thresholds` after confirming no false positives.
+
+A second, **rotation-side** tell complements `HeadingLock` from the open-source MX project's
+`BaritoneCheck`:
+[`BaritonePathingRotationHeuristic`](../src/main/java/de/jpx3/intave/check/combat/heuristics/combatpatterns/rotation/BaritonePathingRotationHeuristic.java)
+(config `baritone-rotation`). Where `HeadingLock` reads the *movement* (yaw vs. travel heading), this
+reads the *rotation stream*: while the player is travelling, a window of per-tick deltas is gathered and
+flagged when the **pitch is frozen** (a near-zero range carried by at most a couple of distinct steps)
+yet a **large amount of yaw turning** accumulated — Baritone holds one computed pitch for a path segment
+and steers purely in yaw to follow the nodes, whereas a human who sweeps that much yaw inevitably tilts
+the view. Crucially it is gated on *travel, not combat*, so it closes the gap every other (combat-gated)
+rotation heuristic leaves open for a bot that paths without fighting. The decision core
+[`BaritonePathingTracker`](../src/main/java/de/jpx3/intave/check/combat/heuristics/combatpatterns/rotation/BaritonePathingTracker.java)
+is pure and unit-tested; on release it stamps the same player marker `HeadingLock` uses, so the combat
+`BaritoneHeuristic` corroborates a bot that also fights. Ships at `0` (observe); raise after tuning.
 
 > Considered and rejected: a block-break/place **cadence** sub-check. Vanilla block-break time is
 > deterministic per block/tool, so a human repeatedly mining one block type is just as periodic as a

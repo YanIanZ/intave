@@ -100,6 +100,10 @@ public enum HeuristicsClassicType {
   /** Pathfinding bot (e.g. Baritone): attacks while travelling with the transmitted yaw robotically
    *  locked to the movement heading through turns — a human decouples view from travel when fighting. */
   BARITONE("baritone"),
+  /** Pathfinding bot (e.g. Baritone), rotation side: while travelling (not fighting) the pitch is held
+   *  frozen across a window with only a couple of distinct steps while a large amount of yaw turning
+   *  accumulates — the bot steers a path by yaw alone, which combat-gated rotation tells never see. */
+  BARITONE_ROTATION("baritone-rotation"),
   /** Multi-action exploit (e.g. LiquidBounce MultiActions): performs hand actions vanilla allows only
    *  one of per tick — placing a block mid block-break, or starting a block-break while an item is in
    *  active use (eating/drinking/drawing/blocking). Sustained overlap is a hard invariant. */
