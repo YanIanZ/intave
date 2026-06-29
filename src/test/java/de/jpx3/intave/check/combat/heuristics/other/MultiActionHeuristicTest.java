@@ -49,4 +49,20 @@ final class MultiActionHeuristicTest {
   void creativeIsExemptFromDigOverlap() {
     assertFalse(MultiActionHeuristic.digStartOverlapsUse(true, true, true));
   }
+
+  @Test
+  void placeWhileUsingItemIsAnOverlap() {
+    // the right-click is occupied by the item use, so a simultaneous place is impossible
+    assertTrue(MultiActionHeuristic.placeOverlapsUse(false, true));
+  }
+
+  @Test
+  void placeWithoutItemUseIsFine() {
+    assertFalse(MultiActionHeuristic.placeOverlapsUse(false, false));
+  }
+
+  @Test
+  void creativeIsExemptFromPlaceWhileUse() {
+    assertFalse(MultiActionHeuristic.placeOverlapsUse(true, true));
+  }
 }
