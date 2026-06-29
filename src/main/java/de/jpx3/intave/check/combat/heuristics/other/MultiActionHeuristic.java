@@ -36,6 +36,9 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Client.USE_ITEM_ON;
  *       place during an un-aborted break is the tell.</li>
  *   <li><b>break-while-use</b> — a {@code START_DESTROY_BLOCK} arrives while
  *       {@link InventoryMetadata#handActive()} reports an item in active use.</li>
+ *   <li><b>place-while-use</b> — a block place ({@code USE_ITEM_ON}/{@code BLOCK_PLACE}) arrives while
+ *       {@link InventoryMetadata#handActive()} reports an item in active use; the symmetric case to
+ *       break-while-use, since the right-click that drives the use cannot also drive a place.</li>
  * </ul>
  *
  * <p>A single overlap can race the tick boundary, and break-while-use can legitimately occur on the one
@@ -63,9 +66,15 @@ public final class MultiActionHeuristic extends ClassicHeuristic<MultiActionHeur
     packetsIn = {USE_ITEM_ON, BLOCK_PLACE}
   )
   public void onPlace(User user) {
+    boolean creative = isCreative(user);
     // a place while a block-break is still in progress: vanilla would have stopped/aborted the break
-    if (placeOverlapsBreak(isCreative(user), user.meta().attack().inBreakProcess)) {
+    if (placeOverlapsBreak(creative, user.meta().attack().inBreakProcess)) {
       note(user, "placed a block while still breaking one");
+    }
+    // a place while an item is in active use: the right-click is occupied by the use (eating, drinking,
+    // drawing a bow, charging/blocking), so a simultaneous block place is physically impossible
+    if (placeOverlapsUse(creative, user.meta().inventory().handActive())) {
+      note(user, "placed a block while using an item");
     }
   }
 
@@ -90,6 +99,12 @@ public final class MultiActionHeuristic extends ClassicHeuristic<MultiActionHeur
   /** Pure tell: starting a block-break while an item is in active use (creative exempt). */
   static boolean digStartOverlapsUse(boolean creative, boolean startDestroy, boolean handActive) {
     return !creative && startDestroy && handActive;
+  }
+
+  /** Pure tell: placing a block while an item is in active use — the symmetric case to
+   * {@link #digStartOverlapsUse}; the right-click is occupied by the use, so a place cannot coincide. */
+  static boolean placeOverlapsUse(boolean creative, boolean handActive) {
+    return !creative && handActive;
   }
 
   private void note(User user, String details) {
