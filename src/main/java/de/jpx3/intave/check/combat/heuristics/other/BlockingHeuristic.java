@@ -4,10 +4,10 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.wrappers.EnumWrappers;
-import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.check.combat.Heuristics;
 import de.jpx3.intave.check.combat.heuristics.ClassicHeuristic;
 import de.jpx3.intave.check.combat.heuristics.HeuristicsClassicType;
+import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
 import de.jpx3.intave.entity.datawatcher.DataWatcherAccess;
 import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
@@ -16,7 +16,6 @@ import de.jpx3.intave.module.mitigate.AttackNerfStrategy;
 import de.jpx3.intave.packet.PacketSender;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.CheckCustomMetadata;
-import de.jpx3.intave.user.meta.MovementMetadata;
 import de.jpx3.intave.user.meta.ProtocolMetadata;
 import de.jpx3.intave.user.meta.PunishmentMetadata;
 import org.bukkit.entity.Player;
@@ -25,16 +24,34 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_9;
 
+/**
+ * Detects illegitimate sword-blocking timing ("block-hit" / fast-block) on the 1.8 combat model.
+ *
+ * <p>1.8 sword blocking grants a damage reduction while the use-item is held. Cheats abuse this by
+ * toggling block/unblock around their own attacks faster than the client allows, so they are
+ * defended on virtually every tick. The heuristic watches the {@code RELEASE_USE_ITEM} /
+ * {@code BLOCK_PLACE} packet dance and flags several distinct abuses:
+ * <ul>
+ *   <li>unblocking on the very same tick a block began (no client ticks in between);</li>
+ *   <li>multiple blocking interactions inside one tick;</li>
+ *   <li>too few packets between successive block-toggle packets.</li>
+ * </ul>
+ * Each abuse applies a blocking nerf and, for the instant-unblock case, force-clears the blocking
+ * state via the entity data-watcher.
+ *
+ * <p>Scope: the legacy blocking mechanic is 1.8-only, so the relevant branches gate on
+ * {@code flyingPacketsAreSent()} / {@code protocolVersion() < VER_1_9}. On 1.9+ the shield (a
+ * separate item-use) is handled by the simulation checks, not here.
+ */
 public final class BlockingHeuristic extends ClassicHeuristic<BlockingHeuristic.BlockingMeta> {
-  private final IntavePlugin plugin;
 
-  public BlockingHeuristic(Heuristics parentCheck) {
+	public BlockingHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.BLOCKING, BlockingMeta.class);
-    this.plugin = IntavePlugin.singletonInstance();
-  }
+	}
 
   @PacketSubscription(
     packetsIn = {
@@ -45,9 +62,9 @@ public final class BlockingHeuristic extends ClassicHeuristic<BlockingHeuristic.
     Player player = event.getPlayer();
     User user = userOf(player);
     BlockingMeta meta = metaOf(user);
-    MovementMetadata movementData = user.meta().movement();
+    SimulationEnvironment movementData = user.meta().movement();
 
-    if (movementData.lastTeleport == 0) {
+    if (movementData.ticksPast(TELEPORT) == 0) {
       return;
     }
 
@@ -78,7 +95,7 @@ public final class BlockingHeuristic extends ClassicHeuristic<BlockingHeuristic.
     BlockingMeta meta = metaOf(user);
     PacketContainer packet = event.getPacket();
 
-    if (!user.meta().protocol().flyingPacketsAreSent() || user.meta().abilities().ignoringMovementPackets() || user.meta().movement().lastTeleport < 10) {
+    if (!user.meta().protocol().flyingPacketsAreSent() || user.meta().abilities().ignoringMovementPackets() || user.meta().movement().ticksPast(TELEPORT) < 10) {
       return;
     }
 
@@ -146,9 +163,9 @@ public final class BlockingHeuristic extends ClassicHeuristic<BlockingHeuristic.
     Player player = event.getPlayer();
     User user = userOf(player);
     BlockingMeta meta = metaOf(user);
-    MovementMetadata movementData = user.meta().movement();
+    SimulationEnvironment movementData = user.meta().movement();
     ProtocolMetadata clientData = user.meta().protocol();
-    if (movementData.lastTeleport < 10) {
+    if (movementData.ticksPast(TELEPORT) < 10) {
       return;
     }
     // checks if the client version is above 1.8 for disabling the check if the player is standing still
@@ -213,7 +230,6 @@ public final class BlockingHeuristic extends ClassicHeuristic<BlockingHeuristic.
     Player player = event.getPlayer();
     User user = userOf(player);
     BlockingMeta meta = metaOf(player);
-    MovementMetadata movementData = user.meta().movement();
     ProtocolMetadata clientData = user.meta().protocol();
     if (user.meta().abilities().ignoringMovementPackets()) {
       return;

@@ -49,6 +49,7 @@ We accept contributions to the project, but please make sure to read the [contri
 For a high-level overview of the project organization, see [this document](docs/STRUCTURE.md).
 A cheatsheet can be found [here](docs/CHEATSHEET.md) to quickly find your way around the codebase, contributions welcome!
 Our block system is briefly outlined in [this document](docs/BLOCK_SYSTEM.md).
+The combat heuristics (anti-aimbot/aura/auto-clicker) and their version coverage are documented in [this document](docs/HEURISTICS.md).
 If you have any questions, feel free to get in touch with us on [Discord](https://intave.ac/go/discord).
 
 ## License

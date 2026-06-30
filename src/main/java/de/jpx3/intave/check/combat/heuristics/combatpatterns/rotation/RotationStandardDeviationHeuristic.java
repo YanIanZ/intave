@@ -23,7 +23,29 @@ import java.util.List;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.LOOK;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION_LOOK;
 
+/**
+ * Detects aim-assist by the <i>consistency</i> of its aiming error rather than its size.
+ *
+ * <p>While attacking a moving target, the distance between the player's actual yaw/pitch and the
+ * "perfect" angle that would point straight at the target is sampled on every fast rotation.
+ * A human produces a noisy spread of errors; aim-assist that nudges the cursor towards the
+ * target produces a stream of errors clustered tightly around a constant offset. Once enough
+ * samples are collected the heuristic computes their standard deviation and flags when it stays
+ * below {@link #YAW_DEVIATION_THRESHOLD} (yaw) or {@link #PITCH_DEVIATION_THRESHOLD} (pitch)
+ * across repeated windows, applying a light damage/hit nerf as soft mitigation.
+ *
+ * <p>Pitch tolerates a wider band than yaw because vertical aim is naturally steadier. Both
+ * checks require a small streak of suspicious windows before flagging to absorb the occasional
+ * coincidentally-steady human burst.
+ */
 public final class RotationStandardDeviationHeuristic extends ClassicHeuristic<RotationStandardDeviationHeuristic.RotationStandardDeviationMeta> {
+  // Standard-deviation ceilings (in degrees) below which the error stream is "too consistent".
+  private static final double YAW_DEVIATION_THRESHOLD = 1.0;
+  private static final double PITCH_DEVIATION_THRESHOLD = 3.0;
+  // Minimum samples gathered before a window is evaluated.
+  private static final int YAW_SAMPLE_SIZE = 7;
+  private static final int PITCH_SAMPLE_SIZE = 10;
+
   private final IntavePlugin plugin;
 
   public RotationStandardDeviationHeuristic(Heuristics parentCheck) {
@@ -55,7 +77,7 @@ public final class RotationStandardDeviationHeuristic extends ClassicHeuristic<R
       if (yawSpeed > 2.6) {
         heuristicMeta.distancesToPerfectYaw.add(distanceToPerfectYaw);
       }
-      if (heuristicMeta.distancesToPerfectYaw.size() >= 7) {
+      if (heuristicMeta.distancesToPerfectYaw.size() >= YAW_SAMPLE_SIZE) {
         evaluateYawPatterns(user);
         heuristicMeta.distancesToPerfectYaw.clear();
       }
@@ -68,7 +90,7 @@ public final class RotationStandardDeviationHeuristic extends ClassicHeuristic<R
       if (pitchSpeed > 0.5 && yawSpeed > 3) {
         heuristicMeta.distancesToPerfectPitch.add(distanceToPerfectPitch);
       }
-      if (heuristicMeta.distancesToPerfectPitch.size() >= 10) {
+      if (heuristicMeta.distancesToPerfectPitch.size() >= PITCH_SAMPLE_SIZE) {
         evaluatePitchPatterns(user);
         heuristicMeta.distancesToPerfectPitch.clear();
       }
@@ -80,7 +102,7 @@ public final class RotationStandardDeviationHeuristic extends ClassicHeuristic<R
     RotationStandardDeviationMeta heuristicMeta = metaOf(user);
     double standardDeviation = standardDeviation(heuristicMeta.distancesToPerfectYaw);
 
-    if (standardDeviation < 1.0) {
+    if (standardDeviation < YAW_DEVIATION_THRESHOLD) {
       if (heuristicMeta.rotationBalanceYaw++ >= 2) {
         String description = "standard deviation (yaw) (" + MathHelper.formatDouble(standardDeviation, 4) + ")";
         flag(player, description);
@@ -97,7 +119,7 @@ public final class RotationStandardDeviationHeuristic extends ClassicHeuristic<R
     RotationStandardDeviationMeta heuristicMeta = metaOf(user);
     double standardDeviation = standardDeviation(heuristicMeta.distancesToPerfectPitch);
 
-    if (standardDeviation < 3.0) {
+    if (standardDeviation < PITCH_DEVIATION_THRESHOLD) {
       if (heuristicMeta.rotationBalancePitch++ >= 4) {
         String description = "standard deviation (pitch) (" + standardDeviation + ")";
         flag(player, description);

@@ -2,10 +2,10 @@ package de.jpx3.intave.check.combat.heuristics.combatpatterns;
 
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
-import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.check.combat.Heuristics;
 import de.jpx3.intave.check.combat.heuristics.ClassicHeuristic;
 import de.jpx3.intave.check.combat.heuristics.HeuristicsClassicType;
+import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.module.tracker.entity.Entity;
@@ -18,17 +18,34 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.module.mitigate.AttackNerfStrategy.DMG_MEDIUM;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_8;
 
+/**
+ * Detects kill-aura by the absence of the natural "aim, then click" sequence.
+ *
+ * <p>A legitimate player's cursor rests on an entity for at least a moment before they swing at
+ * it, so genuine attacks are preceded by ticks where the cursor was already on the target (a
+ * "pre-attack"). Aura clicks the instant the target enters range without that lead-in. Over a
+ * window of {@link #ATTACK_WINDOW} attacks the heuristic counts how many were preceded by the
+ * cursor actually resting on the entity (verified by ray-tracing the look vector against the
+ * hit-box); fewer than {@link #MIN_PRE_ATTACKS} such lead-ins marks the combat as automated and
+ * applies a medium damage nerf.
+ *
+ * <p>Outdated (ViaVersion-translated) clients are skipped to avoid ray-trace mismatches, and a
+ * fishing-rod grace window prevents the rod's synthetic swing from being mistaken for a hit.
+ */
 public final class PreAttackHeuristic extends ClassicHeuristic<PreAttackHeuristic.PreAttackMeta> {
-  private final IntavePlugin plugin;
+  // Attacks observed per evaluation window, and the minimum number that must show a genuine
+  // cursor-on-target lead-in before the window is considered human.
+  private static final int ATTACK_WINDOW = 100;
+  private static final int MIN_PRE_ATTACKS = 4;
 
-  public PreAttackHeuristic(Heuristics parentCheck) {
+	public PreAttackHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.PRE_ATTACK, PreAttackMeta.class);
-    plugin = IntavePlugin.singletonInstance();
-  }
+	}
 
   @PacketSubscription(
     priority = ListenerPriority.HIGH,
@@ -86,9 +103,9 @@ public final class PreAttackHeuristic extends ClassicHeuristic<PreAttackHeuristi
     User user = userOf(player);
     ProtocolMetadata clientData = user.meta().protocol();
     AttackMetadata attackData = user.meta().attack();
-    MovementMetadata movementData = user.meta().movement();
+    SimulationEnvironment movementData = user.meta().movement();
     Entity entity = attackData.lastAttackedEntity();
-    if (entity == null || !entity.clientSynchronized || movementData.lastTeleport < 5) {
+    if (entity == null || !entity.clientSynchronized || movementData.ticksPast(TELEPORT) < 5) {
       return;
     }
     if (clientData.outdatedClient()) {
@@ -115,8 +132,8 @@ public final class PreAttackHeuristic extends ClassicHeuristic<PreAttackHeuristi
       if (meta.didAttack) {
         meta.attacks++;
       }
-      if (meta.attacks >= 100) {
-        if (meta.preAttacks < 4) {
+      if (meta.attacks >= ATTACK_WINDOW) {
+        if (meta.preAttacks < MIN_PRE_ATTACKS) {
           String description = "attacks seem automated (" + meta.preAttacks + "f) | " + clientData.versionString();
           flag(player, description);
           user.nerf(DMG_MEDIUM, nerfId);

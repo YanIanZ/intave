@@ -2,7 +2,6 @@ package de.jpx3.intave.check.combat.heuristics.combatpatterns.rotation;
 
 import com.comphenix.protocol.events.PacketEvent;
 import com.google.common.collect.Lists;
-import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.check.combat.Heuristics;
 import de.jpx3.intave.check.combat.heuristics.ClassicHeuristic;
 import de.jpx3.intave.check.combat.heuristics.HeuristicsClassicType;
@@ -22,18 +21,37 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.math.MathHelper.averageOf;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.LOOK;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION_LOOK;
 import static de.jpx3.intave.module.mitigate.AttackNerfStrategy.DMG_LIGHT;
 
+/**
+ * The primary yaw-based aim-assist detector, layering several complementary sub-checks that all
+ * compare the player's yaw against the "perfect" yaw towards a moving, recently-attacked target.
+ *
+ * <p>Each layer targets a different aim-assist behaviour:
+ * <ul>
+ *   <li>{@code checkFollow} — the cursor tracks the target's motion too precisely (small residual
+ *       even at high turn speed).</li>
+ *   <li>{@code checkShortTermAccuracy} — a short burst of turns is suspiciously accurate.</li>
+ *   <li>{@code checkLongTermAccuracy} — accuracy stays high across a long run of rotations.</li>
+ *   <li>{@code checkHitboxCorners} — the aim clings to the same edge of the hit-box while strafing,
+ *       a fingerprint of corner-locking aimbots.</li>
+ *   <li>{@code checkYawAccuracyAvg} — over a sliding window, turn speed is high yet the maximum
+ *       residual stays small, which a human sweeping the mouse cannot maintain.</li>
+ * </ul>
+ *
+ * <p>Every layer keeps its own decaying balance and only flags after a streak, so an isolated
+ * lucky rotation is absorbed; confirmed layers additionally request a criticals/damage nerf as
+ * soft mitigation. Applies to all supported versions (1.7 – 26.2).
+ */
 public final class RotationAccuracyYawHeuristic extends ClassicHeuristic<RotationAccuracyYawHeuristic.RotationAccuracyHeuristicMeta> {
-  private final IntavePlugin plugin;
 
-  public RotationAccuracyYawHeuristic(Heuristics parentCheck) {
+	public RotationAccuracyYawHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.ROTATION_ACCURACY, RotationAccuracyHeuristicMeta.class);
-    this.plugin = IntavePlugin.singletonInstance();
-  }
+	}
 
   @PacketSubscription(
     priority = ListenerPriority.HIGH,
@@ -52,7 +70,7 @@ public final class RotationAccuracyYawHeuristic extends ClassicHeuristic<Rotatio
     float perfectYaw = attackData.perfectYaw();
     float yawSpeed = MathHelper.distanceInDegrees(rotationYaw, movementData.lastRotationYaw);
     float distanceToPerfectYaw = MathHelper.distanceInDegrees(perfectYaw, rotationYaw);
-    if (entity == null || movementData.lastTeleport < 5 || !attackData.recentlyAttacked(1000)) {
+    if (entity == null || movementData.ticksPast(TELEPORT) < 5 || !attackData.recentlyAttacked(1000)) {
       return;
     }
 
@@ -75,6 +93,10 @@ public final class RotationAccuracyYawHeuristic extends ClassicHeuristic<Rotatio
 
     RotationAccuracyHeuristicMeta heuristicMeta = metaOf(player);
 
+    // NOTE: yawSpeed is a wrapped angular distance and never exceeds 180, so the 1001 guard keeps
+    // this legacy snap branch permanently dormant. Snap detection now lives in the dedicated
+    // RotationSnapHeuristic; the branch is retained (rather than re-armed) to avoid duplicate,
+    // unsynchronised flagging. Do not lower this constant without re-tuning against that check.
     if (attackData.recentlyAttacked(150)
       && yawSpeed > 1001
       && attackData.lastReach() > 1.0

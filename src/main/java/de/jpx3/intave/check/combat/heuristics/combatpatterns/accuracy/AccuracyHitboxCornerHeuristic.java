@@ -24,7 +24,23 @@ import java.util.List;
 
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 
+/**
+ * Detects aura that lands hits while aiming at the <i>edges</i> of the hit-box rather than centre.
+ *
+ * <p>This couples two measurements over a sliding window of fast rotations: the click fail-rate
+ * (as in {@link AccuracyLongTermHeuristic}) and how far the aim sits from the perfect centre angle.
+ * A human who keeps a high turn speed or a large average offset to centre will naturally miss
+ * often; an aura that snaps onto whatever part of the hit-box is reachable keeps a very low
+ * fail-rate <i>despite</i> that wild-looking aim. When the fail-rate stays under
+ * {@link #MAX_FAIL_RATE_PERCENT}% while the average yaw speed or offset is large, evidence builds
+ * and — after a short streak — a flag plus a medium damage nerf is applied.
+ */
 public final class AccuracyHitboxCornerHeuristic extends ClassicHeuristic<AccuracyHitboxCornerHeuristic.PerfectAttackMeta> {
+  // Window size (look packets) before evaluation, and the fail-rate ceiling (%) that, combined
+  // with a large turn speed or centre offset, characterises corner-locking aura.
+  private static final int ROTATION_SAMPLE_SIZE = 20;
+  private static final double MAX_FAIL_RATE_PERCENT = 5.0;
+
   public AccuracyHitboxCornerHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.ATTACK_ACCURACY, PerfectAttackMeta.class);
   }
@@ -87,12 +103,12 @@ public final class AccuracyHitboxCornerHeuristic extends ClassicHeuristic<Accura
     float yawSpeed = MathHelper.distanceInDegrees(movementData.rotationYaw, movementData.lastRotationYaw);
     float pitchSpeed = MathHelper.distanceInDegrees(movementData.rotationPitch, movementData.lastRotationPitch);
 
-    if (heuristicMeta.distanceToPerfectYawList.size() > 20) {
+    if (heuristicMeta.distanceToPerfectYawList.size() > ROTATION_SAMPLE_SIZE) {
       double distanceAverage = averageOf(heuristicMeta.distanceToPerfectYawList);
       double yawSpeedAverage = averageOf(heuristicMeta.yawSpeedList);
       double failRate = (heuristicMeta.swings / heuristicMeta.attacks) * 100.0;
 
-      if (failRate < 5 && (yawSpeedAverage > 10 || distanceAverage > 10)) {
+      if (failRate < MAX_FAIL_RATE_PERCENT && (yawSpeedAverage > 10 || distanceAverage > 10)) {
         heuristicMeta.vl++;
         String description = "maintains high attack accuracy whilst aiming at hitbox corners " +
           "(fail:" + MathHelper.formatDouble(failRate, 2)

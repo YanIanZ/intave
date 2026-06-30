@@ -5,6 +5,7 @@ import com.comphenix.protocol.events.PacketEvent;
 import de.jpx3.intave.check.combat.Heuristics;
 import de.jpx3.intave.check.combat.heuristics.ClassicHeuristic;
 import de.jpx3.intave.check.combat.heuristics.HeuristicsClassicType;
+import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.module.tracker.entity.Entity;
@@ -17,10 +18,31 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import static de.jpx3.intave.check.movement.physics.MoveMetric.TELEPORT;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.*;
 import static de.jpx3.intave.user.meta.ProtocolMetadata.VER_1_8;
 
+/**
+ * Detects 1.8 kill-aura that swings at an entity but omits the mandatory attack packet.
+ *
+ * <p>On the 1.8 protocol a real hit is always two packets: an arm-animation (swing) <i>and</i> a
+ * use-entity/attack. Some aura implementations only replay the swing while injecting the actual
+ * damage elsewhere, or drop the attack packet under load. When the cursor demonstrably rests on
+ * the entity (confirmed by ray-trace) yet a swing arrives without the paired attack, the
+ * heuristic builds violation level and flags once the pattern repeats within a plausible combat
+ * cadence ({@link #MIN_REPEAT_GAP_MS}–{@link #MAX_REPEAT_GAP_MS} between occurrences).
+ *
+ * <p><b>Version scope:</b> this check only runs for genuine 1.8 clients
+ * ({@code protocolVersion() == VER_1_8}). From 1.9 onwards the attack-cooldown means players
+ * frequently swing without attacking on purpose, which would make this signal unreliable; the
+ * modern equivalent is handled by {@link PreAttackHeuristic}. On a 26.2 server, 1.8 players
+ * connecting through ViaVersion are still covered.
+ */
 public final class AttackRequiredHeuristic extends ClassicHeuristic<AttackRequiredHeuristic.AttackRequiredMeta> {
+  // Plausible spacing (ms) between two missed-attack occurrences for them to count as a pattern.
+  private static final long MIN_REPEAT_GAP_MS = 1500;
+  private static final long MAX_REPEAT_GAP_MS = 20_000;
+
   public AttackRequiredHeuristic(Heuristics parentCheck) {
     super(parentCheck, HeuristicsClassicType.ATTACK_REQUIRED, AttackRequiredMeta.class);
   }
@@ -81,9 +103,9 @@ public final class AttackRequiredHeuristic extends ClassicHeuristic<AttackRequir
     User user = userOf(player);
     ProtocolMetadata clientData = user.meta().protocol();
     AttackMetadata attackData = user.meta().attack();
-    MovementMetadata movementData = user.meta().movement();
+    SimulationEnvironment movementData = user.meta().movement();
     Entity entity = attackData.lastAttackedEntity();
-    if (entity == null || !entity.clientSynchronized || movementData.lastTeleport < 5) {
+    if (entity == null || !entity.clientSynchronized || movementData.ticksPast(TELEPORT) < 5) {
       return;
     }
     // todo: test if it works on versions > 1.8
@@ -105,7 +127,7 @@ public final class AttackRequiredHeuristic extends ClassicHeuristic<AttackRequir
       boolean cursorUponEntity = cursorUponEntity(user, entity);
       if (cursorUponEntity) {
         long timeToLastFlag = System.currentTimeMillis() - meta.lastFlag;
-        if (timeToLastFlag < 20_000 && timeToLastFlag > 1500) {
+        if (timeToLastFlag < MAX_REPEAT_GAP_MS && timeToLastFlag > MIN_REPEAT_GAP_MS) {
           int vl = (meta.vl += 200) / 200;
           if (vl >= 2) {
             flag(player, "missed attack packet vl:" + vl);

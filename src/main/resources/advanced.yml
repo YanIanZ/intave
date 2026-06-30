@@ -68,32 +68,94 @@ check:
       100:
         - $ban$
 
+  # Pathfinding-bot detection (e.g. Baritone). Catches robotic "heading-lock through turns": the
+  # transmitted yaw stays welded to the movement heading while the player curves along a route, which
+  # a human (who decouples view from travel) does not sustain. Version-independent (reads only motion
+  # and yaw), so it covers every Baritone branch (1.13.2 - 1.21.11). Ships notify/log-only (no kick)
+  # until tuned; its violation level still feeds the ghost-client cross-domain breadth.
+  pathfinder:
+    enabled: true
+
+    thresholds:
+      20:
+        - "intave internals storelog {player} {check} {vl}"
+        - "intave internals sendnotify &e{player}&7 is moving like a pathfinding bot (baritone) #1"
+      40:
+        - "intave internals sendnotify &e{player}&7 is moving like a pathfinding bot (baritone) #2"
+      # Raise an action here (e.g. $kick$) after confirming no false positives on your server.
+
   heuristics:
     enabled: true
 
     # Sets the violation level increases for each classic check type.
     # - The number must be an integer and -1 disables the checks
     # - 0 keeps the check activated and combat nerfers will be applied but no violations are added
+    # All classic heuristics apply across the supported protocol range (1.7 through 26.2). A few
+    # are bound to a narrower range because the packet they rely on only exists there; see the
+    # per-check notes below and docs/HEURISTICS.md for the detection rationale of each entry.
     classic:
       # Attack Heuristics
-      attack-accuracy: 4
-      attack-required: 3
-      pre-attack: 4
+      attack-accuracy: 4   # auto-clicker / aura: implausibly high long-term hit accuracy
+      attack-required: 3   # 1.8 aura: swing on entity without the paired attack packet
+      pre-attack: 4        # aura: attacks fire without a cursor-on-target lead-in
 
       # Rotation Heuristics
-      rotation-accuracy: 4
-      rotation-exact: 10
-      rotation-snap: 5
-      rotation-sensitivity: -1
-      rotation-reset: 3
+      rotation-accuracy: 4    # aim-assist: tracks the perfect angle too tightly (multi-layer)
+      rotation-exact: 10      # aimbot: rotation lands exactly on the perfect angle
+      rotation-snap: 5        # aimbot: instant yaw snap not mirrored by movement
+      rotation-sensitivity: -1 # aimbot GCD desync (disabled by default; tune per server, see docs)
+      rotation-reset: 3       # silent-aim: snap onto target then reset the view
+      rotation-constant-speed: 0 # linear-aim: robotically constant turn velocity (0 = observe/corroborate-only; raise after tuning)
+      rotation-acceleration: 0 # linear-aim: robotically constant turn acceleration / steady speed ramp (0 = observe/corroborate-only; raise after tuning)
+      aim-smoothing: 0        # aimbot: robotically constant ease/smoothing factor toward the target (0 = observe/corroborate-only; raise after tuning)
+      rotation-linearity: 0   # aimbot: collinear (yaw, pitch) steps — a robotically straight aim path (0 = observe/corroborate-only; raise after tuning)
+      rotation-entropy: 0     # aimbot: rotation stream too repetitive (low entropy) to be human motor noise (0 = observe/corroborate-only; raise after tuning)
+      rotation-jitter: 0      # aimbot: added aim jitter is artificial/white (uncorrelated deltas) where human tremor is autocorrelated (0 = observe/corroborate-only; raise after tuning)
+      fail-rotation: 0        # aim-assist: bounded, self-reverting "miss" pulses on a robotically tight aim — defeats accuracy/jitter/entropy (e.g. LiquidBounce fail-rotation); (0 = observe/corroborate-only; raise after tuning)
+      rotation-pause: 0       # aimbot: injected total aim freezes mid-track to fragment the smoothness tells (e.g. LiquidBounce short-stop) — freeze right after an active turn while the target keeps moving; (0 = observe/corroborate-only; raise after tuning)
 
       # Other
-      inventory-rotations: 2
-      blocking: 0
-      no-swing: 0
-      swing-order: 3
+      inventory-rotations: 2  # inventory-aura: rotating while a container screen is open
+      blocking: 0             # 1.8 block-hit timing abuse
+      no-swing: 0             # damage without the arm-animation packet
+      swing-order: 3          # spoofed swing/attack packet ordering
       sprint-toggles: 2 # prevents spamming sprint packets to apply more knockback on targets
       tool-switch: 3 # prevents slot switches while breaking blocks
+      fast-swap: 0 # auto-swap / weapon-combo macro: weapon swaps faster than one per tick (0 = observe/corroborate-only; raise after tuning)
+      mace-fall-distance: 5 # mace smash with more server fall distance than its airtime physically allows (hard terminal-velocity invariant, 1.21+)
+      multi-aura: 4 # switch-aura: attacks land on distinct entities within one tick — hard invariant, sustained + lag-gated (enforced; ~5 fires to notify, ~13 to kick)
+      crystal-aura: 0 # crystal-aura: detonates an end crystal a tick or two after it spawns (super-human reaction; 0 = observe/corroborate-only; raise after tuning)
+      anchor-bed-aura: 0 # anchor/bed-aura (Nether/End PvP): place-then-detonate cycle of a respawn anchor or bed faster than a human can place and re-aim (0 = observe/corroborate-only; raise after tuning)
+      spear-attack-speed: 0 # auto-attack: spear hits faster than its cooldown allows (0 = observe/corroborate-only; raise after tuning to your spear's cooldown)
+      heavy-attack-speed: 0 # auto-attack (1.21+): mace/trident hits faster than a heavy weapon's cooldown allows (0 = observe/corroborate-only; raise after tuning)
+      attack-while-consuming: 5 # kill-aura: sustained attacks while still eating/drinking — the first attack should interrupt the consume; hard invariant, sustained-gated (enforced)
+      attack-while-bow-draw: 5 # kill-aura/bow-aura: sustained melee attacks while drawing a bow/crossbow — the draw occupies the hand; hard invariant, sustained-gated (enforced)
+      attack-while-inventory: 4 # kill-aura/inventory-aura: sustained attacks while a container GUI is open — vanilla routes the mouse to the screen; hard invariant, sustained-gated (enforced)
+      inventory-close-attack: 4 # kill-aura/inventory-aura: closes the container a tick before each attack and reopens it (e.g. LiquidBounce simulateInventoryClosing) — sustained close-then-attack within one tick; hard invariant, sustained-gated (enforced)
+      baritone: 0 # pathfinding bot: attacks while auto-pathing with the yaw heading-locked through turns (see check.pathfinder); (0 = observe/corroborate-only; raise after tuning)
+      baritone-rotation: 0 # pathfinding bot (rotation side, works while travelling not fighting): pitch frozen across a window while large yaw turning accumulates — bot steers a path by yaw alone (ported from MX-Project BaritoneCheck); (0 = observe/corroborate-only; raise after tuning)
+      multi-action: 4 # multi-action exploit (e.g. LiquidBounce MultiActions): sustained place-while-breaking or break-while-using-item — vanilla allows one hand action per tick; hard invariant, sustained-gated, creative-exempt (enforced)
+      criticals: 0 # packet/spoofed criticals (e.g. Wurst Criticals PACKET mode, LiquidBounce packet criticals): claims airborne while collision proves grounded to force a crit — sustained-gated, strips the crit on a confirmed run; (0 = observe/corroborate+nerf-only; raise after tuning)
+
+      # Meta
+      # Definitive verdict: fires when >= 2 DISTINCT physical-impossibility tells (multi-aura,
+      # attack-while-consuming/-bow-draw/-inventory, mace-fall-distance) coincide on the same player.
+      # A legitimate player trips none of these, so two at once is certain — zero false positive by
+      # construction, which is why it ships enforced (stronger than the statistical corroboration).
+      impossible-combo: 15
+
+      # Escalates when several DISTINCT heuristics above corroborate on the same player within a
+      # short window (independent detectors agreeing is stronger evidence than one repeating).
+      # Conservative by design; set to 0 to observe it (log/verbose) without adding violation level.
+      corroboration: 3
+
+      # Ghost-/cheat-client verdict: identifies a player running a cheat CLIENT (e.g. a "ghost"
+      # client such as Vape) rather than one isolated cheat, by the breadth of independent base
+      # heuristics that agree (kill-aura, reach, velocity, auto-clicker each leak into a different
+      # one). Folds in the minecraft:brand fingerprint for attribution (a spoofed/hidden "vanilla"
+      # brand under heavy cheating is surfaced). Stricter than corroboration and very low false
+      # positive; set to 0 to only identify/log it without adding violation level.
+      ghost-client: 5
 
       thresholds:
         20:
@@ -167,6 +229,14 @@ check:
     thresholds:
       100: "intave internals sendnotify &c{player}&7/{trust-color}&7 is breaking blocks too quickly"
 
+  fastuse:
+    enabled: true
+    # Flags consuming items (food/potions) faster than physically possible.
+    # Conservative by default: notify only, no ban. Lower the threshold to notify sooner.
+    # BAN NOT NECESSARY
+    thresholds:
+      100: "intave internals sendnotify &c{player}&7/{trust-color}&7 is using items too quickly"
+
   protocolscanner:
     enabled: true
     invokant: false
@@ -214,7 +284,7 @@ check:
 
 cloud:
   # Should Intave connect to the cloud?
-  enabled: true
+  enabled: false
 
   features:
     # Should Intave use the cloud to store metadata?
@@ -229,10 +299,6 @@ cloud:
 storage:
   # Set to ignore the "intave internals storelog"    and auto-store suggested violations instead
   auto-logs: false
-
-  # Set to let Intave find a suitable trustfactor when you don't specify one
-  # This setting is ignored if cloud-trustfactor is enabled
-  auto-trustfactor: true
 
   # Should Intave try to transfer VLs when switching between servers?
   recover-vl: true
