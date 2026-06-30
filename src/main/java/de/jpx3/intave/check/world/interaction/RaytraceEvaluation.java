@@ -146,7 +146,21 @@ public class RaytraceEvaluation {
     if (invalidCache != null) {
       return invalidCache;
     }
-    return invalidCache = (hitMiss() || positionMismatch() || wrongBlockFace());
+    boolean rawInvalid = hitMiss() || positionMismatch() || wrongBlockFace();
+    // Issue #104: a player teleported/stuck inside a block (e.g. by another plugin) cannot produce a
+    // normal server-side interaction raytrace — the eye is embedded, so the trace misses or
+    // mismatches. Flagging it makes mining the block they are stuck in impossible and they suffocate.
+    // While intave's collision view says the player is genuinely embedded in a block, the interaction
+    // is exempt; being embedded illegitimately is itself a movement violation, and nothing can be
+    // cheated from inside a solid block.
+    if (rawInvalid && playerEmbeddedInBlock()) {
+      rawInvalid = false;
+    }
+    return invalidCache = rawInvalid;
+  }
+
+  private boolean playerEmbeddedInBlock() {
+    return UserRepository.userOf(origin.player()).meta().movement().currentlyInBlock;
   }
 
   @Override
