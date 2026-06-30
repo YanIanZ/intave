@@ -5,12 +5,10 @@ import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.annotate.Nullable;
 import de.jpx3.intave.block.type.MaterialSearch;
-import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.player.Enchantments;
 import de.jpx3.intave.player.ItemProperties;
 import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
-import de.jpx3.intave.user.UserRepository;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -25,6 +23,7 @@ import static de.jpx3.intave.check.movement.physics.MoveMetric.RIPTIDE_SPIN;
 
 public final class InventoryMetadata {
   private final Player player;
+  private final User user;
   private final List<String> whitelistedItemIdRequests = new ArrayList<>();
   public int handActiveTicks, pastHandActiveTicks = 100;
   public int pastItemUsageTransition;
@@ -50,8 +49,9 @@ public final class InventoryMetadata {
   private boolean foodItem;
   public int lastBlockSequenceNumber;
 
-  public InventoryMetadata(Player player) {
+  public InventoryMetadata(Player player, User user) {
     this.player = player;
+    this.user = user;
     if (player != null) {
       this.handSlot = player.getInventory().getHeldItemSlot();
     }
@@ -133,9 +133,7 @@ public final class InventoryMetadata {
 
       if (IntaveControl.DEBUG_ITEM_USAGE) {
         Material activeItem = this.activeItemType;
-        Synchronizer.synchronize(() -> {
-          player.sendMessage("Item usage started: " + activeItem);
-        });
+        user.sendMessage("Item usage started: " + activeItem);
       }
     } finally {
       handActiveLock.unlock();
@@ -145,7 +143,6 @@ public final class InventoryMetadata {
   public void deactivateHand() {
     handActiveLock.lock();
     try {
-      User user = UserRepository.userOf(player);
       MovementMetadata movementData = user.meta().movement();
       if (!handActive) {
         return;
@@ -167,9 +164,7 @@ public final class InventoryMetadata {
       this.deactivatedItemThisTick = true;
       Material activeItem = this.activeItemType;
       if (IntaveControl.DEBUG_ITEM_USAGE) {
-        Synchronizer.synchronize(() -> {
-          player.sendMessage("Item usage ended: " + activeItem);
-        });
+        user.sendMessage("Item usage stopped: " + activeItem);
 //        Thread.dumpStack();
         System.out.println("Item usage ended: " + activeItem);
       }
@@ -185,7 +180,7 @@ public final class InventoryMetadata {
 
   public void releaseItemNextTick() {
     if (IntaveControl.DEBUG_ITEM_USAGE) {
-      player.sendMessage("Forceful item release next tick");
+      user.sendMessage("Forceful item release next tick");
     }
     releaseItemNextTick = true;
     releaseItemType = heldItemType();
@@ -220,7 +215,6 @@ public final class InventoryMetadata {
   }
 
   public void updateInventoryOpenState(boolean inventoryOpen) {
-    User user = UserRepository.userOf(player);
     ProtocolMetadata clientData = user.meta().protocol();
     if (!inventoryOpen && clientData.supportsInventoryAchievementPacket()) {
       this.forceInventoryOnClickOpen = true;

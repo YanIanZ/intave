@@ -7,6 +7,7 @@ import de.jpx3.intave.access.player.trust.DefaultForwardingPermissionTrustFactor
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.access.player.trust.TrustFactorResolver;
 import de.jpx3.intave.annotate.HighOrderService;
+import de.jpx3.intave.cleanup.StartupTasks;
 import de.jpx3.intave.connect.cloud.LogTransmittor;
 import de.jpx3.intave.diagnostic.ConsoleOutput;
 import de.jpx3.intave.diagnostic.message.DebugBroadcast;
@@ -14,6 +15,7 @@ import de.jpx3.intave.diagnostic.message.MessageCategory;
 import de.jpx3.intave.diagnostic.message.MessageSeverity;
 import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
+import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscriber;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.user.User;
@@ -49,7 +51,7 @@ public final class TrustFactorService implements BukkitEventSubscriber {
     }
 
     plugin.eventLinker().registerEventsIn(this);
-    Synchronizer.synchronize(() -> BackgroundExecutors.execute(this::resolveTrustFactorForAll));
+    StartupTasks.add(() -> BackgroundExecutors.execute(this::resolveTrustFactorForAll));
   }
 
   private boolean floodgatePresent() {

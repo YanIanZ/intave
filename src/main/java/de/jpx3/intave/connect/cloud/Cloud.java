@@ -23,7 +23,8 @@ import de.jpx3.intave.connect.cloud.request.CloudTrustfactorResolver;
 import de.jpx3.intave.connect.cloud.request.Request;
 import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Task;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.nayoro.Classifier;
 import de.jpx3.intave.module.nayoro.Nayoro;
@@ -60,7 +61,7 @@ public final class Cloud {
   private final Map<UUID, Request<Map<String, String>>> statusInquiryRequests = new HashMap<>();
   private final Map<Integer, Request<String>> uploadLogRequests = new HashMap<>();
   private CloudConfig cloudConfig;
-  private int taskId;
+  private Task task;
   private boolean wasConnected = false;
   private boolean lastAttemptFailed = false;
 
@@ -83,8 +84,7 @@ public final class Cloud {
 
   private void disable() {
     sessions.values().forEach(Session::close);
-    Bukkit.getScheduler().cancelTask(taskId);
-    TaskTracker.stopped(taskId);
+    task.cancel();
     if (shardCache.wasModified() && !IntaveControl.CLOUD_LOCALHOST_MASTER_SHARD) {
       SHARD_STORAGE_RESOURCE.write(shardCache.compiledLines());
     }
@@ -157,13 +157,10 @@ public final class Cloud {
   }
 
   private void setupKeepAliveTick() {
-    taskId = Bukkit.getScheduler().scheduleAsyncRepeatingTask(
-      IntavePlugin.singletonInstance(), () -> {
-        keepAliveTick();
-        removeUnansweredRequests();
-      }, 20 * 10, 20 * 30
-    );
-    TaskTracker.begun(taskId);
+    task = Tasks.periodicNamed("Cloud.keepAliveTick", () -> {
+      keepAliveTick();
+      removeUnansweredRequests();
+    }, 20 * 10, 20 * 30).startAsync();
   }
 
   private void setTrustAndStorage() {

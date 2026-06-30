@@ -308,7 +308,7 @@ public final class SetbackSimulator extends Module {
       //   s += " @" + movementData.entityBoundingBox();
 
       Motion finalMotion = motion.copy();
-      Synchronizer.synchronizeDelayed(() -> proceedEmulationTick(world, player, finalMotion, ticks - 1, startingTicks, delay, cancellable), delay);
+      Synchronizer.synchronizeDelayed(user, () -> proceedEmulationTick(world, player, finalMotion, ticks - 1, startingTicks, delay, cancellable), delay);
 
       // velocity
       Motion futureMotion = motionProceed(motion, user, boundingBox, true);

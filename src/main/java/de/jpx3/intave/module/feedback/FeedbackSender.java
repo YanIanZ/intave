@@ -115,9 +115,13 @@ public final class FeedbackSender extends Module {
     FeedbackObserver firstTracker, FeedbackObserver secondTracker,
     int options
   ) {
+    User user = UserRepository.userOf(player);
+    if (!user.hasPlayer()) {
+      return;
+    }
     if (!Bukkit.isPrimaryThread()) {
       if (matches(SELF_SYNCHRONIZATION, options)) {
-        Synchronizer.synchronize(() -> tracedDoubleSynchronize(player, encapsulate, target, firstCallback, secondCallback, firstTracker, secondTracker, options));
+        Synchronizer.synchronize(user, () -> tracedDoubleSynchronize(player, encapsulate, target, firstCallback, secondCallback, firstTracker, secondTracker, options));
         return;
       } else if (isInInvalidThread()) {
         if (WARNINGS_LEFT-- > 0) {
@@ -130,10 +134,6 @@ public final class FeedbackSender extends Module {
 //        secondCallback.success(player, target);
 //        return;
       }
-    }
-    User user = UserRepository.userOf(player);
-    if (!user.hasPlayer()) {
-      return;
     }
     ReentrantLock lock = userLock(user);
     try {
@@ -208,9 +208,13 @@ public final class FeedbackSender extends Module {
     Player player, T target, FeedbackCallback<T> callback, FeedbackObserver tracker, int options,
     @Nullable PacketEvent toBundle
   ) {
+    User user = UserRepository.userOf(player);
+    if (!user.hasPlayer()) {
+      return;
+    }
     if (!Bukkit.isPrimaryThread()) {
       if (matches(SELF_SYNCHRONIZATION, options)) {
-        Synchronizer.synchronize(() -> tracedSingleSynchronize(player, target, callback, tracker, options));
+        Synchronizer.synchronize(user, () -> tracedSingleSynchronize(player, target, callback, tracker, options));
         return;
       } else if (isInInvalidThread()) {
 //        IntaveLogger.logger().error("We can't perform tick-validation on thread " + Thread.currentThread().getName());
@@ -227,10 +231,6 @@ public final class FeedbackSender extends Module {
     ReentrantLock lock = userLock(userOf(player));
     try {
       lock.lock();
-      User user = UserRepository.userOf(player);
-      if (!user.hasPlayer()) {
-        return;
-      }
       boolean append = false;
       if (matches(APPEND_ON_OVERFLOW, options)) {
         boolean tooManyPending = pendingTransactions(userOf(player)) > OPTIONAL_PENDING_LIMIT;

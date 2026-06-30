@@ -317,7 +317,8 @@ public final class ViolationProcessor extends Module {
     Violation violation = violationContext.violation();
     Player player = violation.findPlayer().orElseThrow(IllegalStateException::new);
     String checkName = violation.check().name().toLowerCase(Locale.ROOT);
-    Synchronizer.synchronize(() -> {
+    User user = UserRepository.userOf(player);
+    Synchronizer.synchronize(user, () -> {
       boolean playerRemoved = command.startsWith("ban") || command.startsWith("kick");
       if (playerRemoved) {
         Modules.mitigate().reconnectionLimiter().ban(player.getAddress().getAddress(), player.getUniqueId(), checkName);
@@ -335,7 +336,7 @@ public final class ViolationProcessor extends Module {
       if (command.contains("{log-id}")) {
         logTransmittor.awaitLogIdOf(player, logId -> {
           String commandWithLogId = command.replace("{log-id}", logId);
-          Synchronizer.synchronize(() -> {
+          Synchronizer.synchronize(user, () -> {
             plugin.logger().commandExecution(commandWithLogId);
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), commandWithLogId);
           });
@@ -401,7 +402,8 @@ public final class ViolationProcessor extends Module {
       }
       player.spigot().sendMessage(textComponent);
     } else {
-      Synchronizer.synchronize(() -> synchronizedMessage(player, message, granularInfos));
+      User user = UserRepository.userOf(player);
+      Synchronizer.synchronize(user, () -> synchronizedMessage(player, message, granularInfos));
     }
   }
 

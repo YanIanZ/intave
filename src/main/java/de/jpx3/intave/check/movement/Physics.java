@@ -59,16 +59,17 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static de.jpx3.intave.check.movement.physics.MoveMetric.*;
+import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL;
 import static de.jpx3.intave.diagnostic.message.MessageCategory.SIMFLT;
 import static de.jpx3.intave.diagnostic.message.MessageCategory.SIMFUL;
 import static de.jpx3.intave.math.MathHelper.*;
 import static de.jpx3.intave.share.ClientMath.floor;
-import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL;
 
 public final class Physics extends Check {
   private static final double VL_DECREMENT_PER_VALID_MOVE = 0.08;
@@ -1040,8 +1041,7 @@ public final class Physics extends Check {
       }
       String finalDebug = debug;
       if (!anyDebugRequested) {
-        String finalFinalDebug = finalDebug;
-        Synchronizer.synchronize(() -> player.sendMessage(finalFinalDebug));
+        user.sendMessage(finalDebug);
       } else {
         finalDebug = ChatColor.stripColor(finalDebug);
         if (faultDebugRequested && violationLevelIncrease > 0) {
@@ -1061,7 +1061,7 @@ public final class Physics extends Check {
     BoundingBox box = BoundingBox.fromPosition(user, user.meta().movement(), x, y, z).grow(1.2);
     Player player = user.player();
     List<Position> positions = Collision.collectCollidingPositions(player, box, 16, Collectors.toList());
-    Synchronizer.synchronize(() -> {
+    Synchronizer.synchronize(user, () -> {
       for (Position position : positions) {
         refreshBlock(player, position.toLocation(player.getWorld()));
       }

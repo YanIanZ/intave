@@ -114,7 +114,7 @@ public final class MovementDispatcher extends Module {
     double teleportDistance = toLocation.getWorld() != player.getWorld() ? Double.MAX_VALUE : toLocation.distance(fromLocation);
     if (toLocation.getWorld() != player.getWorld() || teleportDistance > 8) {
       Location fixed = fixLocation(user, toLocation);
-      Synchronizer.synchronize(() -> {
+      Synchronizer.synchronize(user, () -> {
         player.teleport(fixed, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
       });
     }
@@ -254,7 +254,7 @@ public final class MovementDispatcher extends Module {
       if (protocol.protocolVersion() >= VER_1_16) {
         user.refreshSprintState();
       }
-      Synchronizer.synchronize(inventory::releaseItemNextTick);
+      Synchronizer.synchronize(user, inventory::releaseItemNextTick);
       movement.baseMotionX = 0;
       movement.baseMotionY = 0;
       movement.baseMotionZ = 0;
@@ -629,7 +629,7 @@ public final class MovementDispatcher extends Module {
     user.ignoreNextInboundPacket();
     PacketSender.receiveClientPacketFrom(player, packet);
     updatePlayerHandItem(player);
-    Synchronizer.synchronize(player::updateInventory);
+    Synchronizer.synchronize(user, player::updateInventory);
     if (IntaveControl.DEBUG_ITEM_USAGE) {
       player.sendMessage(ChatColor.DARK_PURPLE + "Release item");
     }

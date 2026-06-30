@@ -8,7 +8,6 @@ import de.jpx3.intave.block.physics.BlockPhysics;
 import de.jpx3.intave.block.physics.BlockProperties;
 import de.jpx3.intave.check.movement.physics.environment.SimulationEnvironment;
 import de.jpx3.intave.diagnostic.timings.Timings;
-import de.jpx3.intave.executor.Synchronizer;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.tracker.entity.Entity;
 import de.jpx3.intave.player.Effects;
@@ -558,9 +557,7 @@ class BaseSimulator extends Simulator {
     if (IntaveControl.DEBUG_MOVEMENT_BLOCK_FALLEN_UPON) {
       if (block != null) {
         String name = block.name();
-        Synchronizer.synchronize(() -> {
-          player.sendMessage("Block fallen upon: " + name);
-        });
+        user.sendMessage("Block fallen upon: " + name);
       }
     }
 

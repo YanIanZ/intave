@@ -5,7 +5,8 @@ import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.cleanup.ShutdownTasks;
 import de.jpx3.intave.cleanup.StartupTasks;
 import de.jpx3.intave.diagnostic.ConsoleOutput;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Task;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscriber;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
@@ -21,8 +22,8 @@ public final class LogTransmittor implements BukkitEventSubscriber {
   private final Cloud cloud = IntavePlugin.singletonInstance().cloud();
   private final Map<UUID, LogState> logStates = new HashMap<>();
   private final LogState intaveLogState = new LogState();
-  private int scheduledUploadLogTaskId;
-  private int logIdRequestFailedUpdateScheduleTaskId;
+  private Task uploadTask;
+  private Task garbageCollectionTask;
 
   public void addPlayerLog(Player player, String line) {
     LogState logState = logStateOf(player);
@@ -31,17 +32,20 @@ public final class LogTransmittor implements BukkitEventSubscriber {
     logState.addLine(dateFormatted + ChatColor.stripColor(line));
   }
 
-  public void addIntaveLog(String line) {
-//    intaveLogState.addLine(line);
-  }
-
   public void init() {
-    if (scheduledUploadLogTaskId == 0) {
-      scheduledUploadLogTaskId = Bukkit.getScheduler().runTaskTimerAsynchronously(IntavePlugin.singletonInstance(), this::uploadAll, 20 * 60 * 5, 20 * 60 * 5).getTaskId();
-      TaskTracker.begun(scheduledUploadLogTaskId);
+    if (uploadTask != null) {
+      uploadTask.cancel();
     }
-    if (logIdRequestFailedUpdateScheduleTaskId == 0) {
-      logIdRequestFailedUpdateScheduleTaskId = Bukkit.getScheduler().runTaskTimerAsynchronously(IntavePlugin.singletonInstance(), () -> {
+    uploadTask = Tasks.periodic(
+      this::uploadAll,
+      20 * 60 * 5, 20 * 60 * 5
+    ).startAsync();
+
+    if (garbageCollectionTask != null) {
+      garbageCollectionTask.cancel();
+    }
+    garbageCollectionTask = Tasks.periodic(
+      () -> {
         for (LogIdRequest request : requests) {
           if (request.fulfilled) {
             requests.remove(request);
@@ -50,9 +54,10 @@ public final class LogTransmittor implements BukkitEventSubscriber {
             requests.remove(request);
           }
         }
-      }, 20 * 5, 20 * 5).getTaskId();
-      TaskTracker.begun(logIdRequestFailedUpdateScheduleTaskId);
-    }
+      },
+      20 * 5, 20 * 5
+    ).startAsync();
+
     StartupTasks.add(() -> Modules.linker().bukkitEvents().registerEventsIn(this));
     ShutdownTasks.add(this::uploadAll);
   }

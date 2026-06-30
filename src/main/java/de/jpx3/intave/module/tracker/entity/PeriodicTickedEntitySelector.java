@@ -1,8 +1,8 @@
 package de.jpx3.intave.module.tracker.entity;
 
-import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.executor.BackgroundExecutors;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Task;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserRepository;
 import de.jpx3.intave.user.meta.ConnectionMetadata;
@@ -17,24 +17,24 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Deprecated
 public final class PeriodicTickedEntitySelector {
   private final int ticks;
-  private int taskId;
+  private Task asyncTask;
 
   public PeriodicTickedEntitySelector(int ticks) {
     this.ticks = ticks;
   }
 
   public void enableTask() {
-    taskId = Bukkit.getScheduler().scheduleAsyncRepeatingTask(IntavePlugin.singletonInstance(), () -> {
+    asyncTask = Tasks.periodic(() -> {
       for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
         BackgroundExecutors.executeExternallyScheduled(() -> selectCappedEntities(onlinePlayer));
       }
-    }, ticks, ticks);
-    TaskTracker.begun(taskId);
+    }, ticks, ticks).startAsync();
   }
 
   public void disableTask() {
-    Bukkit.getScheduler().cancelTask(taskId);
-    TaskTracker.stopped(taskId);
+    if (asyncTask != null) {
+      asyncTask.cancel();
+    }
   }
 
   public void selectCappedEntities(Player player) {

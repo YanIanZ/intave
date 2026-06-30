@@ -41,7 +41,7 @@ import de.jpx3.intave.entity.size.HitboxSizeAccess;
 import de.jpx3.intave.entity.type.EntityTypeDataAccessor;
 import de.jpx3.intave.executor.BackgroundExecutors;
 import de.jpx3.intave.executor.Synchronizer;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.klass.locate.Locate;
 import de.jpx3.intave.library.Libraries;
 import de.jpx3.intave.library.pledge.TickEnd;
@@ -211,7 +211,7 @@ public final class IntavePlugin extends JavaPlugin {
       // stage 5
       Modules.proceedBoot(BootSegment.STAGE_5);
 
-      TaskTracker.setup();
+      Tasks.addShutdownHook();
       Locate.setup();
 
       ReflectiveAccess.setup();
@@ -637,7 +637,6 @@ public final class IntavePlugin extends JavaPlugin {
       configService.shutdown();
     } catch (Exception ignored) {
     }
-    Bukkit.getScheduler().cancelTasks(this);
     ShutdownTasks.runAll();
     BackgroundExecutors.stopAllBlocking();
     deleteIntegrityCache();

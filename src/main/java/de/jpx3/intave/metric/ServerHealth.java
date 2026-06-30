@@ -24,8 +24,8 @@ public final class ServerHealth {
         tpsAccess = (double[]) serverSpigot.getClass().getMethod("getTPS").invoke(serverSpigot);
         return;
       } catch (Exception exception1) {
-        exception.printStackTrace();
-        exception1.printStackTrace();
+//        exception.printStackTrace();
+//        exception1.printStackTrace();
       }
       tpsAccess = new double[]{20, 20, 20};
     }

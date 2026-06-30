@@ -454,6 +454,8 @@ public interface User {
    */
   void nerfPermanently(AttackNerfStrategy strategy, String checkId);
 
+  void sendMessage(String message);
+
   /**
    * Retrieve a player's packet latency
    *
@@ -553,11 +555,6 @@ public interface User {
    * @param args the arguments
    */
   void message(String key, Object... args);
-
-  /**
-   * Send a message to the player, without localization
-   */
-  void sendMessage(String message);
 
   /**
    * Unregister a user

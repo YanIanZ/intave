@@ -4,9 +4,9 @@ import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.cleanup.ShutdownTasks;
 import de.jpx3.intave.connect.IntaveDomains;
 import de.jpx3.intave.executor.BackgroundExecutors;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.security.HWIDVerification;
 import de.jpx3.intave.security.LicenseAccess;
-import org.bukkit.Bukkit;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -39,7 +39,10 @@ public final class ScheduledUploadService {
   private void mergeFiles() {
     BackgroundExecutors.executeWhenever(this::uploadSessionFiles);
     // start timer for edge of next day
-    Bukkit.getScheduler().scheduleSyncDelayedTask(IntavePlugin.singletonInstance(), this::mergeFiles, millisUntilNextDay() / 50);
+    Tasks.delayedNamed(
+    "ScheduledUploadService.merge",
+      this::mergeFiles, millisUntilNextDay() / 50
+    ).startAsync();
   }
 
   public void scheduledUpload(String name, String data) throws IOException {

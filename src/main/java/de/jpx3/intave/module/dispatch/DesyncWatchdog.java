@@ -6,6 +6,8 @@ import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.block.type.BlockTypeAccess;
 import de.jpx3.intave.check.movement.Physics;
 import de.jpx3.intave.executor.Synchronizer;
+import de.jpx3.intave.executor.task.Task;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.math.MathHelper;
 import de.jpx3.intave.module.Module;
 import de.jpx3.intave.module.Modules;
@@ -16,7 +18,6 @@ import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.UserLocal;
 import de.jpx3.intave.user.UserRepository;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -32,13 +33,26 @@ public final class DesyncWatchdog extends Module {
 
   private static long lastActionIssued = System.currentTimeMillis();
 
+	private Task watchdogTask;
+
   @Override
   public void enable() {
-    Bukkit.getScheduler().scheduleAsyncRepeatingTask(plugin, () ->
-      UserRepository.applyOnAll(this::performDesyncCheck), 20, 20);
+		if (watchdogTask != null) {
+			watchdogTask.cancel();
+		}
+		watchdogTask = Tasks.periodicNamed("DesyncWatchdog.performDesyncCheck", () ->
+      UserRepository.applyOnAll(this::performDesyncCheck), 20, 20
+		).startAsync();
   }
 
-  private void performDesyncCheck(User user) {
+	@Override
+	public void disable() {
+		if (watchdogTask != null) {
+			watchdogTask.cancel();
+		}
+	}
+
+	private void performDesyncCheck(User user) {
     // Spectators don't send any position packets when observing an entity
     if (user.player().getGameMode() == GameMode.SPECTATOR) {
       return;
@@ -71,14 +85,14 @@ public final class DesyncWatchdog extends Module {
 
         if (System.currentTimeMillis() - lastActionIssued > 10_000) {
           lastActionIssued = System.currentTimeMillis();
-          Synchronizer.synchronize(() -> {
+          Synchronizer.synchronize(user, () -> {
             Player player = user.player();
             Location location = player.getLocation().clone();
             while (BlockTypeAccess.typeAccess(location.getBlock(), player) != Material.AIR) {
               location.add(0, 1, 0);
             }
             if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
-              player.sendMessage(IntavePlugin.prefix() + "You were instructed to teleport to " + MathHelper.formatPosition(location) + " due to desync.");
+              user.sendMessage(IntavePlugin.prefix() + "You were instructed to teleport to " + MathHelper.formatPosition(location) + " due to desync.");
             }
             player.teleport(location);
           });

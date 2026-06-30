@@ -5,9 +5,8 @@ import de.jpx3.intave.check.Check;
 import de.jpx3.intave.check.CheckViolationLevelDecrementer;
 import de.jpx3.intave.check.other.fastuse.FastBow;
 import de.jpx3.intave.check.other.fastuse.FastConsume;
-import de.jpx3.intave.executor.TaskTracker;
+import de.jpx3.intave.executor.task.Tasks;
 import de.jpx3.intave.user.UserRepository;
-import org.bukkit.Bukkit;
 
 /**
  * Detection cluster for using items faster than the game physically allows ("fast-use").
@@ -34,11 +33,9 @@ public final class FastUse extends Check {
   }
 
   private void startDecrementTask() {
-    int taskId = Bukkit.getScheduler().scheduleAsyncRepeatingTask(
-      IntavePlugin.singletonInstance(),
-      () -> UserRepository.applyOnAll(user -> decrementer.decrement(user, 0.05))
-      , 40, 40);
-    TaskTracker.begun(taskId);
+    Tasks.periodicNamed("FastUse.decrementer", () -> {
+      UserRepository.applyOnAll(user -> decrementer.decrement(user, 0.05));
+    }, 40, 40).startAsync();
   }
 
   private void setupParts() {

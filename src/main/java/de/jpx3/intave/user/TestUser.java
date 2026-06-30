@@ -304,6 +304,11 @@ final class TestUser implements User {
   }
 
   @Override
+  public void sendMessage(String message) {
+
+  }
+
+  @Override
   public int latency() {
     return (int) callback.apply(this, "latency");
   }
@@ -405,11 +410,6 @@ final class TestUser implements User {
 
   @Override
   public void message(String key, Object... args) {
-
-  }
-
-  @Override
-  public void sendMessage(String message) {
 
   }
 
