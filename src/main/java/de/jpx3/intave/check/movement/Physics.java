@@ -567,7 +567,13 @@ public final class Physics extends Check {
       }
     }
 
-    if (!boundingBoxIntersectionCurrent && !boundingBoxIntersectionLast) {
+    // Track whether the player is genuinely embedded in a block (collision truth). This was only ever
+    // cleared, never set, leaving the field dead — so the in-block movement leniency in
+    // SimulationEvaluator and the interaction-raytrace exemption (issue #104) could never engage. Set
+    // it on a current intersection; keep the original clear condition so it survives a one-tick gap.
+    if (boundingBoxIntersectionCurrent) {
+      movementData.currentlyInBlock = true;
+    } else if (!boundingBoxIntersectionLast) {
       movementData.currentlyInBlock = false;
     }
 
