@@ -140,14 +140,6 @@ jobs:
             }
             core.setOutput('publish', publish ? 'true' : 'false');
 
-      - name: Move nightly tag to built commit
-        if: steps.dev_build.outputs.publish == 'true'
-        env:
-          BUILD_SHA: ${{ github.sha }}
-        run: |
-          git tag --force nightly "$BUILD_SHA"
-          git push --force origin refs/tags/nightly
-
       - name: Replace Nightly Build assets and notes
         id: dev_release
         if: steps.dev_build.outputs.publish == 'true'
