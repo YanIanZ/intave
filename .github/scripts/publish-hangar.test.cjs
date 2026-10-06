@@ -47,8 +47,8 @@ function scenario({ tag = 'v2026.09.18', existing = 404, project = 200, auth = 2
   const run = () => publish({ core, context, github }, {
     fetch, apiKey: 'test-api-key',
     readArtifact: async path => {
-      assert.equal(path, 'build/libs/Intave-bundled.jar');
-      return Buffer.from('bundled-jar-bytes');
+      assert.equal(path, 'build/libs/Intave.jar');
+      return Buffer.from('minimal-jar-bytes');
     },
   });
   return { run, requests, notices };
@@ -59,7 +59,7 @@ for (const [tag, version, channel] of [
   ['2026.09.18', '2026.09.18', 'Release'],
   [null, 'dev-abcdef123456', 'Snapshot'],
 ]) {
-  test(`publishes ${version} to ${channel} with the bundled artifact and GitHub notes`, async () => {
+  test(`publishes ${version} to ${channel} with the minimal artifact and GitHub notes`, async () => {
     const { run, requests } = scenario({ tag });
     await run();
     const form = requests.at(-1).options.body;
@@ -69,8 +69,8 @@ for (const [tag, version, channel] of [
     assert.equal(metadata.description, 'GitHub release notes');
     assert.deepEqual(metadata.platformDependencies, { PAPER: ['1.8.8-26.3'] });
     assert.deepEqual(metadata.files, [{ platforms: ['PAPER'] }]);
-    assert.equal(form.get('files').name, 'Intave-bundled.jar');
-    assert.equal(await form.get('files').text(), 'bundled-jar-bytes');
+    assert.equal(form.get('files').name, 'Intave.jar');
+    assert.equal(await form.get('files').text(), 'minimal-jar-bytes');
   });
 }
 

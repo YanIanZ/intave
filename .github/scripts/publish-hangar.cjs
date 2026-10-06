@@ -75,9 +75,9 @@ module.exports = async function publishHangar({ core, context, github }, {
     pluginDependencies: { PAPER: [] },
     files: [{ platforms: ['PAPER'] }],
   })], { type: 'application/json' }));
-  body.append('files', new Blob([await readArtifact('build/libs/Intave-bundled.jar')], {
+  body.append('files', new Blob([await readArtifact('build/libs/Intave.jar')], {
     type: 'application/octet-stream',
-  }), 'Intave-bundled.jar');
+  }), 'Intave.jar');
 
   const uploaded = await request('/projects/intave/upload', { method: 'POST', body });
   if (!uploaded.ok) {
