@@ -25,7 +25,7 @@ function scenario({ tag = 'v2026.09.18', existing = 404, project = 200, auth = 2
       return { data: { commit: { sha: stale ? 'newer-commit' : sha } } };
     },
     getReleaseByTag: async ({ tag: releaseTag }) => {
-      assert.equal(releaseTag, tag || 'nightly');
+      assert.equal(releaseTag, tag || 'nightly-build');
       return { data: { body: 'GitHub release notes', html_url: 'https://github.com/intave/intave/releases' } };
     },
   } } };

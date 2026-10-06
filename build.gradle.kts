@@ -29,7 +29,7 @@ plugins {
 val gitTag by lazy {
   try {
     providers.exec {
-      commandLine("git", "describe", "--tags", "--exclude=dev-build", "--exclude=nightly", "--abbrev=0")
+      commandLine("git", "describe", "--tags", "--exclude=dev-build", "--exclude=nightly", "--exclude=nightly-build", "--abbrev=0")
     }.standardOutput.asText.get().trim()
   } catch (e: Exception) {
     "dev-snapshot"
