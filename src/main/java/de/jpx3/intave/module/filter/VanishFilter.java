@@ -19,7 +19,6 @@ import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.module.linker.packet.PrioritySlot;
-import de.jpx3.intave.packet.reader.PacketReaders;
 import de.jpx3.intave.packet.reader.PlayerInfoReader;
 import de.jpx3.intave.packet.reader.PlayerInfoReader.PlayerInfoEntry;
 import de.jpx3.intave.packet.reader.PlayerInfoRemoveReader;
@@ -62,32 +61,35 @@ public final class VanishFilter extends Filter {
     if (playerInfos == null) {
       return;
     }
-    Set<UUID> updatedShownPlayers = new HashSet<>(shownPlayers);
 
-    for (EnumWrappers.PlayerInfoAction action : actions) {
-      switch (action) {
-        case ADD_PLAYER:
-          playerInfos.forEach(data -> updatedShownPlayers.add(data.profileId()));
-          break;
-        case UPDATE_GAME_MODE:
-        case UPDATE_LATENCY:
-          playerInfos.removeIf(data -> !updatedShownPlayers.contains(data.profileId()));
-          break;
-        case REMOVE_PLAYER:
-          playerInfos.removeIf(data -> !updatedShownPlayers.remove(data.profileId()));
-          break;
+    synchronized (protocol) {
+      Set<UUID> updatedShownPlayers = new HashSet<>(shownPlayers);
+
+      for (EnumWrappers.PlayerInfoAction action : actions) {
+        switch (action) {
+          case ADD_PLAYER:
+            playerInfos.forEach(data -> updatedShownPlayers.add(data.profileId()));
+            break;
+          case UPDATE_GAME_MODE:
+          case UPDATE_LATENCY:
+            playerInfos.removeIf(data -> !updatedShownPlayers.contains(data.profileId()));
+            break;
+          case REMOVE_PLAYER:
+            playerInfos.removeIf(data -> !updatedShownPlayers.remove(data.profileId()));
+            break;
+        }
       }
-    }
 
-    if (playerInfos.isEmpty()) {
-      cancellable.setCancelled(true);
-      return;
-    }
+      if (playerInfos.isEmpty()) {
+        cancellable.setCancelled(true);
+        return;
+      }
 
-    Collections.shuffle(playerInfos);
-    if (reader.writePlayerInfoEntries(playerInfos)) {
-      shownPlayers.clear();
-      shownPlayers.addAll(updatedShownPlayers);
+      Collections.shuffle(playerInfos);
+      if (reader.writePlayerInfoEntries(playerInfos)) {
+        shownPlayers.clear();
+        shownPlayers.addAll(updatedShownPlayers);
+      }
     }
   }
 
@@ -111,13 +113,15 @@ public final class VanishFilter extends Filter {
       List<String> playerNames = Bukkit.getOnlinePlayers().stream()
         .map(Player::getName).collect(Collectors.toList());
       List<String> hiddenPlayers = Lists.newArrayList();
-      for (String name : playerNames) {
-        Player target = Bukkit.getPlayerExact(name);
-        if (target == null) {
-          continue;
-        }
-        if (!shownPlayers.contains(target.getUniqueId())) {
-          hiddenPlayers.add(name);
+      synchronized (protocol) {
+        for (String name : playerNames) {
+          Player target = Bukkit.getPlayerExact(name);
+          if (target == null) {
+            continue;
+          }
+          if (!shownPlayers.contains(target.getUniqueId())) {
+            hiddenPlayers.add(name);
+          }
         }
       }
       List<String> newTabCompletions = Lists.newArrayList();
@@ -154,16 +158,14 @@ public final class VanishFilter extends Filter {
       PLAYER_INFO_REMOVE
     }
   )
-  public void onRemoval(PacketEvent event) {
-    Player player = event.getPlayer();
-    PacketContainer packet = event.getPacket();
+  public void onRemoval(Player player, PlayerInfoRemoveReader reader) {
     User user = UserRepository.userOf(player);
     ProtocolMetadata protocol = user.meta().protocol();
     Set<UUID> shownPlayers = protocol.shownPlayers;
-    PlayerInfoRemoveReader reader = PacketReaders.readerOf(packet);
     List<UUID> uuids = reader.playersToRemove();
-    uuids.removeIf(uuid -> !shownPlayers.contains(uuid));
-    reader.release();
+    synchronized (protocol) {
+      uuids.removeIf(uuid -> !shownPlayers.contains(uuid));
+    }
   }
 
   @Override
