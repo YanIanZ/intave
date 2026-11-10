@@ -146,6 +146,30 @@ final class AuroraTaskSchedulerTest {
   }
 
   @Test
+  void goneUserIsDroppedWithoutScheduling() {
+    FakeAuroraScheduler fake = new FakeAuroraScheduler();
+    AuroraTaskScheduler scheduler = new AuroraTaskScheduler(fake);
+    User user = (User) Proxy.newProxyInstance(
+      AuroraTaskSchedulerTest.class.getClassLoader(),
+      new Class<?>[]{User.class},
+      (proxy, method, arguments) -> {
+        if (method.getName().equals("hasPlayer")) {
+          return false;
+        }
+        if (method.getName().equals("player")) {
+          throw new IllegalStateException("Player be gone");
+        }
+        return null;
+      }
+    );
+
+    scheduler.startUserSync(new TestTask(1, 5), user);
+
+    assertTrue(fake.calls.isEmpty());
+    assertEquals(0, scheduler.scheduledTaskCount());
+  }
+
+  @Test
   void unsupportedEntitySchedulerFallsBackToGlobal() {
     FakeAuroraScheduler fake = new FakeAuroraScheduler();
     fake.entitySchedulerUnsupported = true;
@@ -168,7 +192,12 @@ final class AuroraTaskSchedulerTest {
     return (User) Proxy.newProxyInstance(
       AuroraTaskSchedulerTest.class.getClassLoader(),
       new Class<?>[]{User.class},
-      (proxy, method, arguments) -> method.getName().equals("player") ? player : null
+      (proxy, method, arguments) -> {
+        if (method.getName().equals("hasPlayer")) {
+          return true;
+        }
+        return method.getName().equals("player") ? player : null;
+      }
     );
   }
 

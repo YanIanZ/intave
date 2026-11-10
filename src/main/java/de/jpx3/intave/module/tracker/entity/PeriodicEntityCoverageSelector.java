@@ -50,6 +50,10 @@ public final class PeriodicEntityCoverageSelector {
   }
 
   public void enableTask() {
+    if (task != null) {
+      task.cancel();
+      task = null;
+    }
     task = Tasks.periodicNamed("PeriodicEntityCoverageSelector.select", () -> {
       UserRepository.applyOnOnlineUsers(user ->
         Synchronizer.synchronize(user, () -> selectEntitiesToTraceFor(user.player()))

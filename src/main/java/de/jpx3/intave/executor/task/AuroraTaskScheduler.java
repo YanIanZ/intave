@@ -91,11 +91,16 @@ final class AuroraTaskScheduler implements TaskScheduler {
   public void startUserSync(Task task, User user) {
     ensureNotRunning(task);
     Entity entity;
+    if (!user.hasPlayer()) {
+      return;
+    }
     try {
       entity = user.player();
     } catch (Throwable throwable) {
-      startSync(task);
-      return;
+      if (!user.hasPlayer()) {
+        return;
+      }
+      throw throwable;
     }
     if (entity == null) {
       startSync(task);

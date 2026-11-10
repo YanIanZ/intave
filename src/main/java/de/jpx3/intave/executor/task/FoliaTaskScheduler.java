@@ -11,6 +11,7 @@ import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -86,7 +87,11 @@ final class FoliaTaskScheduler implements TaskScheduler {
   @Override
   public void startUserSync(Task task, User user) {
     ensureNotRunning(task);
-    EntityScheduler scheduler = ENTITY_SCHEDULER.apply(user.player());
+    Player player = playerOf(user);
+    if (player == null) {
+      return;
+    }
+    EntityScheduler scheduler = ENTITY_SCHEDULER.apply(player);
     if (scheduler == null) {
       startSync(task);
       return;
@@ -194,6 +199,20 @@ final class FoliaTaskScheduler implements TaskScheduler {
   private void ensureNotRunning(Task task) {
     if (scheduledTasks.containsKey(task)) {
       throw new IllegalStateException("Task is already running: " + task.name());
+    }
+  }
+
+  private Player playerOf(User user) {
+    if (!user.hasPlayer()) {
+      return null;
+    }
+    try {
+      return user.player();
+    } catch (RuntimeException exception) {
+      if (!user.hasPlayer()) {
+        return null;
+      }
+      throw exception;
     }
   }
 
