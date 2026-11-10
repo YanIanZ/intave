@@ -13,6 +13,8 @@ The build requires a JDK 25 toolchain (Gradle provisions it through the foojay r
 - `./gradlew testShadedJar` — library, native-library, certificate, cloud, and report tests against the bundled JAR.
 - `./gradlew testProtocolResources` — protocol-version and reflection-mapping tests against the bundled JAR.
 - `./gradlew testCoverage` — unit tests plus the JaCoCo HTML/XML/CSV report.
+- `./gradlew verifyJava8Bytecode verifyBundledJar` — fail if a main class is not major 52, or if
+  SourbyAPI/GPL classes leak into the bundled JAR.
 - `./gradlew testPaper1_21_4` — boot a real Paper 1.21.4 server with the plugin and run the in-server self-tests.
   Every configured version has a task (`testPaper1_8_8`, `testPaper26_3`, ...); `testAllPaperVersions` runs all of them.
 - `./gradlew runPaper1_21_4` — development server with the plugin and ViaVersion/ViaBackwards, offline mode.

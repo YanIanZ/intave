@@ -67,6 +67,13 @@ enabled!
 We use [this IntelliJ plugin](https://plugins.jetbrains.com/plugin/14832-single-hotswap) for efficient hotswapping, which
 can swap method contents that don't have an indy lambda or anonymous class.
 
+### SourbyCraft
+
+Intave supports SourbyCraft 26.2 natively through `folia-supported: true`. On SourbyCraft Build 55+
+it uses the SourbyAPI `AuroraScheduler` by default; force the Folia path with
+`-Dintave.sourbycraft.scheduler=folia`. The integration design and Build 57 evidence are in
+[`docs/architecture/SOURBYAPI-INTEGRATION.md`](docs/architecture/SOURBYAPI-INTEGRATION.md).
+
 ## Contributing
 
 We accept contributions to the project, but please make sure to read the [contributing guidelines](docs/CONTRIBUTING.md) before doing so.
