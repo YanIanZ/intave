@@ -203,6 +203,9 @@ public final class ReaderTests extends IntegrationTests {
 
   @Test(testCode = "native-scoreboard", severity = Severity.ERROR)
   public void testNativeScoreboardPackets() throws ReflectiveOperationException {
+    if (!isGlobalTickThread()) {
+      return;
+    }
     org.bukkit.scoreboard.Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
     org.bukkit.scoreboard.Objective objective = board.registerNewObjective("reader", "dummy");
     objective.setDisplayName("Reader title");
@@ -1091,5 +1094,14 @@ public final class ReaderTests extends IntegrationTests {
       assertSame(packet, acquired.packet());
     }
     assertNull(reader.packet());
+  }
+
+  private static boolean isGlobalTickThread() {
+    try {
+      Class<?> regionizedServer = Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+      return (boolean) regionizedServer.getMethod("isGlobalTickThread").invoke(null);
+    } catch (Throwable ignored) {
+      return true;
+    }
   }
 }

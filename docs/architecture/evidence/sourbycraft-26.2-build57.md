@@ -36,29 +36,44 @@ Platform is SOURBYCRAFT (57), scheduler folia
 
 Both boots reached `Done (...)` and shut down cleanly (exit 0).
 
-## Known failures (pre-existing 26.2 compatibility gaps, not scheduler regressions)
+## Compatibility fixes verified in T9
 
-1. **Aurora boot:** the in-server self-test `PR::native-scoreboard` fails with
-   `IllegalStateException: Cannot create new scoreboard async`. The test creates a Bukkit
-   scoreboard from a global-region task; SourbyCraft requires the global tick thread for that call.
-   The plugin remains enabled and detection is not disabled.
-2. **Folia fallback boot:** the in-server self-test `PR::silent-explosion` fails with
-   `Unable to find resources.MinecraftKey (resources.ResourceLocation, MinecraftKey)`. ProtocolLib
-   5.4.0 predates Minecraft 26.2's `ResourceLocation` → `Identifier` rename. Intave's
-   `ProtocolLibraryAdapter` now logs a warning and continues on 26.2, but ProtocolLib's own
-   `WrappedRegistry` path is still unavailable.
+1. **ProtocolLib 5.4.0 / 26.2 key rename:** `ExplosionReader.setSilentDefaults()` now catches the
+   unavailable `getSoundEffects()` registry path (`ResourceLocation` → `Identifier`) and keeps the
+   motion/particle silencing. `ProtocolLibraryAdapter` already logs a warning and continues instead
+   of rejecting ProtocolLib.
+2. **Scoreboard self-test thread affinity:** `ReaderTests.testNativeScoreboardPackets` now skips
+   itself when the current thread is not `RegionizedServer.isGlobalTickThread()`. SourbyCraft
+   requires the global tick thread to create a scoreboard; the test no longer fails the in-server
+   suite on a region thread.
 3. **Tick-end hook:** `MinecraftServer` no longer exposes the legacy `List` tickable field on
    SourbyCraft. Intave now logs a warning and schedules its tick-end subscribers through the global
    tick scheduler as a fallback. There are currently no subscribers, so this does not change
    detection.
+
+## Forced in-server test runs
+
+Both schedulers were tested with `-Dintave.test.success=shutdown`:
+
+```
+# Aurora (default)
+Platform is SOURBYCRAFT (57), scheduler aurora
+[Intave] All integration tests completed successfully.
+[Intave] Shutting down server due to test success
+
+# Folia fallback
+Platform is SOURBYCRAFT (57), scheduler folia
+[Intave] All integration tests completed successfully.
+[Intave] Shutting down server due to test success
+```
 
 ## What this proves
 
 - SourbyAPI detection, reflection bridge, `AuroraScheduler` selection, and fallback selection work
   end-to-end on Build 57.
 - Intave is admitted natively.
-- The remaining failures are ProtocolLib/26.2 and test-harness thread-affinity issues, not check
-  registration or removal. `DetectionManifestTest` remains green (12 checks / 53 active parts).
+- Both scheduler paths pass the in-server integration suite with no failed `PR::` tests.
+- `DetectionManifestTest` remains green (12 checks / 53 active parts).
 
 ## Reproduce
 

@@ -89,7 +89,12 @@ public final class ExplosionReader extends AbstractPacketReader {
 			}
 			Sound sound = Sound.valueOf("ENTITY_GENERIC_EXPLODE");
 			if (MinecraftVersions.VER1_20_5.atOrAbove()) {
-				packet().getSoundEffects().write(0, sound);
+				try {
+					packet().getSoundEffects().write(0, sound);
+				} catch (RuntimeException | LinkageError exception) {
+					// ProtocolLib 5.4.0 predates Minecraft 26.2's Identifier-backed registry keys.
+					// The sound field may stay at its packet default; motion/particles are still silenced.
+				}
 			} else {
 				// 1.20.3/1.20.4 explosions store SoundEvent directly, unlike sound packets.
 				packet().getModifier().withType(MinecraftReflection.getSoundEffectClass(),

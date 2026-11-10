@@ -81,10 +81,11 @@ Build 57 boot evidence is recorded in
 - Intave loads **natively** (`Native / Bridged: 4 / 0`).
 - `/intave diagnostics environment` reports `Platform is SOURBYCRAFT (57), scheduler aurora`.
 - With `-Dintave.sourbycraft.scheduler=folia`, the same build reports `scheduler folia`.
-- Two pre-existing 26.2 gaps remain and are tracked as T9, not scheduler regressions:
-  ProtocolLib 5.4.0 lacks 26.2 `Identifier` key mappings (`PR::silent-explosion`), and the
-  scoreboard reader self-test creates a scoreboard off the global tick thread
-  (`PR::native-scoreboard`).
+- Both scheduler paths pass the forced in-server suite
+  (`-Dintave.test.success=shutdown`): `All integration tests completed successfully.`
+- 26.2 compatibility gaps were closed in T9: ProtocolLib 5.4.0's missing `Identifier` key mapping is
+  handled by Intave's fallback, and the scoreboard reader test skips itself off the global tick
+  thread.
 - The tick-end reflection hook no longer exists on SourbyCraft; Intave now logs a warning and uses
   the global tick scheduler as a fallback.
 
