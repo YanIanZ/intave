@@ -146,6 +146,11 @@ public final class DiagnosticsStage extends CommandStage implements BukkitEventS
     sender.sendMessage(ChatColor.GRAY + "Spigot is " + ChatColor.WHITE + serverVersion);
     sender.sendMessage(ChatColor.GRAY + "ProtocolLib is " + ChatColor.WHITE + protocolLibVersion);
     sender.sendMessage(ChatColor.GRAY + "Intave is " + ChatColor.WHITE + intaveVersion);
+    sender.sendMessage(
+      ChatColor.GRAY + "Platform is " + ChatColor.WHITE + Tasks.platform()
+        + " (" + de.jpx3.intave.platform.SourbyCraftBridge.buildNumber() + ")"
+        + ", scheduler " + Tasks.schedulerName()
+    );
 
     TextComponent message = new TextComponent("[Copy report message to chat]");
     message.setColor(net.md_5.bungee.api.ChatColor.GRAY);

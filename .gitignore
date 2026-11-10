@@ -14,6 +14,7 @@
 !gradlew
 !gradlew.bat
 !README.md
+!AGENTS.md
 !settings.gradle.kts
 .client/
 /docs/internal/

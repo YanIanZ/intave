@@ -1,14 +1,25 @@
+/*
+ * Copyright 2026 Intave
+ *
+ * This software is licensed under the PolyForm Perimeter License 1.0.0.
+ * You may use this software for any purpose, except for providing to
+ * others any product that competes with the software.
+ *
+ * A copy of the license is available at:
+ *   https://polyformproject.org/licenses/perimeter/1.0.0/
+ */
+
 package de.jpx3.intave.executor.task;
 
 import de.jpx3.intave.cleanup.ShutdownTasks;
+import de.jpx3.intave.platform.ServerPlatform;
+import de.jpx3.intave.platform.SourbyCraftBridge;
 import de.jpx3.intave.user.User;
 import org.bukkit.World;
 
 public final class Tasks {
-  private static final boolean FOLIA_SERVER = detectFoliaServer();
-  private static final TaskScheduler SCHEDULER = FOLIA_SERVER
-    ? new FoliaTaskScheduler()
-    : new BukkitTaskScheduler();
+  private static final ServerPlatform PLATFORM = ServerPlatform.current();
+  private static final TaskScheduler SCHEDULER = createScheduler();
 
   private Tasks() {
   }
@@ -63,19 +74,41 @@ public final class Tasks {
   }
 
   public static boolean isFoliaServer() {
-    return FOLIA_SERVER;
+    return PLATFORM != ServerPlatform.BUKKIT;
   }
 
-  private static boolean detectFoliaServer() {
-    try {
-      Class.forName(
-        "io.papermc.paper.threadedregions.RegionizedServer",
-        false,
-        Tasks.class.getClassLoader()
-      );
-      return true;
-    } catch (ClassNotFoundException ignored) {
-      return false;
+  public static ServerPlatform platform() {
+    return PLATFORM;
+  }
+
+  public static String schedulerName() {
+    if (SCHEDULER instanceof AuroraTaskScheduler) {
+      return "aurora";
     }
+    return SCHEDULER instanceof FoliaTaskScheduler ? "folia" : "bukkit";
+  }
+
+  private static TaskScheduler createScheduler() {
+    boolean auroraRequested = SourbyCraftBridge.schedulerRequested();
+    Object auroraScheduler = PLATFORM == ServerPlatform.SOURBYCRAFT && auroraRequested
+      ? SourbyCraftBridge.findScheduler()
+      : null;
+    return schedulerFor(PLATFORM, auroraScheduler, auroraRequested);
+  }
+
+  static TaskScheduler schedulerFor(
+    ServerPlatform platform, Object auroraScheduler, boolean auroraRequested
+  ) {
+    if (platform == ServerPlatform.SOURBYCRAFT && auroraRequested && auroraScheduler != null) {
+      try {
+        return new AuroraTaskScheduler(auroraScheduler);
+      } catch (IllegalArgumentException ignored) {
+        // A SourbyCraft build without the expected scheduler contract falls back to Folia.
+      }
+    }
+    if (platform == ServerPlatform.BUKKIT) {
+      return new BukkitTaskScheduler();
+    }
+    return new FoliaTaskScheduler();
   }
 }
