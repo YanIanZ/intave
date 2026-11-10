@@ -15,15 +15,23 @@ public final class TickEndTask {
   private static Class<?> RUNNABLE_CLASS;
 
   static {
+    List<Object> runnables = null;
+    Class<?> runnableClass = null;
     try {
       Server server = Bukkit.getServer();
       Object mcServer = server.getClass().getMethod("getServer").invoke(server);
       Field field = getFieldByType(mcServer.getClass().getSuperclass(), List.class);
-      TickEndTask.RUNNABLES = (List<Object>) field.get(mcServer);
-      TickEndTask.RUNNABLE_CLASS = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-    } catch (Exception ex) {
-      throw new RuntimeException("Could not set up tick end runnable!", ex);
+      runnables = (List<Object>) field.get(mcServer);
+      runnableClass = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+    } catch (Throwable ignored) {
+      // Region-threaded servers no longer expose MinecraftServer's legacy tickable list.
     }
+    TickEndTask.RUNNABLES = runnables;
+    TickEndTask.RUNNABLE_CLASS = runnableClass;
+  }
+
+  public static boolean isSupported() {
+    return RUNNABLES != null && RUNNABLE_CLASS != null;
   }
 
   public TickEndTask(Runnable runnable) {
@@ -91,6 +99,9 @@ public final class TickEndTask {
   }
 
   public static TickEndTask create(Runnable runnable) {
+    if (!isSupported()) {
+      throw new IllegalStateException("Tick end is not supported on this server");
+    }
     return new TickEndTask(runnable).start();
   }
 }

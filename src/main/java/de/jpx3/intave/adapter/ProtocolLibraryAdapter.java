@@ -52,7 +52,16 @@ public final class ProtocolLibraryAdapter {
     try {
       Class<?> minecraftKeyClass = MinecraftReflection.getMinecraftKeyClass();
     } catch (Throwable throwable) {
-      throw new InvalidDependencyException(PROTOCOLLIB_OUTDATED + " (missing MinecraftKey class reference)");
+      // ProtocolLib 5.4.0 predates the 26.2 Identifier rename. Intave's Locate mapping can still
+      // resolve the native class, so do not reject an otherwise usable ProtocolLib install.
+      if (MinecraftVersion.current().isAtLeast(MinecraftVersions.VER26_2)
+        && classExists("net.minecraft.resources.Identifier")) {
+        IntaveLogger.logger().warn(
+          "ProtocolLib lacks 26.2 key mappings; continuing with Intave's Locate fallback"
+        );
+      } else {
+        throw new InvalidDependencyException(PROTOCOLLIB_OUTDATED + " (missing MinecraftKey class reference)");
+      }
     }
 
     if (!methodExists(MinecraftVersion.class.getName(), "atOrAbove")) {
