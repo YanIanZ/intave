@@ -13,11 +13,13 @@ import groovy.json.JsonSlurper
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription.Permission.Default.FALSE
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription.Permission.Default.OP
 import xyz.jpenilla.runpaper.task.RunServer
+import java.io.DataInputStream
 import java.net.HttpURLConnection
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
+import java.util.zip.ZipFile
 
 plugins {
   java
@@ -1033,4 +1035,67 @@ tasks {
     description = "Runs the test suite and generates a JaCoCo coverage report."
     dependsOn(jacocoTestReport)
   }
+}
+
+/*
+ * Distribution guards
+ */
+tasks.register("verifyJava8Bytecode") {
+  group = "verification"
+  description = "Fails if a main-source class is not Java 8 bytecode (major version 52)."
+  dependsOn(tasks.named("classes"))
+  val classesDirectory = layout.buildDirectory.dir("classes/java/main")
+  inputs.dir(classesDirectory)
+  doLast {
+    val classesRoot = classesDirectory.get().asFile
+    if (!classesRoot.isDirectory) {
+      throw GradleException("Missing compiled main classes at $classesRoot")
+    }
+    val invalid = classesRoot.walkTopDown()
+      .filter { it.isFile && it.extension == "class" }
+      .mapNotNull { file ->
+        val major = DataInputStream(file.inputStream().buffered()).use { input ->
+          input.readInt()
+          input.readUnsignedShort()
+          input.readUnsignedShort()
+        }
+        if (major == 52) null else "${file.relativeTo(classesRoot)} (major $major)"
+      }
+      .toList()
+    if (invalid.isNotEmpty()) {
+      throw GradleException(
+        "Main classes must be Java 8 bytecode (major 52):\n" + invalid.joinToString("\n")
+      )
+    }
+  }
+}
+
+tasks.register("verifyBundledJar") {
+  group = "verification"
+  description = "Fails if the bundled distribution contains SourbyAPI classes."
+  dependsOn(tasks.named("shadowJar"))
+  val bundledJar = tasks.named<Jar>("shadowJar").flatMap { it.archiveFile }
+  inputs.file(bundledJar)
+  doLast {
+    val file = bundledJar.get().asFile
+    ZipFile(file).use { zip ->
+      val entries = zip.entries()
+      while (entries.hasMoreElements()) {
+        val name = entries.nextElement().name
+        if (name.startsWith("dev/iyanz/sourbycraft/")) {
+          throw GradleException(
+            "SourbyAPI is GPL-3.0-only and must not be shaded into $file (found $name)"
+          )
+        }
+      }
+    }
+  }
+}
+
+tasks.named("test") {
+  dependsOn(tasks.named("verifyJava8Bytecode"))
+}
+
+tasks.named("build") {
+  dependsOn(tasks.named("verifyBundledJar"))
 }
