@@ -328,6 +328,37 @@ this passes.
 
 ---
 
+### Task 9: Close the 26.2 compatibility gaps found by the Build 57 boot
+
+**Files:**
+- Modify: `src/main/java/de/jpx3/intave/packet/reader/ScannerReaderSupport.java` or the
+  `ExplosionReader` key lookup path (TBD by T9 owner)
+- Modify: `src/main/java/de/jpx3/intave/packet/reader/ReaderTests.java:206` (scoreboard self-test)
+- Create: `src/test/java/de/jpx3/intave/adapter/ProtocolLibraryAdapterTest.java` (version-aware
+  key fallback)
+- Update: `docs/architecture/evidence/sourbycraft-26.2-build57.md`
+
+**Interfaces:**
+- No production API change. The key lookup must use Intave's `Locate`/`MinecraftKey` fallback when
+  ProtocolLib's `MinecraftReflection.getMinecraftKeyClass()` is unavailable on 26.2.
+- The scoreboard self-test must run on the global tick thread or be skipped with an explicit
+  SourbyCraft reason; it must not fail the in-server suite on a region thread.
+
+- [ ] **Step 1:** Reproduce `PR::silent-explosion` and `PR::native-scoreboard` from the Build 57
+      evidence log.
+- [ ] **Step 2:** Add a ProtocolLib-key fallback that does not depend on `WrappedRegistry`'s
+      `MinecraftReflection` lookup; keep the version-aware `ProtocolLibraryAdapter` warning.
+- [ ] **Step 3:** Move the scoreboard construction to a global-tick-thread helper, or mark the test
+      skipped on region-threaded servers with the exact reason.
+- [ ] **Step 4:** Re-run both the Aurora and Folia boots and require zero `ERROR: Self-test ... failed`
+      lines in the in-server suite.
+- [ ] **Step 5:** Commit `fix: close SourbyCraft 26.2 reader compatibility gaps`.
+
+**Acceptance:** Build 57 Aurora and Folia boots both reach `Done`, Intave reports the expected
+scheduler, and the in-server self-test suite has no failed `PR::` tests.
+
+---
+
 ## Execution Order and Ownership
 
 | Task | Owner (office role) | Model | Depends on |
@@ -339,7 +370,8 @@ this passes.
 | T5 master bugs | Code Reviewer | `vultr/minimax-m3.1-flash` | — |
 | T6 QA/CI | QA Engineer | `vultr/qwen3.8-flash-next` | T1, T3 |
 | T7 Build 57 boot | Build Engineer | `vultr/glm-5.3-flash` | T3, T4, T6 |
-| T8 docs/release | PM | `vultr/deepseek-v4.1-flash-1017` | T5, T6, T7 |
+| T8 docs/release | PM | `vultr/deepseek-v4.1-flash-1017` | T5, T6, T7, T9 |
+| T9 26.2 reader compat | Integration Engineer | `vultr/glm-5.3-flash` | T7 |
 
 ## Definition of Done
 
@@ -350,5 +382,6 @@ this passes.
       the explicit `-Dintave.sourbycraft.scheduler=folia` path.
 - [ ] Aurora adapter is the default on Build 57 and has a hard Folia fallback; Build 57 evidence
       recorded.
+- [ ] T9 closed: Build 57 Aurora and Folia boots have no failed in-server `PR::` self-tests.
 - [ ] `./gradlew test`, `testShadedJar`, `testProtocolResources`, `testCoverage` green.
-- [ ] AGENTS/README/ADR describe the support matrix and the opt-in flag.
+- [ ] AGENTS/README/ADR describe the support matrix and the Folia fallback flag.
