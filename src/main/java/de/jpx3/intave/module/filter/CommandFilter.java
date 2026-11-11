@@ -36,7 +36,9 @@ public final class CommandFilter extends Filter {
     super("command");
     separateEnable = plugin.settings().getBoolean("command.hide", true);
     disabled = plugin.settings().getBoolean("command.fix-tab-kicks", false);
-    hidePluginList = plugin.settings().getBoolean("command.hide-plugin-list", false);
+    hidePluginList = plugin.settings().getBoolean(
+      "command.hide-plugin-list", IntaveBuildConfig.BRAND_STEALTH
+    );
 
     ConfigurationSection reroute = plugin.settings().getConfigurationSection("command.reroute");
     if (reroute != null) {
