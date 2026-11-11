@@ -12,6 +12,11 @@ public final class StartupTasks {
     throw new UnsupportedOperationException("Initialization of helper class");
   }
 
+  public static void reset() {
+    tasks.clear();
+    done = false;
+  }
+
   public static void add(Runnable runnable) {
     if (done) {
       throw new IllegalStateException("Startup tasks already ran");

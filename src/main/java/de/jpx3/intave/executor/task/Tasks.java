@@ -11,6 +11,7 @@
 
 package de.jpx3.intave.executor.task;
 
+import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.cleanup.ShutdownTasks;
 import de.jpx3.intave.platform.ServerPlatform;
 import de.jpx3.intave.platform.SourbyCraftBridge;
@@ -74,11 +75,11 @@ public final class Tasks {
   }
 
   public static boolean isFoliaServer() {
-    return PLATFORM != ServerPlatform.BUKKIT;
+    return platform() != ServerPlatform.BUKKIT;
   }
 
   public static ServerPlatform platform() {
-    return PLATFORM;
+    return SourbyCraftBridge.isSourbyCraft() ? ServerPlatform.SOURBYCRAFT : PLATFORM;
   }
 
   public static String schedulerName() {
@@ -89,11 +90,14 @@ public final class Tasks {
   }
 
   private static TaskScheduler createScheduler() {
+    boolean sourbyCraft = PLATFORM == ServerPlatform.SOURBYCRAFT
+      || SourbyCraftBridge.isSourbyCraft();
+    ServerPlatform platform = sourbyCraft ? ServerPlatform.SOURBYCRAFT : PLATFORM;
     boolean auroraRequested = SourbyCraftBridge.schedulerRequested();
-    Object auroraScheduler = PLATFORM == ServerPlatform.SOURBYCRAFT && auroraRequested
+    Object auroraScheduler = sourbyCraft && auroraRequested
       ? SourbyCraftBridge.findScheduler()
       : null;
-    return schedulerFor(PLATFORM, auroraScheduler, auroraRequested);
+    return schedulerFor(platform, auroraScheduler, auroraRequested);
   }
 
   static TaskScheduler schedulerFor(
@@ -102,8 +106,10 @@ public final class Tasks {
     if (platform == ServerPlatform.SOURBYCRAFT && auroraRequested && auroraScheduler != null) {
       try {
         return new AuroraTaskScheduler(auroraScheduler);
-      } catch (IllegalArgumentException ignored) {
-        // A SourbyCraft build without the expected scheduler contract falls back to Folia.
+      } catch (RuntimeException | LinkageError exception) {
+        IntaveLogger.logger().warn(
+          "SourbyAPI AuroraScheduler unavailable; falling back to Folia: " + exception
+        );
       }
     }
     if (platform == ServerPlatform.BUKKIT) {

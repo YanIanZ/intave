@@ -1082,9 +1082,9 @@ tasks.register("verifyBundledJar") {
       val entries = zip.entries()
       while (entries.hasMoreElements()) {
         val name = entries.nextElement().name
-        if (name.startsWith("dev/iyanz/sourbycraft/")) {
+        if (name.startsWith("dev/iyanz/")) {
           throw GradleException(
-            "SourbyAPI is GPL-3.0-only and must not be shaded into $file (found $name)"
+            "SourbyAPI/GPL classes must not be shaded into $file (found $name)"
           )
         }
       }

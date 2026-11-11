@@ -139,17 +139,20 @@ so it must not use them.
 
 The gate is a JUnit test that runs in plain `./gradlew test`:
 
-- `CHECK|<simple-name>|<always-enabled>` for every registered top-level check.
-- `PART|<parent>|<part>|ACTIVE` for every attached part.
-- `PART|<parent>|<part>|DECLARED` for a declared part that is intentionally not attached
-  (e.g. `PacketLoss`, `JumpAndPlace`, `SneakAndPlace`, `PacketOrder`).
+- `CHECK|<simple-name>` for every registered top-level check.
+- `ACTIVE|<parent>|<part>` for every attached part.
+- Intentionally detached parts (e.g. `PacketLoss`, `JumpAndPlace`, `SneakAndPlace`,
+  `PacketOrder`) are inert and are not tracked; attaching one adds an `ACTIVE` line and fails CI
+  until the change is reviewed.
 - The test parses `CheckService.java` and the `check/**` sources with comments stripped, then
   compares the set to `baseline-units.txt`.
-- Removing or renaming a unit, or flipping `ACTIVE` to `DECLARED`, fails CI. Adding a unit also
-  fails until the baseline is consciously updated (`-Dintave.parity.update=true` writes the file
-  and prints the diff).
-- A second assertion checks that every non-always check has `check.<key>.enabled: true` in
-  `src/main/resources/advanced.yml`, so a missing key cannot silently disable detection.
+- Removing or renaming a unit, or detaching an active part, fails CI. Adding a unit also fails
+  until the baseline is consciously updated (`-Dintave.parity.update=true` writes the file and
+  prints the diff).
+- A second assertion derives the configuration key for every registered check from its `super(...)`
+  call and requires a matching `check.<key>` section with `enabled: true` in
+  `src/main/resources/advanced.yml` (except the always-enabled Physics/Timer overrides). A missing
+  section can no longer silently disable a check.
 
 ## Consequences
 

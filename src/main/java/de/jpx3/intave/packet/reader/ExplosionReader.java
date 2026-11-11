@@ -16,6 +16,7 @@ import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.BukkitConverters;
 import com.comphenix.protocol.wrappers.WrappedParticle;
 import com.comphenix.protocol.utility.MinecraftReflection;
+import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.share.Motion;
 import org.bukkit.util.Vector;
@@ -26,9 +27,11 @@ import java.util.Optional;
 import java.util.Collections;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class ExplosionReader extends AbstractPacketReader {
 	private final static boolean NEW_EXPLOSION = MinecraftVersions.VER1_21_2.atOrAbove();
+	private static final AtomicBoolean SOUND_FALLBACK_WARNED = new AtomicBoolean();
 	private static Object emptyBlockParticles;
 	private final static EquivalentConverter<Vector> vectorConverter =
 		NEW_EXPLOSION ? BukkitConverters.getVectorConverter() : null;
@@ -94,6 +97,12 @@ public final class ExplosionReader extends AbstractPacketReader {
 				} catch (RuntimeException | LinkageError exception) {
 					// ProtocolLib 5.4.0 predates Minecraft 26.2's Identifier-backed registry keys.
 					// The sound field may stay at its packet default; motion/particles are still silenced.
+					if (SOUND_FALLBACK_WARNED.compareAndSet(false, true)) {
+						IntaveLogger.logger().warn(
+							"ProtocolLib cannot resolve explosion sound effects on this version; "
+								+ "leaving the sound field at its packet default"
+						);
+					}
 				}
 			} else {
 				// 1.20.3/1.20.4 explosions store SoundEvent directly, unlike sound packets.

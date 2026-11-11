@@ -19,8 +19,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -75,10 +78,42 @@ final class DetectionManifestTest {
   @Test
   void everyDefaultEnabledCheckStaysEnabled() throws IOException {
     Path projectRoot = DetectionManifest.projectRoot();
+    Map<String, Boolean> enabledByKey = checkDefaults(projectRoot);
+    Map<String, String> keysByName = DetectionManifest.checkConfigurationKeys(projectRoot);
+    SortedSet<String> manifest = DetectionManifest.collect(projectRoot);
+
+    boolean foundCheck = false;
+    for (String line : manifest) {
+      if (!line.startsWith("CHECK|")) {
+        continue;
+      }
+      foundCheck = true;
+      String name = line.substring("CHECK|".length());
+      String key = keysByName.getOrDefault(name, name.toLowerCase(Locale.ROOT));
+      Boolean enabled = enabledByKey.get(key);
+      assertTrue(
+        enabled != null,
+        "Check '" + name + "' has no check." + key + " section in advanced.yml"
+      );
+      if (ALWAYS_ENABLED.contains(key)) {
+        assertTrue(
+          enabled || alwaysEnabledSource(projectRoot, key),
+          "Check '" + name + "' must stay enabled"
+        );
+      } else {
+        assertTrue(
+          enabled,
+          "Check '" + name + "' must have enabled: true in advanced.yml"
+        );
+      }
+    }
+    assertTrue(foundCheck, "Detection manifest must contain registered checks");
+  }
+
+  private Map<String, Boolean> checkDefaults(Path projectRoot) throws IOException {
     Path advanced = projectRoot.resolve("src/main/resources/advanced.yml");
     List<String> lines = Files.readAllLines(advanced, StandardCharsets.UTF_8);
-
-    Set<String> checkDefaults = new LinkedHashSet<>();
+    Map<String, Boolean> defaults = new HashMap<>();
     boolean inCheckSection = false;
     String currentKey = null;
     for (String line : lines) {
@@ -94,27 +129,14 @@ final class DetectionManifestTest {
       }
       if (line.startsWith("  ") && !line.startsWith("   ") && line.trim().endsWith(":")) {
         currentKey = line.trim().substring(0, line.trim().length() - 1);
-        checkDefaults.add(currentKey + "=false");
+        defaults.put(currentKey, false);
         continue;
       }
       if (currentKey != null && line.trim().equals("enabled: true")) {
-        checkDefaults.remove(currentKey + "=false");
-        checkDefaults.add(currentKey + "=true");
+        defaults.put(currentKey, true);
       }
     }
-
-    for (String entry : checkDefaults) {
-      String key = entry.substring(0, entry.indexOf('='));
-      boolean enabled = entry.endsWith("=true");
-      if (ALWAYS_ENABLED.contains(key)) {
-        assertTrue(
-          enabled || alwaysEnabledSource(projectRoot, key),
-          "Check '" + key + "' must stay enabled"
-        );
-      } else {
-        assertTrue(enabled, "Check '" + key + "' must have enabled: true in advanced.yml");
-      }
-    }
+    return defaults;
   }
 
   private boolean alwaysEnabledSource(Path projectRoot, String key) throws IOException {

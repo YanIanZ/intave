@@ -55,10 +55,10 @@ public final class Synchronizer {
   }
 
   public static void synchronize(User user, Runnable runnable) {
-    if (!user.hasPlayer()) {
-      return;
-    }
     if (Tasks.isFoliaServer()) {
+      if (!user.hasPlayer()) {
+        return;
+      }
       Tasks.delayedNamed("Synchronizer.synchronize", wrapped(runnable), 0).startUserSync(user);
     } else {
       synchronize(runnable);
@@ -76,7 +76,7 @@ public final class Synchronizer {
   }
 
   public static void synchronizeDelayed(User user, Runnable runnable, int ticks) {
-    if (!user.hasPlayer()) {
+    if (Tasks.isFoliaServer() && !user.hasPlayer()) {
       return;
     }
     Tasks.delayedNamed("Synchronizer.synchronizeDelayed", wrapped(runnable), ticks).startUserSync(user);

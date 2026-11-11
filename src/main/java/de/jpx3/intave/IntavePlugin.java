@@ -135,8 +135,9 @@ public final class IntavePlugin extends JavaPlugin {
 
   public IntavePlugin() {
     // stage 2
-    // re-arm shutdown handling in case a previous lifecycle ran in this classloader
+    // re-arm lifecycle handling in case a previous lifecycle ran in this classloader
     ShutdownTasks.reset();
+    StartupTasks.reset();
     stage2();
   }
 

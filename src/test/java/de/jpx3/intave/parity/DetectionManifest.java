@@ -112,6 +112,28 @@ final class DetectionManifest {
     return manifest;
   }
 
+  static java.util.Map<String, String> checkConfigurationKeys(Path projectRoot) throws IOException {
+    Path checkRoot = projectRoot.resolve("src/main/java/de/jpx3/intave/check");
+    Pattern superCall = Pattern.compile("super\\(\\s*\"([^\"]+)\"\\s*,\\s*\"([^\"]+)\"");
+    java.util.Map<String, String> keys = new java.util.HashMap<>();
+    List<Path> sources = new ArrayList<>();
+    try (Stream<Path> paths = Files.walk(checkRoot)) {
+      paths.filter(path -> path.toString().endsWith(".java")).forEach(sources::add);
+    }
+    for (Path source : sources) {
+      String content = stripComments(read(source));
+      Matcher checkClass = CHECK_CLASS.matcher(content);
+      if (!checkClass.find()) {
+        continue;
+      }
+      Matcher constructor = superCall.matcher(content);
+      if (constructor.find()) {
+        keys.put(checkClass.group(1), constructor.group(2));
+      }
+    }
+    return keys;
+  }
+
   static Path projectRoot() {
     Path candidate = Path.of("").toAbsolutePath();
     while (candidate != null) {

@@ -18,8 +18,8 @@ jobs:
           java-version: '25'
           distribution: 'temurin'
           cache: gradle
-      - name: Verify Java 8 bytecode and bundle contents
-        run: ./gradlew verifyJava8Bytecode verifyBundledJar
+      - name: Run unit tests and distribution guards
+        run: ./gradlew test verifyJava8Bytecode verifyBundledJar
 
   versions:
     runs-on: ubuntu-latest

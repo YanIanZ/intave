@@ -165,8 +165,13 @@ final class AuroraTaskScheduler implements TaskScheduler {
 
   @Override
   public void stop(Task task) {
-    Object handle = scheduledTasks.remove(task);
-    cancel(handle);
+    Object handle = scheduledTasks.get(task);
+    if (handle == null) {
+      return;
+    }
+    if (cancel(handle)) {
+      scheduledTasks.remove(task, handle);
+    }
   }
 
   @Override
@@ -285,20 +290,23 @@ final class AuroraTaskScheduler implements TaskScheduler {
     }
   }
 
-  private void cancel(Object handle) {
+  private boolean cancel(Object handle) {
     if (handle == null) {
-      return;
+      return true;
     }
     try {
       Method cancel = handle.getClass().getMethod("cancel");
       cancel.setAccessible(true);
       cancel.invoke(handle);
+      return true;
     } catch (InvocationTargetException exception) {
       IntaveLogger.logger().error(
         "Failed to cancel Aurora scheduled task: " + exception.getCause()
       );
+      return false;
     } catch (ReflectiveOperationException exception) {
       IntaveLogger.logger().error("Failed to cancel Aurora scheduled task: " + exception);
+      return false;
     }
   }
 
