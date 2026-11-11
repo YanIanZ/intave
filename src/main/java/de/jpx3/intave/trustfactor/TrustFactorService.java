@@ -120,7 +120,14 @@ public final class TrustFactorService implements BukkitEventSubscriber {
       return;
     }
 
+    TrustFactor previous = user.trustFactor();
     user.setTrustFactor(trustFactor);
+    if (trustFactor.factor() < previous.factor()) {
+      de.jpx3.intave.module.network.NetworkSync network = de.jpx3.intave.module.Modules.networkOrNull();
+      if (network != null) {
+        network.publishTrustFactor(player, trustFactor, source);
+      }
+    }
 
     String playerName = player.getName();
     String message = source + " assigned trust factor " + trustFactor.coloredBaseName() + IntavePlugin.defaultColor() + " to " + ChatColor.RED + playerName;
@@ -139,6 +146,32 @@ public final class TrustFactorService implements BukkitEventSubscriber {
     }
 
   }
+
+  public void applyNetworkTrustFactor(Player player, TrustFactor trustFactor, String source) {
+    User user = UserRepository.userOf(player);
+    Synchronizer.synchronize(user, () -> applyNetworkTrustFactorNow(player, user, trustFactor, source));
+  }
+
+  private void applyNetworkTrustFactorNow(
+    Player player, User user, TrustFactor trustFactor, String source
+  ) {
+    TrustFactor current = user.trustFactor();
+    if (current.atLeast(TrustFactor.BYPASS)) {
+      return;
+    }
+    if (trustFactor.factor() >= current.factor()) {
+      return;
+    }
+    user.setTrustFactor(trustFactor);
+    if (ConsoleOutput.TRUSTFACTOR_DEBUG) {
+      IntaveLogger.logger().info(
+        ChatColor.RED + player.getName() + IntavePlugin.defaultColor() +
+          " inherited " + trustFactor.coloredBaseName() + IntavePlugin.defaultColor() +
+          " trust factor from " + source
+      );
+    }
+  }
+
 
   public int trustFactorSetting(String key, Player player) {
     return trustFactorConfiguration.resolveSetting(key, UserRepository.userOf(player).trustFactor());

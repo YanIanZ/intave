@@ -309,6 +309,21 @@ public final class DiagnosticsStage extends CommandStage implements BukkitEventS
   }
 
   @SubCommand(
+    selectors = "network",
+    usage = "",
+    description = "Show cross-server synchronisation status",
+    permission = "intave.command.diagnostics.performance"
+  )
+  public void network(User user) {
+    de.jpx3.intave.module.network.NetworkSync network = Modules.networkOrNull();
+    if (network == null || !network.active()) {
+      user.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Cross-server synchronisation is disabled");
+      return;
+    }
+    user.sendMessage(IntavePlugin.prefix() + ChatColor.GRAY + "Cross-server: " + ChatColor.WHITE + network.status());
+  }
+
+  @SubCommand(
     selectors = "storagetrace",
     usage = "",
     description = "",

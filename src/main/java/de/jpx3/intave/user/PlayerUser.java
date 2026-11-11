@@ -551,6 +551,10 @@ final class PlayerUser implements User {
       return;
     }
     disconnectQueued = true;
+    de.jpx3.intave.module.network.NetworkSync network = Modules.networkOrNull();
+    if (network != null && player() != null) {
+      network.publishKick(player().getName(), player().getUniqueId(), reason);
+    }
     if (ConsoleOutput.FAULT_KICKS) {
       IntaveLogger.logger().info("Queuing manual disconnect of player " + player().getName() + " for " + reason.toLowerCase());
       IntaveLogger.logger().info("This measure is a security-constraint necessity, but feel free to contact us if this happens too often");

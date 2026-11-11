@@ -104,6 +104,7 @@ dependencies {
   )
 
   // Bundled libraries.
+  implementation(project(":wureta-proxy-common"))
   implementation("ac.intave:samples:0.0.12") { isTransitive = false }
   implementation("ac.intave:cloud-protocol:0.0.11") { isTransitive = false }
   implementation("it.unimi.dsi:fastutil:8.5.12")
@@ -858,6 +859,12 @@ fun registerTestAllTask() {
   }
 }
 
+tasks.register("buildWuretaProxy") {
+  group = "build"
+  description = "Builds the WuretaProxy companion plugin for Velocity and BungeeCord"
+  dependsOn(":wureta-proxy-velocity:shadowJar", ":wureta-proxy-bungee:shadowJar")
+}
+
 fun registerPaperRunTask(serverVersion: String, javaVersion: Int) {
   tasks.register<RunServer>("runPaper${serverVersion.taskSuffix()}") {
     group = IntaveTaskGroups.SERVER_RUNS
@@ -997,7 +1004,7 @@ java {
 apply(from = "gradle/packaging.gradle.kts")
 
 tasks {
-  build { dependsOn(shadowJar) }
+  build { dependsOn(shadowJar, "buildWuretaProxy") }
 
   jar {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE

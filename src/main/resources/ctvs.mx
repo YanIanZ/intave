@@ -10,6 +10,19 @@ notify -> layout.notify
 cloud-token -> check.cloud.token
 privacy -> check.cloud.privacy-mode
 
+
+network.enabled -> network.enabled
+network.server-id -> network.server-id
+network.channel -> network.channel
+network.secret -> network.secret
+network.sync.alerts -> network.sync.alerts
+network.sync.trust-factor -> network.sync.trust-factor
+network.sync.sanctions -> network.sync.sanctions
+network.sync.storage -> network.sync.storage
+network.storage.request-timeout-ms -> network.storage.request-timeout-ms
+network.alert-rate-limit-ms -> network.alert-rate-limit-ms
+network.debug -> network.debug
+
 +Placeholders
 kick-commands -> $kick$
 ban-commands -> $ban$

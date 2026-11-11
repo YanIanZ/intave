@@ -693,6 +693,10 @@ public final class IntavePlugin extends JavaPlugin {
     return trustFactorService;
   }
 
+  public PlayerListService playerListService() {
+    return blackListService;
+  }
+
   public IntaveLogger logger() {
     return logger;
   }

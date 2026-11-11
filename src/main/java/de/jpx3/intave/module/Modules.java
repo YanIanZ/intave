@@ -11,6 +11,7 @@ import de.jpx3.intave.module.linker.nayoro.NayoroEventSubscriptionLinker;
 import de.jpx3.intave.module.linker.packet.PacketSubscriptionLinker;
 import de.jpx3.intave.module.mitigate.CombatMitigator;
 import de.jpx3.intave.module.mitigate.ReconDelayLimiter;
+import de.jpx3.intave.module.network.NetworkSync;
 import de.jpx3.intave.module.nayoro.Nayoro;
 import de.jpx3.intave.module.player.StorageLoader;
 import de.jpx3.intave.module.test.PhysicsTestRecorder;
@@ -59,6 +60,13 @@ public final class Modules {
 
   public static ViolationProcessor violationProcessor() {
     return find(ViolationProcessor.class);
+  }
+
+  /**
+   * Cross-server sync is optional. Callers on the violation path must not fail when it is absent.
+   */
+  public static NetworkSync networkOrNull() {
+    return pool.lookup(NetworkSync.class);
   }
 
   public static CustomEvents eventInvoker() {

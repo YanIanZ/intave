@@ -243,6 +243,24 @@ check:
 
     privacy-mode: BEST_DETECTION
 
+# Cross-server synchronisation
+#   Install WuretaProxy on the Velocity/BungeeCord proxy, enable this on every backend,
+#   and set the same secret on all servers. server-id must match the proxy server name.
+network:
+  enabled: false
+  server-id: "server-1"
+  channel: "wureta:sync"
+  secret: ""
+  sync:
+    alerts: true
+    trust-factor: true
+    sanctions: true
+    storage: true
+  storage:
+    request-timeout-ms: 2500
+  alert-rate-limit-ms: 1500
+  debug: false
+
 storage:
   # Set to ignore the "wureta internals storelog"    and auto-store suggested violations instead
   auto-logs: false

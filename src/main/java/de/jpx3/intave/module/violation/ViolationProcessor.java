@@ -219,8 +219,13 @@ public final class ViolationProcessor extends Module {
 //        doVerbose = violationContext.violationLevelPassedPreventionActivation() && SELECTED_CHECKS.contains(checkName);
 //        break;
 //    }
-    if (verboseMode.doVerbose(violationContext) || violation.flagSet(DISPLAY_IN_ALL_VERBOSE_MODES)) {
+    boolean verbose = verboseMode.doVerbose(violationContext) || violation.flagSet(DISPLAY_IN_ALL_VERBOSE_MODES);
+    if (verbose) {
       broadcastVerbose(player, violationContext);
+      de.jpx3.intave.module.network.NetworkSync network = Modules.networkOrNull();
+      if (network != null) {
+        network.publishViolation(violationContext);
+      }
     }
     // console output
     String trustFactor = user.trustFactor().name().toLowerCase().replace("_", "");

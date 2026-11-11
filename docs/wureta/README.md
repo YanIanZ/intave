@@ -13,6 +13,8 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
   confidence policy, coverage gaps, and the teleport layers.
 - [`BRAND-STEALTH.md`](BRAND-STEALTH.md) — `WuretaCore` brand profile, hidden client-visible
   markers, and the limits of stealth.
+- [`MULTISERVER.md`](MULTISERVER.md) — Velocity/BungeeCord companion plugin, storage/VL handoff,
+  alert/trust/sanction relays, protocol, security and limitations.
 - [`DETECTION-BACKLOG.md`](DETECTION-BACKLOG.md) — non-overlapping P0/P1/P2 work with files, signals,
   tests, and acceptance criteria.
 - [`REA.md`](REA.md) — how to complete artifact-level REA/JEB analysis when the JEB provider is
@@ -31,6 +33,8 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
   rotation adoption, confirm/revert sequence, combat before adoption, and refusal history, combined
   by `AntiBypassEngine` with corroboration/coverage policy. Pure `TeleportRotationTracker`/
   `TeleportRotationAssessment` helpers and layer tests cover the state.
+- `NetworkSync` + `WuretaProxy` provide optional Velocity/BungeeCord cross-server sync for storage,
+  alerts, trust factors and sanctions. See `MULTISERVER.md`.
 - The remaining work is the overlap-aware P0 list in `DETECTION-BACKLOG.md`; it starts by fixing
   existing click-pattern gates and the AttackRaytrace rotation snapshot rather than adding duplicate
   checks.

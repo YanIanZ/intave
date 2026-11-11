@@ -13,6 +13,24 @@ command:
   # Hide WuretaCore from /plugins and /pl for players without intave.command
   hide-plugin-list: true
 
+# Cross-server synchronisation
+#   Install WuretaProxy on the Velocity/BungeeCord proxy, enable this on every backend,
+#   and set the same secret on all servers. server-id must match the proxy server name.
+network:
+  enabled: false
+  server-id: "server-1"
+  channel: "wureta:sync"
+  secret: ""
+  sync:
+    alerts: true
+    trust-factor: true
+    sanctions: true
+    storage: true
+  storage:
+    request-timeout-ms: 2500
+  alert-rate-limit-ms: 1500
+  debug: false
+
 kick-commands:
   - "wureta internals kickip {player} &cYou have been kicked, as an account with your ip address was removed from the game"
   - "kick {player} &cYou have been removed from the game based on data that was collected by the anti-cheat ({log-id})"

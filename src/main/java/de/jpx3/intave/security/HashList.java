@@ -1,6 +1,5 @@
 package de.jpx3.intave.security;
 
-import com.google.common.collect.ImmutableSet;
 import de.jpx3.intave.resource.Resource;
 
 import java.nio.charset.StandardCharsets;
@@ -8,6 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
 
 public final class HashList {
@@ -15,7 +15,8 @@ public final class HashList {
   private final MessageDigest sha256Digest;
 
   private HashList(Set<String> hashes) {
-    this.hashes = hashes;
+    this.hashes = ConcurrentHashMap.newKeySet();
+    this.hashes.addAll(hashes);
     try {
       this.sha256Digest = MessageDigest.getInstance("SHA-256");
     } catch (NoSuchAlgorithmException exception) {
@@ -52,8 +53,21 @@ public final class HashList {
     return hexString.toString();
   }
 
+  public void addName(String name) {
+    if (name == null || name.isEmpty()) {
+      return;
+    }
+    hashes.add(hashOf(name));
+    hashes.add(hashOf(name.toLowerCase()));
+    hashes.add(hashOf(name.toUpperCase()));
+  }
+
+  public void addId(UUID id) {
+    hashes.add(hashOf(id.toString()));
+  }
+
   public static HashList empty() {
-    return new HashList(ImmutableSet.of());
+    return new HashList(new HashSet<>());
   }
 
   public static HashList from(Resource resource) {

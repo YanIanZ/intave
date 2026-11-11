@@ -7,8 +7,10 @@
 !gradle/
 !libs/
 !src/
+!proxy/
 !libs/servers/
 !.gitignore
+proxy/**/build/
 !build.gradle.kts
 !gradle.properties
 !gradlew

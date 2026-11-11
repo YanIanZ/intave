@@ -1,0 +1,5 @@
+name: WuretaProxy
+version: 1.0.0
+main: de.jpx3.wureta.proxy.bungee.WuretaBungeePlugin
+author: Wureta Network
+description: Wureta Network cross-server core services

@@ -1,0 +1,10 @@
+{
+  "id": "wureta-proxy",
+  "name": "WuretaProxy",
+  "version": "1.0.0",
+  "description": "Wureta Network cross-server core services",
+  "authors": [
+    "Wureta Network"
+  ],
+  "main": "de.jpx3.wureta.proxy.velocity.WuretaVelocityPlugin"
+}

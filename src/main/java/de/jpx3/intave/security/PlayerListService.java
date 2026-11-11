@@ -24,6 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -36,7 +37,7 @@ public final class PlayerListService implements BukkitEventSubscriber {
   private final Resource bluelistKnowledgeResource = Resources.fileCache("rax-bluelist-log");
   private final List<String> bluelistKnowledge = new ArrayList<>();
   private final List<String> graylistKnowledge = new ArrayList<>();
-  private final Set<InetAddress> blocked = new HashSet<>();
+  private final Set<InetAddress> blocked = ConcurrentHashMap.newKeySet();
   private String kickMessage;
   private boolean messageInChat;
   private HashList blackList, grayList;
@@ -210,7 +211,15 @@ public final class PlayerListService implements BukkitEventSubscriber {
     if (!enabled()) {
       return;
     }
-    blocked.add(player.getAddress().getAddress());
+    InetAddress address = player.getAddress() == null ? null : player.getAddress().getAddress();
+    if (address != null) {
+      blocked.add(address);
+      de.jpx3.intave.module.network.NetworkSync network =
+        de.jpx3.intave.module.Modules.networkOrNull();
+      if (network != null) {
+        network.publishBlock(player.getName(), player.getUniqueId(), address.getHostAddress(), kickMessage);
+      }
+    }
     User user = UserRepository.userOf(player);
     Synchronizer.synchronize(user, () -> {
       if (messageInChat) {
@@ -222,6 +231,23 @@ public final class PlayerListService implements BukkitEventSubscriber {
         player.kickPlayer(kickMessage);
       }
     });
+  }
+
+  public void applyNetworkSanction(String name, UUID id, InetAddress address, String reason) {
+    if (address != null) {
+      blocked.add(address);
+    }
+    if (blackList != null) {
+      blackList.addName(name);
+      blackList.addId(id);
+    }
+    Player online = Bukkit.getPlayer(id);
+    if (online == null || !online.isOnline() || !enabled()) {
+      return;
+    }
+    String kickReason = reason == null || reason.isEmpty() ? kickMessage : reason;
+    User user = UserRepository.userOf(online);
+    Synchronizer.synchronize(user, () -> online.kickPlayer(kickReason));
   }
 
   public boolean enabled() {
