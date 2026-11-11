@@ -80,6 +80,7 @@ check:
     teleport-rotation-timeout: 20
     teleport-rotation-cooldown: 1000
     teleport-rotation-refusal-window: 30000
+    teleport-rotation-observe-only: false
 ```
 
 - `teleport-rotation-vl: 0` disables the part without removing the check from the parity baseline.

@@ -112,9 +112,11 @@ observation path until the live data justifies enforcement.
 
 ## 8. Rollout
 
-- Start with `teleport-rotation-vl: 10` (observation-friendly) and inspect `evidenceSummary()` /
-  coverage gaps.
-- A `SUSPICIOUS` decision should be logged, not punished; only `shouldFlag()` creates a violation.
+- Start with `teleport-rotation-vl: 10` and `teleport-rotation-observe-only: true`; inspect
+  `evidenceSummary()` / coverage gaps through `DEBUG_TELEPORT`.
+- A `SUSPICIOUS` decision is always logged, not punished; in observe-only mode even a would-be
+  `VIOLATION` is logged without creating a violation.
 - If a layer repeatedly produces `UNKNOWN` in production, add the missing evidence rather than
   lowering its status.
+- Turn observe-only off only after a live false-positive sample has been reviewed.
 - Keep the layer weights and policy in code until the live data justifies config exposure.

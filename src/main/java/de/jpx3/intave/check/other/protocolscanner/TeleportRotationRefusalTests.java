@@ -45,28 +45,139 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
 
   @Test(testCode = "teleport-rotation-layered-refusal", severity = Severity.ERROR)
   public void testLayeredRefusalProducesViolation() throws ReflectiveOperationException {
+    Fixture fixture = fixture(776, TrustFactor.GREEN, false);
+    try {
+      fixture.accept();
+      fixture.combatAction();
+      fixture.confirmServerView();
+      fixture.revertToPreviousView();
+      assertTrue(fixture.part.lastDecision() != null);
+      assertTrue(fixture.part.lastDecision().shouldFlag());
+    } finally {
+      fixture.close();
+    }
+  }
+
+  @Test(testCode = "teleport-rotation-normal-adoption", severity = Severity.ERROR)
+  public void testNormalAdoptionHasNoDecision() throws ReflectiveOperationException {
+    Fixture fixture = fixture(776, TrustFactor.GREEN, false);
+    try {
+      fixture.accept();
+      fixture.confirmServerView();
+      assertNull(fixture.part.lastDecision());
+    } finally {
+      fixture.close();
+    }
+  }
+
+  @Test(testCode = "teleport-rotation-bypass-ignored", severity = Severity.ERROR)
+  public void testBypassTrustFactorIsIgnored() throws ReflectiveOperationException {
+    Fixture fixture = fixture(776, TrustFactor.BYPASS, false);
+    try {
+      fixture.accept();
+      fixture.combatAction();
+      fixture.confirmServerView();
+      fixture.revertToPreviousView();
+      assertNull(fixture.part.lastDecision());
+    } finally {
+      fixture.close();
+    }
+  }
+
+  @Test(testCode = "teleport-rotation-inventory-ignored", severity = Severity.ERROR)
+  public void testInventoryOpenIsIgnored() throws ReflectiveOperationException {
+    Fixture fixture = fixture(776, TrustFactor.GREEN, false);
+    try {
+      fixture.user.meta().inventory().updateInventoryOpenState(true);
+      fixture.accept();
+      fixture.combatAction();
+      fixture.confirmServerView();
+      fixture.revertToPreviousView();
+      assertNull(fixture.part.lastDecision());
+    } finally {
+      fixture.close();
+    }
+  }
+
+  @Test(testCode = "teleport-rotation-camera-ignored", severity = Severity.ERROR)
+  public void testCameraEntityIsIgnored() throws ReflectiveOperationException {
+    Fixture fixture = fixture(776, TrustFactor.GREEN, false);
+    try {
+      fixture.user.meta().abilities().hasViewEntity = true;
+      fixture.accept();
+      fixture.combatAction();
+      fixture.confirmServerView();
+      fixture.revertToPreviousView();
+      assertNull(fixture.part.lastDecision());
+    } finally {
+      fixture.close();
+    }
+  }
+
+  @Test(testCode = "teleport-rotation-just-joined-ignored", severity = Severity.ERROR)
+  public void testJustJoinedIsIgnored() throws ReflectiveOperationException {
+    Fixture fixture = fixture(776, TrustFactor.GREEN, true);
+    try {
+      fixture.accept();
+      fixture.combatAction();
+      fixture.confirmServerView();
+      fixture.revertToPreviousView();
+      assertNull(fixture.part.lastDecision());
+    } finally {
+      fixture.close();
+    }
+  }
+
+  @Test(testCode = "teleport-rotation-position-only", severity = Severity.ERROR)
+  public void testPositionOnlyTeleportDoesNotFlag() throws ReflectiveOperationException {
+    Fixture fixture = fixture(776, TrustFactor.GREEN, false);
+    try {
+      fixture.accept();
+      fixture.combatAction();
+      assertNull(fixture.part.lastDecision());
+    } finally {
+      fixture.close();
+    }
+  }
+
+  private static Fixture fixture(
+    int protocolVersion, TrustFactor trustFactor, boolean justJoined
+  ) {
     Player player = FakePlayerFactory.createPlayer((methodName, arguments) -> null);
     User user = UserFactory.createTestUserFor(player, (ignored, key) -> {
       if (key.equals("protocolVersion")) {
-        return 776; // Minecraft 26.2
+        return protocolVersion;
       }
       if (key.equals("justJoined")) {
-        return false;
+        return justJoined;
       }
       if (key.equals("joined")) {
         return 0L;
       }
       if (key.equals("trustFactor")) {
-        return TrustFactor.GREEN;
+        return trustFactor;
       }
       return null;
     });
     UserRepository.manuallyRegisterUser(player, user);
-    try {
-      ProtocolScanner scanner = IntavePlugin.singletonInstance().checks()
-        .searchCheck(ProtocolScanner.class);
-      TeleportRotationRefusal part = new TeleportRotationRefusal(user, scanner);
-      MovementMetadata movement = user.meta().movement();
+    ProtocolScanner scanner = IntavePlugin.singletonInstance().checks()
+      .searchCheck(ProtocolScanner.class);
+    return new Fixture(player, user, new TeleportRotationRefusal(user, scanner));
+  }
+
+  private static final class Fixture {
+    private final Player player;
+    private final User user;
+    private final TeleportRotationRefusal part;
+    private final MovementMetadata movement;
+
+    private Fixture(
+      Player player, User user, TeleportRotationRefusal part
+    ) {
+      this.player = player;
+      this.user = user;
+      this.part = part;
+      this.movement = user.meta().movement();
       movement.setRotation(0.0F, 0.0F);
       movement.setLastRotation(0.0F, 0.0F);
 
@@ -80,26 +191,35 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
       );
       teleport.allow();
       movement.pendingTeleports.get().add(teleport);
+    }
 
+    private void accept() {
       try (TeleportAcceptReader accept = PacketReaders.readerOf(acceptPacket(37))) {
         part.receiveTeleportAccept(accept);
       }
-      part.receiveCombatAction(user);
+    }
 
+    private void combatAction() {
+      part.receiveCombatAction(user);
+    }
+
+    private void confirmServerView() throws ReflectiveOperationException {
       try (PlayerMoveReader confirm = PacketReaders.readerOf(
         positionLookPacket(0.0D, 64.0D, 0.0D, 90.0F, 0.0F)
       )) {
         part.receiveMovement(confirm);
       }
+    }
 
+    private void revertToPreviousView() throws ReflectiveOperationException {
       try (PlayerMoveReader revert = PacketReaders.readerOf(
         positionLookPacket(0.0D, 64.0D, 0.0D, 0.0F, 0.0F)
       )) {
         part.receiveMovement(revert);
       }
+    }
 
-      assertTrue(part.lastDecision() != null && part.lastDecision().shouldFlag());
-    } finally {
+    private void close() {
       UserRepository.unregisterUser(player);
     }
   }

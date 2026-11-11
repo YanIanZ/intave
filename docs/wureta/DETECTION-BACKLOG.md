@@ -163,9 +163,12 @@ behavior to an existing Intave owner and lists the "do not build" duplicates.
   two corroborating layers or one high-confidence layer flag. See `ANTI-BYPASS-LAYERS.md`.
 - **Tests:** `TeleportRotationAssessmentTest`, `TeleportRotationTrackerTest`,
   `AntiBypassEngineTest`, `TeleportBypassLayersTest`, and the in-server
-  `TeleportRotationRefusalTests` synthetic packet test.
-- **Telemetry:** `SUSPICIOUS` and coverage gaps go to `DEBUG_TELEPORT`; violations carry the
-  evidence summary and gaps.
+  `TeleportRotationRefusalTests` synthetic packet suite (layered flag, normal adoption, BYPASS,
+  inventory-open, camera entity, just-joined, position-only).
+- **Telemetry:** `SUSPICIOUS`, would-be violations, and coverage gaps go to `DEBUG_TELEPORT`;
+  violations carry the evidence summary and gaps.
+- **Observation mode:** `teleport-rotation-observe-only: true` logs the layered decision without
+  creating a violation; use it for the first Wureta observation window.
 - **Known limitations:** detection-only (does not cancel or teleport); relative-rotation teleports
   are skipped; position-only packets carry no rotation; 26.3 uses the combined accept plus the
   following movement packet; `isAllowed` arming depends on the normal transaction flow.

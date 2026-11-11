@@ -66,6 +66,7 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Client.TELEPORT_ACCEP
  */
 public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScanner> {
   private final int vl;
+  private final boolean observeOnly;
   private final long refusalWindowMs;
   private final TeleportRotationTracker tracker;
   private final AntiBypassEngine<TeleportBypassContext> bypassEngine;
@@ -80,6 +81,8 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
   public TeleportRotationRefusal(User user, ProtocolScanner parentCheck) {
     super(user, parentCheck);
     this.vl = parentCheck.configuration().settings().intBy("teleport-rotation-vl", 10);
+    this.observeOnly = parentCheck.configuration().settings()
+      .boolBy("teleport-rotation-observe-only", false);
     this.refusalWindowMs = parentCheck.configuration().settings()
       .intBy("teleport-rotation-refusal-window", 30000);
     this.tracker = new TeleportRotationTracker(
@@ -230,9 +233,11 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
     );
     AntiBypassDecision decision = bypassEngine.evaluate(context);
     this.lastDecision = decision;
-    if (!decision.shouldFlag()) {
+    if (!decision.shouldFlag() || observeOnly) {
       if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
         StringBuilder message = new StringBuilder("[TeleportLayers] ")
+          .append(decision.verdict())
+          .append(' ')
           .append(decision.evidenceSummary());
         if (!decision.coverageGaps().isEmpty()) {
           message.append(" gaps=").append(decision.coverageGaps());
