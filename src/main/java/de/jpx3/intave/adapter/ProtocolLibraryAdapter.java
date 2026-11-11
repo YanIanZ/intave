@@ -56,8 +56,8 @@ public final class ProtocolLibraryAdapter {
       // resolve the native class, so do not reject an otherwise usable ProtocolLib install.
       if (MinecraftVersion.current().isAtLeast(MinecraftVersions.VER26_2)
         && classExists("net.minecraft.resources.Identifier")) {
-        IntaveLogger.logger().warn(
-          "ProtocolLib lacks 26.2 key mappings; continuing with " + de.jpx3.intave.IntaveBuildConfig.BRAND_NAME + " Locate fallback"
+        IntaveLogger.logger().info(
+          "ProtocolLib lacks 26.2 key mappings; using " + de.jpx3.intave.IntaveBuildConfig.BRAND_NAME + " Locate fallback"
         );
       } else {
         throw new InvalidDependencyException(PROTOCOLLIB_OUTDATED + " (missing MinecraftKey class reference)");
