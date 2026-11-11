@@ -273,6 +273,7 @@ compatibility:
 
 command:
   hide: true
+  hide-plugin-list: true
   reroute:
     "/alerts": "/wureta verbose"
     "/cps": "/wureta cps"

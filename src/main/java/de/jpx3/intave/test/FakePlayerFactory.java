@@ -74,6 +74,8 @@ public final class FakePlayerFactory {
     // default fallbacks
     methods.add((methodName, args) -> {
       switch (methodName) {
+        case "getServer":
+          return Bukkit.getServer();
         case "getLocation":
           return Bukkit.getWorlds().isEmpty()
             ? new Location(null, 0, 0, 0)

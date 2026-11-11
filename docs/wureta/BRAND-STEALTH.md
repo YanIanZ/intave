@@ -25,27 +25,36 @@ Set in `gradle.properties`:
 
 ## What changes for a client
 
-- `/plugins` shows `WuretaCore`, not `Intave`.
+- Operators and the console see `WuretaCore`, not `Intave`.
 - The command root is `/wureta` (alias `/wcore`); `/intave` and `/iac` are not registered.
 - Chat/actionbar/console prefixes use `Wureta`.
 - `customclient` and `movdebug` channels are not registered in stealth mode.
 - The attribute modifier key uses the `wureta` namespace.
 - Version/update notices are suppressed; the plugin does not announce an outdated/unlisted build.
 - Non-permitted players cannot tab-complete or invoke the command; chat attempts are redirected.
+- With `command.hide-plugin-list: true`, non-permitted players running `/plugins`, `/pl`,
+  `/bukkit:plugins`, or `/paper:plugins` get a filtered list that omits `WuretaCore`; operators with
+  `intave.command` still see the real list.
 - The distribution JARs are `WuretaCore.jar` and `WuretaCore-bundled.jar`.
 
 ## What this does not hide
 
 - Java package/class names (`de.jpx3.intave.*`), source-level strings, and the source repository.
   A server administrator can inspect the JAR; a remote client normally cannot.
-- `/plugins` still shows a plugin named `WuretaCore`; it does not prove what the plugin does.
+- The console and server operators still see `WuretaCore`; the player-facing `/plugins` filter only
+  removes it from the command output, not from the server filesystem or plugin manager.
+- `/help` and the client command tree may still mention `/wureta`; only tab-completion for managed
+  commands is filtered.
 - Packet timing, transaction/keepalive behavior, and detection responses can still fingerprint an
   anticheat to a determined researcher.
 - Outbound cloud/domain traffic is server-side and outside the client's view, but visible to a
   network operator.
 - Other plugins (`ProtocolLib`, `ViaVersion`) remain visible and can hint at the server stack.
-- Full `/plugins`, `/version`, `/about`, and `/help` filtering is **not** enabled; those commands
-  are server commands, and filtering them is a separate policy decision.
+- Only `/plugins` and `/pl` are filtered. `/version`, `/about`, `/help`, and other server commands
+  are untouched; filtering them is a separate policy decision.
+- The filter is a Bukkit command listener, so it also covers 1.19+ signed command packets that the
+  chat-packet filter cannot see. It does not stop a player from reading the server jar or using
+  `/paper dump` if that command is permitted.
 
 ## License and attribution
 

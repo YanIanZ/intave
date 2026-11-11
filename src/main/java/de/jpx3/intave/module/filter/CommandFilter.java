@@ -3,16 +3,24 @@ package de.jpx3.intave.module.filter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.google.common.collect.Lists;
+import de.jpx3.intave.IntaveBuildConfig;
 import de.jpx3.intave.IntavePlugin;
+import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.linker.packet.PacketSubscription;
 import de.jpx3.intave.user.permission.BukkitPermissionCheck;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.plugin.Plugin;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.CHAT_IN;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.TAB_COMPLETE_IN;
@@ -21,12 +29,14 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Server.TAB_COMPLETE_O
 public final class CommandFilter extends Filter {
   private final boolean separateEnable;
   private final boolean disabled;
+  private final boolean hidePluginList;
   private final Map<String, String> redirects = new HashMap<>();
 
   public CommandFilter(IntavePlugin plugin) {
     super("command");
     separateEnable = plugin.settings().getBoolean("command.hide", true);
     disabled = plugin.settings().getBoolean("command.fix-tab-kicks", false);
+    hidePluginList = plugin.settings().getBoolean("command.hide-plugin-list", false);
 
     ConfigurationSection reroute = plugin.settings().getConfigurationSection("command.reroute");
     if (reroute != null) {
@@ -114,12 +124,47 @@ public final class CommandFilter extends Filter {
     }
   }
 
-  private static boolean isManagedCommand(String message) {
+  @BukkitEventSubscription(priority = EventPriority.LOWEST)
+  public void on(PlayerCommandPreprocessEvent event) {
+    if (!hidePluginList) {
+      return;
+    }
+    Player player = event.getPlayer();
+    if (BukkitPermissionCheck.permissionCheck(player, "intave.command")) {
+      return;
+    }
+    if (!isPluginListCommand(event.getMessage())) {
+      return;
+    }
+    event.setCancelled(true);
+    String visible = Arrays.stream(Bukkit.getPluginManager().getPlugins())
+      .map(Plugin::getName)
+      .filter(name -> !name.equalsIgnoreCase(IntaveBuildConfig.BRAND_NAME))
+      .sorted(String.CASE_INSENSITIVE_ORDER)
+      .collect(Collectors.joining(", "));
+    player.sendMessage(ChatColor.GRAY + "Plugins: " + (visible.isEmpty() ? "none" : visible));
+  }
+
+  static boolean isPluginListCommand(String message) {
+    String token = commandToken(message);
+    return token.equalsIgnoreCase("plugins")
+      || token.equalsIgnoreCase("pl")
+      || token.equalsIgnoreCase("bukkit:plugins")
+      || token.equalsIgnoreCase("paper:plugins");
+  }
+
+  static boolean isManagedCommand(String message) {
+    String token = commandToken(message);
+    return token.equalsIgnoreCase(IntaveBuildConfig.BRAND_COMMAND)
+      || token.equalsIgnoreCase("wcore")
+      || token.equalsIgnoreCase("intave")
+      || token.equalsIgnoreCase("iac");
+  }
+
+  private static String commandToken(String message) {
     String normalized = message.startsWith("/") ? message.substring(1) : message;
-    return normalized.startsWith(de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND)
-      || normalized.startsWith("intave")
-      || normalized.startsWith("iac")
-      || normalized.startsWith("wcore");
+    int space = normalized.indexOf(' ');
+    return space < 0 ? normalized : normalized.substring(0, space);
   }
 
   @Override

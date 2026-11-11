@@ -8,6 +8,11 @@ config: THIS
 
 prefix: "&8[&7Wureta&8]&7 "
 
+command:
+  hide: true
+  # Hide WuretaCore from /plugins and /pl for players without intave.command
+  hide-plugin-list: true
+
 kick-commands:
   - "wureta internals kickip {player} &cYou have been kicked, as an account with your ip address was removed from the game"
   - "kick {player} &cYou have been removed from the game based on data that was collected by the anti-cheat ({log-id})"
@@ -18,7 +23,7 @@ ban-commands:
 
 # Cloud token
 #   Required for cloud features, such as cloud-based detection, logging and cross-account analysis.
-#   Obtainable at https://wureta.de
+#   Obtainable from your Wureta Network administrator
 cloud-token: "ct_EXAMPLE-TOKEN"
 
 # Movement setback sensitivity
