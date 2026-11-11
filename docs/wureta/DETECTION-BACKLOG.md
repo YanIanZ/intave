@@ -158,8 +158,11 @@ behavior to an existing Intave owner and lists the "do not build" duplicates.
   the server rotation, then watches the next rotation-bearing movement packets for a revert to the
   pre-teleport view. Uses a 0.05° epsilon, 30° minimum server delta, 2 refusals within 30 s,
   1 s cooldown, 20-packet/5 s timeout.
-- **Tests:** `TeleportRotationAssessmentTest` (rotation math) and
-  `TeleportRotationTrackerTest` (arm/adopt/refuse/flag/timeout/window/streak).
+- **Layers:** four independent layers feed `AntiBypassEngine` — rotation adoption, confirm/revert
+  sequence, combat before adoption, and refusal history. One weak signal stays observation-only;
+  two corroborating layers or one high-confidence layer flag. See `ANTI-BYPASS-LAYERS.md`.
+- **Tests:** `TeleportRotationAssessmentTest`, `TeleportRotationTrackerTest`,
+  `AntiBypassEngineTest`, `TeleportBypassLayersTest`.
 - **Known limitations:** detection-only (does not cancel or teleport); relative-rotation teleports
   are skipped; position-only packets carry no rotation; 26.3 uses the combined accept plus the
   following movement packet; `isAllowed` arming depends on the normal transaction flow.

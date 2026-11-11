@@ -3,6 +3,10 @@
 Scope: `ProtocolScanner/TeleportRotationRefusal` on Wureta Network (SourbyCraft 26.2).
 This is a detection-only part: it never cancels packets and never teleports the player.
 
+The decision is now layered: rotation adoption, confirm/revert sequence, combat before adoption,
+and refusal history are combined by `AntiBypassEngine`. A single weak exact-revert signal without
+sequence/combat/history corroboration is observation-only. See `ANTI-BYPASS-LAYERS.md`.
+
 ## 1. Compatibility matrix
 
 | Environment | Behavior | Status |

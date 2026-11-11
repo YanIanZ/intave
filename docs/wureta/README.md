@@ -9,6 +9,8 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
   behavior mapped to Intave's checks.
 - [`OVERLAP-MATRIX.md`](OVERLAP-MATRIX.md) — **read this first**: existing Intave owners, duplicate
   work to avoid, dead-code weaknesses, and genuine gaps.
+- [`ANTI-BYPASS-LAYERS.md`](ANTI-BYPASS-LAYERS.md) — layered detection model: independent layers,
+  confidence policy, coverage gaps, and the teleport layers.
 - [`DETECTION-BACKLOG.md`](DETECTION-BACKLOG.md) — non-overlapping P0/P1/P2 work with files, signals,
   tests, and acceptance criteria.
 - [`REA.md`](REA.md) — how to complete artifact-level REA/JEB analysis when the JEB provider is
@@ -21,8 +23,10 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
   - Detection parity gate (12 checks / **54 active parts** after `TeleportRotationRefusal`).
   - Java 8 bytecode and bundled-JAR guards.
   - Build 57 Aurora and Folia forced test runs green.
-- `ProtocolScanner/TeleportRotationRefusal` (P2-1) is implemented: detection-only teleport
-  rotation-refusal part plus pure `TeleportRotationTracker`/`TeleportRotationAssessment` helpers.
+- `ProtocolScanner/TeleportRotationRefusal` (P2-1) is implemented as a **four-layer** detection:
+  rotation adoption, confirm/revert sequence, combat before adoption, and refusal history, combined
+  by `AntiBypassEngine` with corroboration/coverage policy. Pure `TeleportRotationTracker`/
+  `TeleportRotationAssessment` helpers and layer tests cover the state.
 - The remaining work is the overlap-aware P0 list in `DETECTION-BACKLOG.md`; it starts by fixing
   existing click-pattern gates and the AttackRaytrace rotation snapshot rather than adding duplicate
   checks.

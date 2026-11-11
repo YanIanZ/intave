@@ -14,6 +14,10 @@ package de.jpx3.intave.check.other.protocolscanner;
 import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.check.PlayerCheckPart;
 import de.jpx3.intave.check.other.ProtocolScanner;
+import de.jpx3.intave.check.other.protocolscanner.bypass.AntiBypassDecision;
+import de.jpx3.intave.check.other.protocolscanner.bypass.AntiBypassEngine;
+import de.jpx3.intave.check.other.protocolscanner.bypass.TeleportBypassContext;
+import de.jpx3.intave.check.other.protocolscanner.bypass.TeleportBypassLayers;
 import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.module.linker.bukkit.BukkitEventSubscription;
 import de.jpx3.intave.module.linker.packet.ListenerPriority;
@@ -32,6 +36,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.util.Deque;
 
+import static de.jpx3.intave.module.linker.packet.PacketId.Client.ATTACK_ENTITY;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.LOOK;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.POSITION_LOOK;
 import static de.jpx3.intave.module.linker.packet.PacketId.Client.TELEPORT_ACCEPT;
@@ -45,25 +50,45 @@ import static de.jpx3.intave.module.linker.packet.PacketId.Client.TELEPORT_ACCEP
  * packets. This part arms when the teleport is acknowledged, accepts the adoption, and watches the
  * next rotation-bearing packets for a reversal to the pre-teleport view.
  * <p>
- * Detection-only: the part never cancels packets or issues teleport actions. The server's rotation
- * remains trusted by {@code TeleportController}; this part reports the refusal to the violation
- * pipeline.
+ * The decision is not based on one predicate. Four independent layers feed an
+ * {@link AntiBypassEngine}:
+ * <ul>
+ *   <li>rotation adoption (exact revert),</li>
+ *   <li>confirm/revert packet sequence,</li>
+ *   <li>combat actions before adopting the server view,</li>
+ *   <li>refusal history across teleports.</li>
+ * </ul>
+ * A single weak signal remains observation-only; two corroborating layers or one high-confidence
+ * layer produce a violation.
+ * <p>
+ * Detection-only: the part never cancels packets or issues teleport actions.
  */
 public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScanner> {
   private final int vl;
+  private final long refusalWindowMs;
   private final TeleportRotationTracker tracker;
+  private final AntiBypassEngine<TeleportBypassContext> bypassEngine;
+
+  private boolean confirmHadServerRotation;
+  private boolean nextReverted;
+  private int attacksBeforeAdoption;
+  private int refusalsInWindow;
+  private long lastRefusalMs;
 
   public TeleportRotationRefusal(User user, ProtocolScanner parentCheck) {
     super(user, parentCheck);
     this.vl = parentCheck.configuration().settings().intBy("teleport-rotation-vl", 10);
+    this.refusalWindowMs = parentCheck.configuration().settings()
+      .intBy("teleport-rotation-refusal-window", 30000);
     this.tracker = new TeleportRotationTracker(
       parentCheck.configuration().settings().intBy("teleport-rotation-refusals", 2),
       parentCheck.configuration().settings().intBy("teleport-rotation-timeout", 20),
       parentCheck.configuration().settings().intBy("teleport-rotation-cooldown", 1000),
-      parentCheck.configuration().settings().intBy("teleport-rotation-refusal-window", 30000),
+      refusalWindowMs,
       (float) parentCheck.configuration().settings().doubleBy("teleport-rotation-epsilon", 0.05),
       (float) parentCheck.configuration().settings().doubleBy("teleport-rotation-min-delta", 30.0)
     );
+    this.bypassEngine = TeleportBypassLayers.engine();
   }
 
   @PacketSubscription(
@@ -76,6 +101,7 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
     }
     User user = owningUser();
     if (shouldIgnore(user)) {
+      resetLocalState();
       tracker.reset();
       return;
     }
@@ -100,6 +126,7 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
     }
     User user = owningUser();
     if (shouldIgnore(user)) {
+      resetLocalState();
       tracker.reset();
       return;
     }
@@ -109,8 +136,20 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
     observe(user, reader.yaw(), reader.pitch());
   }
 
+  @PacketSubscription(
+    priority = ListenerPriority.HIGH,
+    packetsIn = {ATTACK_ENTITY}
+  )
+  public void receiveCombatAction(User user) {
+    if (vl <= 0 || !tracker.armed() || confirmHadServerRotation || shouldIgnore(user)) {
+      return;
+    }
+    attacksBeforeAdoption++;
+  }
+
   @BukkitEventSubscription
   public void receiveRespawn(PlayerRespawnEvent event) {
+    resetLocalState();
     tracker.reset();
   }
 
@@ -150,6 +189,74 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
     }
   }
 
+  private void observe(User user, float sentYaw, float sentPitch) {
+    TeleportRotationTracker.Observation observation = tracker.observe(
+      sentYaw, sentPitch, System.currentTimeMillis()
+    );
+    if (observation == TeleportRotationTracker.Observation.ADOPTED) {
+      confirmHadServerRotation = true;
+      return;
+    }
+    if (observation == TeleportRotationTracker.Observation.REFUSED
+      || observation == TeleportRotationTracker.Observation.FLAGGED) {
+      nextReverted = true;
+      updateRefusalHistory();
+      boolean evidenceWarrantsDecision = observation == TeleportRotationTracker.Observation.FLAGGED
+        || attacksBeforeAdoption > 0
+        || refusalsInWindow >= 2;
+      if (evidenceWarrantsDecision) {
+        evaluateLayers(user);
+      }
+      resetLocalState();
+      return;
+    }
+    if (observation == TeleportRotationTracker.Observation.EXPIRED) {
+      resetLocalState();
+    }
+  }
+
+  private void evaluateLayers(User user) {
+    TeleportBypassContext context = new TeleportBypassContext(
+      true,
+      tracker.lastServerDelta(),
+      tracker.lastClientDelta(),
+      confirmHadServerRotation,
+      nextReverted,
+      confirmHadServerRotation,
+      attacksBeforeAdoption,
+      refusalsInWindow
+    );
+    AntiBypassDecision decision = bypassEngine.evaluate(context);
+    if (!decision.shouldFlag()) {
+      return;
+    }
+    Violation violation = Violation.builderFor(ProtocolScanner.class)
+      .forUser(user)
+      .withMessage("ignored teleport rotation")
+      .withDetails(
+        "server delta " + tracker.lastServerDelta() + " degrees, client delta "
+          + tracker.lastClientDelta() + " degrees; " + decision.evidenceSummary()
+      )
+      .withVL(vl)
+      .build();
+    Modules.violationProcessor().processViolation(violation);
+  }
+
+  private void updateRefusalHistory() {
+    long now = System.currentTimeMillis();
+    if (now - lastRefusalMs > refusalWindowMs) {
+      refusalsInWindow = 0;
+    }
+    lastRefusalMs = now;
+    refusalsInWindow++;
+  }
+
+  private void resetLocalState() {
+    confirmHadServerRotation = false;
+    nextReverted = false;
+    attacksBeforeAdoption = 0;
+  }
+
   private boolean shouldIgnore(User user) {
     if (user.justJoined() || user.trustFactor().atLeast(TrustFactor.BYPASS)) {
       return true;
@@ -164,23 +271,5 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
     }
     // Vanilla does not rotate the camera while a container screen is open.
     return user.meta().inventory().inventoryOpen();
-  }
-
-  private void observe(User user, float sentYaw, float sentPitch) {
-    TeleportRotationTracker.Observation observation = tracker.observe(
-      sentYaw, sentPitch, System.currentTimeMillis()
-    );
-    if (observation == TeleportRotationTracker.Observation.FLAGGED) {
-      Violation violation = Violation.builderFor(ProtocolScanner.class)
-        .forUser(user)
-        .withMessage("ignored teleport rotation")
-        .withDetails(
-          "server delta " + tracker.lastServerDelta() + " degrees, client delta "
-            + tracker.lastClientDelta() + " degrees"
-        )
-        .withVL(vl)
-        .build();
-      Modules.violationProcessor().processViolation(violation);
-    }
   }
 }
