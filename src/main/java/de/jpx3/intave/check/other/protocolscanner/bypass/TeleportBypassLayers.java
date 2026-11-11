@@ -14,13 +14,7 @@ package de.jpx3.intave.check.other.protocolscanner.bypass;
 import java.util.Arrays;
 
 public final class TeleportBypassLayers {
-  private static final AntiBypassEngine<TeleportBypassContext> ENGINE = new AntiBypassEngine<>(
-    Arrays.asList(
-      new TeleportAdoptionLayer(),
-      new TeleportSequenceLayer(),
-      new TeleportCombatLayer(),
-      new TeleportHistoryLayer()
-    ),
+  private static final AntiBypassEngine<TeleportBypassContext> ENGINE = engine(
     AntiBypassPolicy.defaultPolicy()
   );
 
@@ -29,5 +23,17 @@ public final class TeleportBypassLayers {
 
   public static AntiBypassEngine<TeleportBypassContext> engine() {
     return ENGINE;
+  }
+
+  public static AntiBypassEngine<TeleportBypassContext> engine(AntiBypassPolicy policy) {
+    return new AntiBypassEngine<>(
+      Arrays.asList(
+        new TeleportAdoptionLayer(),
+        new TeleportSequenceLayer(),
+        new TeleportCombatLayer(),
+        new TeleportHistoryLayer()
+      ),
+      policy
+    );
   }
 }

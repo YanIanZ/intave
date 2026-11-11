@@ -167,6 +167,9 @@ check:
     teleport-rotation-cooldown: 1000
     teleport-rotation-refusal-window: 30000
     teleport-rotation-observe-only: false
+    teleport-rotation-violation-confidence: 0.85
+    teleport-rotation-suspicious-confidence: 0.60
+    teleport-rotation-corroborating-layers: 2
     thresholds:
       50: "intave internals sendnotify &c{player}&7/{trust-color}&7 is sending invalid packets"
       100:

@@ -16,6 +16,7 @@ import de.jpx3.intave.check.PlayerCheckPart;
 import de.jpx3.intave.check.other.ProtocolScanner;
 import de.jpx3.intave.check.other.protocolscanner.bypass.AntiBypassDecision;
 import de.jpx3.intave.check.other.protocolscanner.bypass.AntiBypassEngine;
+import de.jpx3.intave.check.other.protocolscanner.bypass.AntiBypassPolicy;
 import de.jpx3.intave.check.other.protocolscanner.bypass.TeleportBypassContext;
 import de.jpx3.intave.check.other.protocolscanner.bypass.TeleportBypassLayers;
 import de.jpx3.intave.module.Modules;
@@ -93,7 +94,13 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
       (float) parentCheck.configuration().settings().doubleBy("teleport-rotation-epsilon", 0.05),
       (float) parentCheck.configuration().settings().doubleBy("teleport-rotation-min-delta", 30.0)
     );
-    this.bypassEngine = TeleportBypassLayers.engine();
+    this.bypassEngine = TeleportBypassLayers.engine(new AntiBypassPolicy(
+      parentCheck.configuration().settings()
+        .doubleBy("teleport-rotation-violation-confidence", 0.85D),
+      parentCheck.configuration().settings()
+        .doubleBy("teleport-rotation-suspicious-confidence", 0.60D),
+      parentCheck.configuration().settings().intBy("teleport-rotation-corroborating-layers", 2)
+    ));
   }
 
   @PacketSubscription(

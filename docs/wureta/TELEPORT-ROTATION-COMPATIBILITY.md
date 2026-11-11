@@ -81,6 +81,9 @@ check:
     teleport-rotation-cooldown: 1000
     teleport-rotation-refusal-window: 30000
     teleport-rotation-observe-only: false
+    teleport-rotation-violation-confidence: 0.85
+    teleport-rotation-suspicious-confidence: 0.60
+    teleport-rotation-corroborating-layers: 2
 ```
 
 - `teleport-rotation-vl: 0` disables the part without removing the check from the parity baseline.

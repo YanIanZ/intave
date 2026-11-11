@@ -16,7 +16,7 @@ public final class AntiBypassPolicy {
   private final double suspiciousConfidence;
   private final int corroboratingLayers;
 
-  AntiBypassPolicy(
+  public AntiBypassPolicy(
     double violationConfidence, double suspiciousConfidence, int corroboratingLayers
   ) {
     this.violationConfidence = violationConfidence;

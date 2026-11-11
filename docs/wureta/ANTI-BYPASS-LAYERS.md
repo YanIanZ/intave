@@ -119,4 +119,6 @@ observation path until the live data justifies enforcement.
 - If a layer repeatedly produces `UNKNOWN` in production, add the missing evidence rather than
   lowering its status.
 - Turn observe-only off only after a live false-positive sample has been reviewed.
-- Keep the layer weights and policy in code until the live data justifies config exposure.
+- The aggregation policy is configurable through `teleport-rotation-violation-confidence`,
+  `teleport-rotation-suspicious-confidence`, and `teleport-rotation-corroborating-layers`; layer
+  weights remain code-owned so a config change cannot silently invert a layer's meaning.
