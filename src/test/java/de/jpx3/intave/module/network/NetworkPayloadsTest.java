@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 final class NetworkPayloadsTest {
@@ -49,6 +51,20 @@ final class NetworkPayloadsTest {
     assertEquals(playerId, decoded.playerId());
     assertEquals("RED", decoded.trustFactor());
     assertEquals("cloud", decoded.reason());
+    assertFalse(decoded.force());
+  }
+
+  @Test
+  void roundTripsForcedTrustUpdates() {
+    UUID playerId = UUID.randomUUID();
+    NetworkPayloads.Trust trust = new NetworkPayloads.Trust(
+      playerId, "Player", "GREEN", "command", true
+    );
+
+    NetworkPayloads.Trust decoded = NetworkPayloads.Trust.decode(trust.encode());
+
+    assertEquals("GREEN", decoded.trustFactor());
+    assertTrue(decoded.force());
   }
 
   @Test

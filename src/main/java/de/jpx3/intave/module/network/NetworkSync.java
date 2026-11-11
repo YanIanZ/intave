@@ -196,6 +196,12 @@ public final class NetworkSync extends Module {
     }
   }
 
+  public void publishTrustFactorExact(Player player, TrustFactor trustFactor, String reason) {
+    if (active) {
+      trustFactorRelay.publish(player, trustFactor, reason, true);
+    }
+  }
+
   public void publishBlock(String playerName, UUID playerId, String address, String reason) {
     if (active) {
       sanctionRelay.publishBlock(playerName, playerId, address, reason);

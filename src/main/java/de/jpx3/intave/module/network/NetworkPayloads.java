@@ -135,12 +135,20 @@ public final class NetworkPayloads {
     private final String playerName;
     private final String trustFactor;
     private final String reason;
+    private final boolean force;
 
     public Trust(UUID playerId, String playerName, String trustFactor, String reason) {
+      this(playerId, playerName, trustFactor, reason, false);
+    }
+
+    public Trust(
+      UUID playerId, String playerName, String trustFactor, String reason, boolean force
+    ) {
       this.playerId = playerId;
       this.playerName = playerName;
       this.trustFactor = trustFactor;
       this.reason = reason;
+      this.force = force;
     }
 
     public byte[] encode() {
@@ -151,6 +159,7 @@ public final class NetworkPayloads {
         writeString(output, playerName);
         writeString(output, trustFactor);
         writeString(output, reason);
+        output.writeBoolean(force);
         output.flush();
         return buffer.toByteArray();
       } catch (IOException exception) {
@@ -161,12 +170,14 @@ public final class NetworkPayloads {
     public static Trust decode(byte[] payload) {
       try {
         DataInputStream input = new DataInputStream(new ByteArrayInputStream(payload));
-        return new Trust(
+        Trust trust = new Trust(
           readUuid(input),
           readString(input),
           readString(input),
           readString(input)
         );
+        boolean force = input.available() > 0 && input.readBoolean();
+        return new Trust(trust.playerId, trust.playerName, trust.trustFactor, trust.reason, force);
       } catch (EOFException exception) {
         throw new ProtocolException("Truncated trust payload", exception);
       } catch (IOException exception) {
@@ -188,6 +199,10 @@ public final class NetworkPayloads {
 
     public String reason() {
       return reason;
+    }
+
+    public boolean force() {
+      return force;
     }
   }
 

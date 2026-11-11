@@ -31,6 +31,10 @@ public final class NetworkTrustFactorRelay {
   }
 
   public void publish(Player player, TrustFactor trustFactor, String reason) {
+    publish(player, trustFactor, reason, false);
+  }
+
+  public void publish(Player player, TrustFactor trustFactor, String reason, boolean force) {
     if (!settings.syncTrustFactor() || trustFactor == TrustFactor.BYPASS) {
       return;
     }
@@ -38,7 +42,8 @@ public final class NetworkTrustFactorRelay {
       player.getUniqueId(),
       player.getName(),
       trustFactor.name(),
-      reason
+      reason,
+      force
     );
     network.broadcast(FrameType.TRUST, UUID.randomUUID(), player.getUniqueId(), update.encode());
   }
@@ -64,7 +69,12 @@ public final class NetworkTrustFactorRelay {
     } catch (IllegalArgumentException exception) {
       return;
     }
-    IntavePlugin.singletonInstance().trustFactorService()
-      .applyNetworkTrustFactor(player, trustFactor, frame.source());
+    if (update.force()) {
+      IntavePlugin.singletonInstance().trustFactorService()
+        .applyNetworkTrustFactorExact(player, trustFactor, frame.source());
+    } else {
+      IntavePlugin.singletonInstance().trustFactorService()
+        .applyNetworkTrustFactor(player, trustFactor, frame.source());
+    }
   }
 }

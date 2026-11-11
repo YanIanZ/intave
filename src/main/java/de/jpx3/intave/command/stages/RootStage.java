@@ -364,13 +364,17 @@ public final class RootStage extends CommandStage {
     selectors = "settrust",
     usage = "<trustfactor> [<target>]",
     description = "",
-    permission = "sibyl"
+    permission = "intave.command"
   )
   public void setTrustFactor(User user, TrustFactor trustFactor, @Optional Player target) {
     if (target == null) {
       target = user.player();
     }
     UserRepository.userOf(target).setTrustFactor(trustFactor);
+    de.jpx3.intave.module.network.NetworkSync network = de.jpx3.intave.module.Modules.networkOrNull();
+    if (network != null) {
+      network.publishTrustFactorExact(target, trustFactor, "command");
+    }
     user.sendMessage(ChatColor.GRAY + "Applied " + trustFactor.chatColor() + trustFactor.name() + ChatColor.GRAY + " trustfactor to " + ChatColor.RED + target.getName());
   }
 
@@ -378,7 +382,7 @@ public final class RootStage extends CommandStage {
     selectors = "trust",
     usage = "[<target>]",
     description = "",
-    permission = "sibyl"
+    permission = "intave.command"
   )
   public void lookupTrust(User user, @Optional Player target) {
     if (target == null) {

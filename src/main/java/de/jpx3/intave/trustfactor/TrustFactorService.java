@@ -152,6 +152,23 @@ public final class TrustFactorService implements BukkitEventSubscriber {
     Synchronizer.synchronize(user, () -> applyNetworkTrustFactorNow(player, user, trustFactor, source));
   }
 
+  public void applyNetworkTrustFactorExact(Player player, TrustFactor trustFactor, String source) {
+    User user = UserRepository.userOf(player);
+    Synchronizer.synchronize(user, () -> {
+      if (user.trustFactor().atLeast(TrustFactor.BYPASS)) {
+        return;
+      }
+      user.setTrustFactor(trustFactor);
+      if (ConsoleOutput.TRUSTFACTOR_DEBUG) {
+        IntaveLogger.logger().info(
+          ChatColor.RED + player.getName() + IntavePlugin.defaultColor() +
+            " received " + trustFactor.coloredBaseName() + IntavePlugin.defaultColor() +
+            " trust factor from " + source
+        );
+      }
+    });
+  }
+
   private void applyNetworkTrustFactorNow(
     Player player, User user, TrustFactor trustFactor, String source
   ) {

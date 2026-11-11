@@ -144,8 +144,10 @@ duplicate on the source server.
 
 A trust-factor change is published only when it becomes **more restrictive** (for example ORANGE to
 RED). Receiving backends apply the more restrictive value to an online player. `BYPASS` is never
-overridden or published. This is a "most restrictive wins" policy; clearing a red trust factor does
-not propagate automatically.
+overridden or published. This is a "most restrictive wins" policy for automatic trust resolution.
+
+Staff `/wureta settrust <factor> <player>` changes are published as forced updates and applied
+exactly on the other backends (except when the receiving player holds `BYPASS`).
 
 ### Sanctions
 
@@ -216,9 +218,15 @@ magic "WTS1" | version | type | flags | requestId | playerId | timestamp
 - Build 57 SourbyCraft boots with network disabled and enabled; `/wureta diagnostics network`
   reports the active server id and channel; all integration tests pass.
 - Root unit tests, `verifyJava8Bytecode` and `verifyBundledJar` pass.
+- End-to-end on two Paper 1.20.1 backends behind BungeeCord 26.1 with two Mineflayer 1.20.1
+  clients: both backends enabled storage sync; switching `SwitchBot` from lobby to survival
+  produced `Forwarded storage request ... from survival` and
+  `Cached storage ... from lobby (112 bytes, 1 pending)` in the proxy log, the proxy wrote the
+  player UUID `.bin` file to disk, and the client respawned on survival.
+- CI `Self-tests` is green on the Wureta branch for all Paper versions.
 
-A live two-backend + real-client switch test still requires a running proxy and clients; run it on
-a staging network before production.
+Live alert, trust and sanction delivery across two backends with real players is still worth
+repeating on staging before production; the payload codecs and relays are covered by unit tests.
 
 ## Troubleshooting
 
