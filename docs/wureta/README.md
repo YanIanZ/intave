@@ -7,8 +7,10 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
 
 - [`CLIENT-THREAT-MODEL.md`](CLIENT-THREAT-MODEL.md) — Meteor Client, Wurst7, and LiquidBounce
   behavior mapped to Intave's checks.
-- [`DETECTION-BACKLOG.md`](DETECTION-BACKLOG.md) — prioritized P0/P1/P2 detection work with files,
-  signals, tests, and acceptance criteria.
+- [`OVERLAP-MATRIX.md`](OVERLAP-MATRIX.md) — **read this first**: existing Intave owners, duplicate
+  work to avoid, dead-code weaknesses, and genuine gaps.
+- [`DETECTION-BACKLOG.md`](DETECTION-BACKLOG.md) — non-overlapping P0/P1/P2 work with files, signals,
+  tests, and acceptance criteria.
 - [`REA.md`](REA.md) — how to complete artifact-level REA/JEB analysis when the JEB provider is
   available.
 
@@ -19,8 +21,9 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
   - Detection parity gate (12 checks / 53 active parts).
   - Java 8 bytecode and bundled-JAR guards.
   - Build 57 Aurora and Folia forced test runs green.
-- No production detection code has been added on this branch yet. The first work item is P0-1
-  (packet-order/rotation state machine).
+- No production detection code has been added on this branch yet. The first work item is the
+  overlap-aware P0 list in `DETECTION-BACKLOG.md`; it starts by fixing existing click-pattern gates
+  and the AttackRaytrace rotation snapshot rather than adding duplicate checks.
 
 ## Guardrails
 
@@ -40,9 +43,10 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
 
 ## Suggested first implementation order
 
-1. P0-1 packet-order/rotation state machine.
-2. P0-2 instantaneous timer.
-3. P0-3 selective lag.
-4. P0-4 criticals/teleport continuity.
-5. P0-5 onGround consistency.
-6. P1 inventory, placement, break, reach, slot churn.
+1. Fix `ClickPatterns`'s ≥1.13 gate (existing parts, no new check).
+2. Add the attack-time rotation snapshot to `AttackRaytrace` (no new Heuristics part).
+3. Measure `MoveTickLimit` vs criticals before touching `Physics`.
+4. Measure `PlayerTime` vs TickBase before touching `Timer`.
+5. Extend `MicroBlink` for KeepAlive/action continuity.
+6. Extend the existing `MovementDispatcher`/`Physics` onGround compare.
+7. Fix placement/break dead parts, then one inventory churn part.

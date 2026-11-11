@@ -1,181 +1,184 @@
-# Wureta Network — detection backlog
+# Wureta — non-overlapping detection backlog
 
-Derived from `CLIENT-THREAT-MODEL.md`. Every item must preserve the detection parity gate
-(`DetectionManifestTest`) and pass the SourbyCraft 26.2 boot suite before it is considered done.
+Read [`OVERLAP-MATRIX.md`](OVERLAP-MATRIX.md) before starting. The matrix assigns every client
+behavior to an existing Intave owner and lists the "do not build" duplicates.
 
-## Branch rules
+## Principles
 
-- Base: `Wureta` from `feature/sourbyapi-parity`.
-- Worktree: `/Volumes/Ext/Sourby/intave-wureta`.
-- Do not remove, rename, or default-disable a check or active check-part. Update
-  `src/test/resources/detection_parity/baseline-units.txt` only in a reviewed change.
-- Every movement/combat change needs a replayable `.ptr` recording under
-  `src/test/resources/physics_test_runs/` and a unit test.
-- Run `./gradlew test verifyJava8Bytecode verifyBundledJar` for every change.
-- Run the Build 57 forced suite for scheduler-touching changes:
-  `JAVA_TOOL_OPTIONS='-Dintave.test.success=shutdown'` and the `folia` variant.
+1. **One owner per signal.** Extend the existing check/part named in the matrix; do not add a second
+   part for the same packet or state.
+2. **Fix dead code before adding checks.** Several existing parts already implement the signal but
+   never dispatch a violation (see matrix §4). Fixing those is higher value and zero overlap.
+3. **Measure before building.** Criticals/TickBase may already be covered by `MoveTickLimit` /
+   `PlayerTime`; replay a 26.2 sequence and record the result before writing a new detector.
+4. **No new top-level checks.** New parts go under an existing `Check` (Heuristics, ProtocolScanner,
+   InventoryClickAnalysis, etc.).
+5. **Parity gate stays green.** Do not remove/rename/default-disable a check or active part; update
+   `baseline-units.txt` only in a reviewed change.
 
-## P0 — ship first
+## P0 — fix existing detection first
 
-### P0-1 Packet-order and rotation-context state machine
+### P0-1 Enable click-timing checks on modern clients
 
-- **Signal:** attack/use packet whose hit is only valid against a rotation that arrives later in the
-  same server tick; held attack+punch pairs (Criticals Jump); exact hitbox-center bearing without
-  intermediate rotations.
-- **Clients:** Meteor `combat/KillAura.java`, `combat/Criticals.java`, `utils/player/Rotations.java`;
-  Wurst `hacks/ClickAuraHack.java`, `RotationFaker.java`; LiquidBounce `ModuleKillAura.kt`,
-  `RotationManager.kt`.
-- **Location:** `src/main/java/de/jpx3/intave/check/combat/Heuristics.java` plus a new part under
-  `check/combat/heuristics/other/`; reuse the existing packet-order subscriptions.
-- **Test:** synthetic packet sequence `ATTACK, ROT` vs `ROT, ATTACK`; a `.ptr` recording with held
-  criticals. Assert the first is flagged and the second is not.
-- **Acceptance:** no false positive on vanilla strafing/aim; Meteor callback-style and Wurst
-  ClickAura sequences flagged; parity baseline unchanged.
+- **Owner:** `src/main/java/de/jpx3/intave/check/combat/ClickPatterns.java`.
+- **Weakness:** `makeDetection` returns for protocol ≥1.13 (`:54-57`), so `Deviation`, `Entropy`,
+  `Fluctuation`, `Repetitive`, and `Kurtosis` are inactive on 26.2. `EqualDelay` also has its flag
+  commented (`:56`).
+- **Action:** replace the blanket 1.13 return with a trust-factor/threshold gate; enable `EqualDelay`
+  against tick-aligned constant clicks. Keep `Bursts` behavior (it already bypasses the gate).
+- **Test:** replay a human log-normal click sample and a constant-period sample; assert separation.
+  Add a 26.2 auto-clicker recording.
+- **Acceptance:** modern-client human clicks do not flag; constant/low-entropy timing flags.
+- **Overlap guard:** do not add a new click-timing part; reuse the seven existing parts.
 
-### P0-2 Instantaneous timer / TickBase detector
+### P0-2 Attack-time rotation snapshot in AttackRaytrace
 
-- **Signal:** inter-move-packet interval distribution; slow charge followed by 5× bursts; average
-  rate near 1.0 but short-window rate above the physical ceiling.
-- **Clients:** Meteor `world/Timer.java`; Wurst `mixin/timer/DeltaTrackerTimerMixin.java`;
-  LiquidBounce `ModuleTickBase.kt`, `utils/client/Timer.kt`.
-- **Location:** `src/main/java/de/jpx3/intave/check/movement/Timer.java` /
-  `check/movement/timer/PlayerTime.java`; add a burst-window part, keep the existing long-term
-  balance.
-- **Test:** synthetic move sequence 20 ticks at 0.9× then 3 ticks at 5×; assert burst flag and no
-  flag on a steady 1.0× baseline. Add a `.ptr` recording.
-- **Acceptance:** steady 1.0, jitter, and legitimate lag do not flag; burst is flagged within N ticks.
+- **Owner:** `src/main/java/de/jpx3/intave/check/combat/AttackRaytrace.java`.
+- **Weakness:** `fireRaytraceFor` uses `movementData.rotationYaw/lastRotationYaw` at processing time
+  (`:891-915`), so an attack that arrives before its rotation packet is validated against the
+  end-of-tick rotation. Meteor KillAura attacks in `TickEvent.Pre`, before the rotation packet.
+- **Action:** store yaw/pitch/lastYaw/lastPitch in `Attack` at packet arrival; use the snapshot in
+  `fireRaytraceFor` for queued attacks. Keep the existing reach/hitbox logic untouched.
+- **Test:** synthetic `ATTACK, ROT` vs `ROT, ATTACK`; assert the first is flagged and vanilla
+  strafing/aim is not. Add a `.ptr` recording.
+- **Acceptance:** attack-before-rotation flagged; no new perfect-aim part.
+- **Overlap guard:** the eight existing rotation parts own aim quality; this item only fixes the
+  snapshot. Do not add another rotation-accuracy part.
 
-### P0-3 Selective-lag / blink / backtrack detector
+### P0-3 Verify criticals coverage before extending Physics
 
-- **Signal:** position-packet gaps > threshold while actions (attack/use/click) or KeepAlive continue;
-  flush burst after a gap; attacks against a stale hitbox position.
-- **Clients:** Meteor `movement/Blink.java`; Wurst `hacks/BlinkHack.java`; LiquidBounce
-  `ModuleFakeLag.kt`, `ModuleBacktrack.kt`, `BlinkManager.kt`, `VelocityLag`.
-- **Location:** `check/other/ProtocolScanner.java` or a new part under `check/movement/` (prefer
-  ProtocolScanner for packet-order evidence; Physics for position continuity).
-- **Test:** fake packet queue with delayed positions + immediate KeepAlive; assert flag; a vanilla
-  lag spike with delayed KeepAlive should not flag.
-- **Acceptance:** no flag on normal latency/jitter; flags combat-correlated flush patterns.
+- **Owners:** `check/other/protocolscanner/MoveTickLimit.java` and `check/movement/Physics.java`.
+- **Question:** on 26.2, `MoveTickLimit` cancels the 2nd+ movement packet per `CLIENT_TICK_END` and
+  flags VL 5. Criticals micro-offsets are extra position packets. Does the existing check already
+  block/flag them?
+- **Action:** replay a 26.2 criticals sequence. If `MoveTickLimit` already cancels/flags it, add no
+  new check; document the result. If it does not, extend `Physics` continuity (sub-tick vertical
+  offset / `+√500` shape), not a new check.
+- **Test:** criticals packet sequence; vanilla jump/crit; mace +√500; assert only the cheats flag.
+- **Acceptance:** no duplicate flag path; documented decision.
+- **Overlap guard:** do not add a second multi-move-packet check.
 
-### P0-4 Criticals / MaceKill / teleport micro-move continuity
+### P0-4 Verify TickBase coverage before extending PlayerTime
 
-- **Signal:** sub-tick vertical offsets `+0.0625 / 0 / +1.1e-5 / 0`, `+√500` spikes, multi-block
-  teleport bursts with fall-height shaping.
-- **Clients:** Meteor `combat/Criticals.java`; Wurst `hacks/CriticalsHack.java`,
-  `hacks/MaceDmgHack.java`; LiquidBounce `combat/criticals/`, `ModuleMaceKill.kt`, `tpaura/`.
-- **Location:** `check/movement/Physics.java` (continuity) and a micro-move part; use the 26.2 attack
-  packet split for correlation.
-- **Test:** `.ptr` criticals sequence; synthetic teleport burst; assert flag and no false positive on
-  jump/fall/velocity.
-- **Acceptance:** crit/mace/teleport sequences flagged; vanilla jump/crit and knockback not flagged.
+- **Owner:** `check/movement/timer/PlayerTime.java`.
+- **Question:** `PlayerTime` credits 50 ms per movement packet (`:139`) and flags when the clock
+  drifts (`:147-170`). Does a 0.9× charge / 5× burst pattern already cross that threshold?
+- **Action:** replay a TickBase-like packet cadence. If the existing clock misses it, add a
+  short-window rate/distribution check to `PlayerTime`; do not add a new timer check.
+- **Test:** steady 1.0×, 0.9× charge, 5× 3-tick burst, legitimate lag/jitter; assert separation.
+- **Acceptance:** burst flagged; steady/jitter clean.
+- **Overlap guard:** `PlayerTime` and `MicroBlink` own timer/lag; no new top-level Timer part.
 
-### P0-5 onGround vs simulation consistency
+### P0-5 Extend MicroBlink for selective lag
 
-- **Signal:** serverbound `onGround` contradicts the simulated grounded state for >N ticks while
-  vertical velocity is zero; forged StatusOnly/Pos sequences.
-- **Clients:** Meteor `NoFall`/`AntiHunger`; Wurst `NoFallHack`, `JesusHack`, `AntiCactusHack`;
-  LiquidBounce `NoFallSpoofGround`/`NoFallPacket`.
-- **Location:** `check/movement/Physics.java` or `check/other/ProtocolScanner.java`.
-- **Test:** synthetic grounded → spoofed airborne sequence; assert flag; vanilla jump/fall not
-  flagged.
-- **Acceptance:** spoofed ground flags; legitimate jump/landing remains clean.
+- **Owner:** `check/movement/timer/MicroBlink.java`.
+- **Weakness:** `MicroBlink` correlates position gaps with entity proximity and attack recency, but
+  not with KeepAlive/action continuity or flush bursts. LiquidBounce `VelocityLag` explicitly never
+  queues KeepAlive; FakeLag/Backtrack flush on combat events.
+- **Action:** add KeepAlive/action continuity and flush-correlation signals to the existing
+  histogram/chi² model. Keep the existing horizontal-movement gate and attack recency.
+- **Test:** delayed position + immediate KeepAlive/attack; vanilla lag spike with delayed KeepAlive;
+  assert separation.
+- **Acceptance:** selective lag flagged; normal latency clean.
+- **Overlap guard:** `MicroBlink` is the owner; do not add a new blink part.
 
-## P1 — next
+### P0-6 N-tick onGround consistency
 
-### P1-1 Inventory state machine / silent open
+- **Owners:** `module/dispatch/MovementDispatcher.java` (existing single-packet compare) and
+  `check/movement/Physics.java`.
+- **Weakness:** the dispatcher compares one packet's `onGround` against the simulated state and
+  builds a `Physics` violation, but there is no multi-tick consistency check. AntiHunger/Jesus/
+  AntiCactus forge plausible sequences.
+- **Action:** extend the existing compare with an N-tick contradiction counter; keep the existing
+  fall-distance/rewrite behavior.
+- **Test:** grounded → spoofed airborne sequence; vanilla jump/landing; assert only spoof flags.
+- **Acceptance:** spoof flagged; vanilla clean.
+- **Overlap guard:** no new onGround part; the dispatcher/Physics already own the signal.
 
-- **Signal:** clicks on a container the server never opened; same-tick pick/place pairs; cursor-state
-  mismatch; hotbar churn.
-- **Clients:** Meteor `InvUtils`, `AutoTotem`, `AutoArmor`, `ChestSwap`; Wurst `AutoTotem`,
-  `AutoArmor`, `AutoSteal`, `AutoDrop`; LiquidBounce cheststealer/invcleaner.
-- **Location:** `check/other/InventoryClickAnalysis.java` and its parts.
-- **Test:** open/close, click, pickup/place sequences; assert silent-open and zero-delay pair flags;
-  no flag on normal chest looting.
-- **Acceptance:** silent-open detected; randomized delays alone do not evade the state machine.
+## P1 — fix dead placement/break/inventory parts
 
-### P1-2 Placement fast-place / air-place / sneak spoof
+### P1-1 Placement dead parts and flat-pitch cadence
 
-- **Signal:** placement cadence ≤4 ticks at the same position; placement beyond reach; air-place;
-  forced sneak state in the packet while the client is not sneaking.
-- **Clients:** Meteor `Scaffold`; Wurst `ScaffoldWalkHack`, `AutoBuildHack`; LiquidBounce
-  `world/scaffold/`.
-- **Location:** `check/world/PlacementAnalysis.java` and `check/world/interaction/`.
-- **Test:** synthetic scaffold rotation+place sequence; assert fast-place/air-place; no flag on
-  normal bridging.
-- **Acceptance:** scaffold patterns flagged; vanilla bridge/tower not flagged.
+- **Owners:** `placementanalysis/Snap.java`, `Facing.java`, `SmartSpeed.java`, `Constraint.java`,
+  `RoundedRotation.java`, `Speed.java`.
+- **Action:** process the built-but-dropped violations in `Snap`/`Facing`; dispatch `sneakVL` in
+  `SmartSpeed`; implement or remove `Constraint`/`RoundedRotation`; extend `Speed` to flat-pitch
+  placement (currently under-player only). Do not enable `SneakAndPlace`/`PacketOrder` as duplicates
+  of `SmartSpeed`.
+- **Test:** scaffold placement sequence; normal bridging; sneak-tap; assert separation.
+- **Acceptance:** dead code either works or is removed; no duplicate part added.
 
-### P1-3 Break progression / PacketMine
+### P1-2 Break restart and per-tick progression
 
-- **Signal:** START+STOP destroy in one tick; ABORT/restart loops; skipped damage ticks; reach/LOS
-  violation.
-- **Clients:** Meteor `PacketMine`, `Nuker`, `InstantRebreak`; Wurst `NukerHack`, `FastBreakHack`;
-  LiquidBounce `InstantNukerMode`.
-- **Location:** `check/world/BreakSpeedLimiter.java` and its parts.
-- **Test:** replay of same-tick START/STOP and ABORT loops; assert flag; vanilla mining not flagged.
-- **Acceptance:** packet-mine/instant-break flagged; normal break timing preserved.
+- **Owners:** `breakspeedlimiter/RestartCheck.java`, `CompletionDurationCheck.java`.
+- **Action:** stamp `blockBreakTick` on ABORT; restore the per-tick damage progression loop that is
+  currently commented; keep the existing STOP-too-fast logic.
+- **Test:** ABORT→START, same-tick START/STOP, PacketMine loop; vanilla mining.
+- **Acceptance:** restart/progression cheats flagged; vanilla clean.
 
-### P1-4 AttackRaytrace closest-point reach
+### P1-3 One inventory churn/same-tick part
 
-- **Signal:** eye→server hitbox closest-point distance > vanilla reach; attack without a valid
-  rotation; KillAura default 4.5/5–6 range.
-- **Clients:** Meteor KillAura; Wurst Killaura; LiquidBounce KillAura.
-- **Location:** `check/combat/AttackRaytrace.java`, `check/world/interaction/`.
-- **Test:** vanilla 3.0, 4.5, and 6.0 reach cases; assert only > vanilla flags.
-- **Acceptance:** correct closest-point measurement; no false positive on 4.5 vanilla reach.
+- **Owner:** `check/other/InventoryClickAnalysis` (existing `RegrDelayAnalyzer` or one new part).
+- **Existing coverage:** `NotOpenCheck` owns silent-open; `AutoTotem` owns pickup→offhand;
+  `RegrDelayAnalyzer` owns close-time speed/regression but skips SWAP/QUICK_CRAFT.
+- **Action:** remove the SWAP/QUICK_CRAFT exclusion or add **one** part for same-tick pick/place
+  pairing, hotbar/armor/offhand churn, and auto-drop. Do not add a second silent-open check.
+- **Test:** same-tick pick/place, armor swap without open screen, normal chest looting; assert
+  separation.
+- **Acceptance:** churn flagged; normal looting clean.
 
-### P1-5 Slot churn / AutoSword / AutoTool
+### P1-4 Slot churn extension
 
-- **Signal:** ≥2 distinct held-item-slot changes in one tick; rapid alternating slot packets.
-- **Clients:** Meteor `AutoSword`, `AutoTool`; Wurst `AutoSwordHack`, `AutoToolHack`.
-- **Location:** `check/other/ProtocolScanner.java` (extend `SentSlotTwice`).
-- **Test:** synthetic slot-churn sequence; assert flag; normal scroll/swap not flagged.
-- **Acceptance:** churn detected; legitimate single swap clean.
+- **Owners:** `ProtocolScanner/SentSlotTwice` and `Heuristics/BlockingHeuristic`.
+- **Action:** extend `SentSlotTwice` to distinct-slot churn per tick (not only same-slot twice);
+  extend `BlockingHeuristic`'s held-item-operation count to 1.9+ combat instead of the stationary
+  gate.
+- **Test:** AutoSword/AutoTool alternation; normal scroll/swap.
+- **Acceptance:** churn flagged; normal clean.
 
-## P2 — later
+### P1-5 Reach config verification (no new check)
 
-### P2-1 Click entropy / triggerbot latency
+- **Owner:** `AttackRaytrace`.
+- **Action:** verify `applicable-thresholds.reach` and closest-point measurement against 26.2 item
+  reach. Meteor default KillAura range 4.5 may be at the vanilla boundary; adjust config/tests, do
+  not add a new reach check.
+- **Test:** 3.0/4.5/6.0 reach cases; closest-point vs center distance.
+- **Acceptance:** only > vanilla reach flags.
 
-- **Signal:** coefficient of variation below human floor over ≥60 clicks; crosshair-enter→attack
-  latency ≈0 ms; constant-period technique.
-- **Clients:** Meteor AutoClicker; Wurst Killaura/TriggerBot; LiquidBounce Clicker/HumanClickTiming.
-- **Location:** `check/combat/ClickPatterns.java`, `ClickSpeedLimiter.java`.
-- **Test:** log-normal human sample vs constant; triggerbot sequence; assert separation.
+## P2 — genuine gaps and cleanup
 
-### P2-2 Rotation quantization / aim context
+### P2-1 Teleport-rotation refusal (ProtocolScanner)
 
-- **Signal:** max Δyaw, absence of sub-0.1° quantization, target-switch correlation, inventory-open
-  rotations, 4-tick hold pattern.
-- **Clients:** all three rotation systems.
-- **Location:** `check/combat/Heuristics.java`; add features to Cloud samples.
-- **Test:** replay recorded rotations; compare human vs aura distributions; assert no false positive
-  on high-sensitivity humans.
+- **Gap:** `TeleportController.confirmTeleport` validates position but not rotation; NoRotate clients
+  revert server-set rotation. No part owns this.
+- **Action:** add one `ProtocolScanner` part that compares the confirmed rotation against the
+  server-set rotation and the client's prior rotation.
+- **Test:** normal teleport; NoRotate-style refusal; assert only refusal flags.
+- **Overlap guard:** this is a genuine gap; do not extend rotation-accuracy parts.
 
-### P2-3 Multi-account / swarm
+### P2-2 Triggerbot measurement
 
-- **Signal:** mirrored targets/actions, shared IP/session, synchronized attacks.
-- **Clients:** Meteor Swarm.
-- **Location:** Cloud feature pipeline; no new top-level check without maintainer approval.
-- **Test:** synthetic two-account sequence; require a Cloud-side experiment before enforcement.
+- **Owner:** `PreAttackHeuristic` / accuracy parts.
+- **Action:** measure crosshair-enter→attack latency; only extend `PreAttack` if a gap is proven.
+  Do not add a new triggerbot part before the measurement.
 
-### P2-4 Anti-anticheat protocol invariants
+### P2-3 Cloud multi-account
 
-- **Signal:** dropped move packets, teleport rotation refusal, slot desync, brand spoof.
-- **Clients:** Meteor PacketCanceller/NoRotate; Wurst packet cancel; LiquidBounce NoRotateSet/
-  NoSlotSet/SpooferClient.
-- **Location:** `check/other/ProtocolScanner.java`.
-- **Test:** synthetic drop/refusal sequences; assert protocol-state flags.
-- **Acceptance:** no false positive on normal lag/reconnect; do not ban on brand alone.
+- **Owner:** `Cloud` (feature pipeline), no new top-level check.
+- **Action:** experiment with Swarm-style mirrored targets/actions; require a Cloud-side evaluation
+  before enforcement.
 
-## Non-goals
+### P2-4 Dead-code cleanup
 
-- Wurst `ReachHack` and client-side `AntiKnockback` `lerpMotion` scaling are **not server-visible**.
-  Do not add checks for them.
-- Pure ESP/render modules are out of scope unless they change packets or combat behavior.
-- Do not name clients in detection logic; detect behavior, not brand.
+Finish or remove: `PacketPlayerActionToggle`, `AttackReduceIgnoreHeuristic`, `Civbreak` 1.14+ TODO,
+`PacketDelayAnalyzer`, `SkinBlinker` ≥1.20.2, `Timer` dead keys, `Constraint`, `RoundedRotation`.
+See matrix §4 for the exact files.
 
-## Server-specific inputs still needed
+## Verification for every item
 
-1. Wureta's exact SourbyCraft build and Minecraft version.
-2. Check thresholds/punishment policy and any checks intentionally disabled.
-3. Whether multi-account detection is in scope for the first iteration.
-4. Whether Wureta uses a custom client/mod policy that changes the expected packet surface.
+- `./gradlew test verifyJava8Bytecode verifyBundledJar` green.
+- Parity baseline unchanged unless the change intentionally adds/removes a part.
+- Movement/combat changes: a replayable `.ptr` recording and a unit test.
+- Scheduler-touching changes: Build 57 Aurora and Folia forced suites green.
+- Document the "before" behavior: which existing part already flagged the sample, and why the new
+  work does not duplicate it.
