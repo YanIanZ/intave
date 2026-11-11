@@ -45,10 +45,10 @@ Decision rules:
 
 | Layer | Signal | Status / confidence |
 | --- | --- | --- |
-| `rotation_adoption` | server rotation was adopted then reverted, or exact pre-teleport view was kept | VIOLATION 0.95 / 0.80 |
+| `rotation_adoption` | server rotation was adopted then reverted, or exact pre-teleport view was kept | VIOLATION 0.95 / SUSPICIOUS 0.80 |
 | `confirm_revert_sequence` | confirm packet carried the server rotation, next rotation packet reverted | VIOLATION 0.90 |
-| `combat_before_adoption` | attacks before the client adopted the server view | VIOLATION 0.80 (≥3), SUSPICIOUS 0.65 (≥1) |
-| `refusal_history` | repeated refusals within the 30 s window | VIOLATION 0.75 (≥3), SUSPICIOUS 0.60 (≥2) |
+| `combat_before_adoption` | attacks before the client adopted the server view | SUSPICIOUS 0.80 (≥3) / 0.65 (≥1) |
+| `refusal_history` | repeated refusals within the 30 s window | SUSPICIOUS 0.75 (≥3) / 0.60 (≥2) |
 
 The tracker still enforces the two-refusal/30 s baseline. A first weak signal is observation-only;
 an attack before adoption or a second refusal can corroborate it. This is the anti-bypass property:

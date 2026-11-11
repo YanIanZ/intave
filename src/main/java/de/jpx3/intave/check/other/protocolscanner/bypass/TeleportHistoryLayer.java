@@ -23,7 +23,7 @@ final class TeleportHistoryLayer implements AntiBypassLayer<TeleportBypassContex
       return AntiBypassResult.unknown(id(), "no refusal history");
     }
     if (context.refusalsInWindow() >= 3) {
-      return AntiBypassResult.violation(
+      return AntiBypassResult.suspicious(
         id(), 0.75D, "repeated teleport-view refusals in the window"
       );
     }

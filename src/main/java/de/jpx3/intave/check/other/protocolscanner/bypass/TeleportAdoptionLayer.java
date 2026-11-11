@@ -34,7 +34,7 @@ final class TeleportAdoptionLayer implements AntiBypassLayer<TeleportBypassConte
       return AntiBypassResult.clean(id(), "teleport did not demand a large turn");
     }
     if (context.clientDelta() <= MAX_CLIENT_DELTA) {
-      return AntiBypassResult.violation(
+      return AntiBypassResult.suspicious(
         id(), 0.80D, "client kept its pre-teleport view"
       );
     }

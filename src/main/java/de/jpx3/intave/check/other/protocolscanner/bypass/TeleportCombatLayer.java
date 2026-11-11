@@ -23,7 +23,7 @@ final class TeleportCombatLayer implements AntiBypassLayer<TeleportBypassContext
       return AntiBypassResult.unknown(id(), "no teleport combat context");
     }
     if (context.attacksBeforeAdoption() >= 3) {
-      return AntiBypassResult.violation(
+      return AntiBypassResult.suspicious(
         id(), 0.80D, "multiple attacks before adopting the server view"
       );
     }
