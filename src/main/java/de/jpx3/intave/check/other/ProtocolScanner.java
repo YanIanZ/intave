@@ -18,6 +18,7 @@ import de.jpx3.intave.check.other.protocolscanner.InvalidRelease;
 import de.jpx3.intave.check.other.protocolscanner.MoveTickLimit;
 import de.jpx3.intave.check.other.protocolscanner.SentSlotTwice;
 import de.jpx3.intave.check.other.protocolscanner.SkinBlinker;
+import de.jpx3.intave.check.other.protocolscanner.TeleportRotationRefusal;
 
 public final class ProtocolScanner extends Check {
   private final IntavePlugin plugin;
@@ -35,5 +36,6 @@ public final class ProtocolScanner extends Check {
     );
     appendPlayerCheckPart(SentSlotTwice.class);
     appendPlayerCheckPart(MoveTickLimit.class);
+    appendPlayerCheckPart(TeleportRotationRefusal.class);
   }
 }

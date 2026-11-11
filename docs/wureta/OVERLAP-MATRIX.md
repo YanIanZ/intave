@@ -46,7 +46,7 @@ Intave owner. New parts are justified only when no existing part can own the sig
 | Slot churn / AutoSword / AutoTool | `SentSlotTwice` + `BlockingHeuristic` | Extend to distinct-slot churn per tick; no new part | `SentSlotTwice` owns same-slot; `BlockingHeuristic` owns per-tick item ops |
 | 26.2 click timing (human/constant) | `ClickPatterns` | **Fix the `makeDetection` ≥1.13 gate**; reuse existing parts | All seven parts already exist; they are disabled on modern clients |
 | Triggerbot crosshair-enter→attack | `PreAttackHeuristic` / accuracy parts | Measure the existing pre-attack counters; extend only if a gap is proven | `PreAttack` already owns swing/attack-on-entity timing |
-| Teleport-rotation refusal / NoRotate | `ProtocolScanner` | Genuine gap: add **one** ProtocolScanner part | No current part validates server rotation-set confirmation |
+| Teleport-rotation refusal / NoRotate | `ProtocolScanner/TeleportRotationRefusal` | **Implemented** (one part; pure tracker/assessment helpers) | Genuine gap; no rotation-accuracy part validates server rotation-set confirmation |
 | Multi-account / Swarm | `Cloud` | Cloud-side experiment; no new top-level check | Cloud has no detection behavior yet |
 | Anti-AC packet canceller / NoSlotSet | `ProtocolScanner` | Add protocol invariants only after the teleport-rotation part | Same owner |
 
@@ -97,7 +97,9 @@ These are higher-value than new checks and avoid overlap:
 
 Only these have no existing owner:
 
-1. **Teleport-rotation refusal / server-state rejection** → one new `ProtocolScanner` part.
+1. **Teleport-rotation refusal / server-state rejection** → **implemented** as
+   `ProtocolScanner/TeleportRotationRefusal` (one part, no top-level check); pure state machine in
+   `TeleportRotationTracker`.
 2. **Same-tick inventory pairing / hotbar/armor/offhand churn** → one new part under
    `InventoryClickAnalysis` (or extend `RegrDelayAnalyzer` after removing its SWAP exclusion).
 3. **Auto-drop cadence** → same owner as (2), not a separate check.
@@ -119,5 +121,5 @@ Only these have no existing owner:
 7. **Extend `RestartCheck`/`CompletionDurationCheck`** for ABORT and per-tick progression.
 8. **Fix placement dead parts + flat-pitch `Speed` + `SmartSpeed.sneakVL`**.
 9. **One inventory churn/same-tick part**; `NotOpenCheck` stays the silent-open owner.
-10. **One `ProtocolScanner` teleport-rotation part**.
+10. **One `ProtocolScanner` teleport-rotation part** — done (`TeleportRotationRefusal`).
 11. **Cloud multi-account experiment** only after the above.

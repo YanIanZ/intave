@@ -147,14 +147,23 @@ behavior to an existing Intave owner and lists the "do not build" duplicates.
 
 ## P2 — genuine gaps and cleanup
 
-### P2-1 Teleport-rotation refusal (ProtocolScanner)
+### P2-1 Teleport-rotation refusal (ProtocolScanner) — IMPLEMENTED (unreleased)
 
-- **Gap:** `TeleportController.confirmTeleport` validates position but not rotation; NoRotate clients
-  revert server-set rotation. No part owns this.
-- **Action:** add one `ProtocolScanner` part that compares the confirmed rotation against the
-  server-set rotation and the client's prior rotation.
-- **Test:** normal teleport; NoRotate-style refusal; assert only refusal flags.
-- **Overlap guard:** this is a genuine gap; do not extend rotation-accuracy parts.
+- **Status:** implemented as `ProtocolScanner/TeleportRotationRefusal`; no new top-level check.
+- **Files:** `check/other/protocolscanner/TeleportRotationRefusal.java`,
+  `TeleportRotationTracker.java` (pure state machine), `TeleportRotationAssessment.java` (pure
+  comparison); registered in `ProtocolScanner.java`; config in `advanced.yml`
+  (`check.protocolscanner.teleport-rotation-*`); parity baseline now has **54 active parts**.
+- **Behavior:** arms on `TELEPORT_ACCEPT` before `TeleportController` consumes the queue, accepts
+  the server rotation, then watches the next rotation-bearing movement packets for a revert to the
+  pre-teleport view. Uses a 0.05° epsilon, 30° minimum server delta, 2 refusals within 30 s,
+  1 s cooldown, 20-packet/5 s timeout.
+- **Tests:** `TeleportRotationAssessmentTest` (rotation math) and
+  `TeleportRotationTrackerTest` (arm/adopt/refuse/flag/timeout/window/streak).
+- **Known limitations:** detection-only (does not cancel or teleport); relative-rotation teleports
+  are skipped; position-only packets carry no rotation; 26.3 uses the combined accept plus the
+  following movement packet; `isAllowed` arming depends on the normal transaction flow.
+- **Overlap guard:** genuine gap; does not extend or duplicate the rotation-accuracy parts.
 
 ### P2-2 Triggerbot measurement
 

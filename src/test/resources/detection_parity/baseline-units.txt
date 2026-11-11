@@ -49,6 +49,7 @@ ACTIVE|ProtocolScanner|InvalidRelease
 ACTIVE|ProtocolScanner|MoveTickLimit
 ACTIVE|ProtocolScanner|SentSlotTwice
 ACTIVE|ProtocolScanner|SkinBlinker
+ACTIVE|ProtocolScanner|TeleportRotationRefusal
 ACTIVE|Timer|MicroBlink
 ACTIVE|Timer|PlayerTime
 CHECK|AttackRaytrace

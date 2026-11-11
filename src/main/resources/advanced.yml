@@ -158,6 +158,14 @@ check:
     invokant: false
     check_sent_slot_twice_vl: 100
     packet-order-vl: 5
+    # Detection-only teleport rotation refusal. epsilon/min-delta are yaw+pitch degree sums.
+    teleport-rotation-vl: 10
+    teleport-rotation-refusals: 2
+    teleport-rotation-epsilon: 0.05
+    teleport-rotation-min-delta: 30.0
+    teleport-rotation-timeout: 20
+    teleport-rotation-cooldown: 1000
+    teleport-rotation-refusal-window: 30000
     thresholds:
       50: "intave internals sendnotify &c{player}&7/{trust-color}&7 is sending invalid packets"
       100:

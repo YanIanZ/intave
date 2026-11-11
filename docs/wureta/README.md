@@ -18,12 +18,14 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
 
 - Branch base: `feature/sourbyapi-parity` (`2c2142dd`), which includes:
   - SourbyAPI `AuroraScheduler` default with Folia fallback.
-  - Detection parity gate (12 checks / 53 active parts).
+  - Detection parity gate (12 checks / **54 active parts** after `TeleportRotationRefusal`).
   - Java 8 bytecode and bundled-JAR guards.
   - Build 57 Aurora and Folia forced test runs green.
-- No production detection code has been added on this branch yet. The first work item is the
-  overlap-aware P0 list in `DETECTION-BACKLOG.md`; it starts by fixing existing click-pattern gates
-  and the AttackRaytrace rotation snapshot rather than adding duplicate checks.
+- `ProtocolScanner/TeleportRotationRefusal` (P2-1) is implemented: detection-only teleport
+  rotation-refusal part plus pure `TeleportRotationTracker`/`TeleportRotationAssessment` helpers.
+- The remaining work is the overlap-aware P0 list in `DETECTION-BACKLOG.md`; it starts by fixing
+  existing click-pattern gates and the AttackRaytrace rotation snapshot rather than adding duplicate
+  checks.
 
 ## Guardrails
 
