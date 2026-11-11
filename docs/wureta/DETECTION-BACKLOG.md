@@ -162,7 +162,10 @@ behavior to an existing Intave owner and lists the "do not build" duplicates.
   sequence, combat before adoption, and refusal history. One weak signal stays observation-only;
   two corroborating layers or one high-confidence layer flag. See `ANTI-BYPASS-LAYERS.md`.
 - **Tests:** `TeleportRotationAssessmentTest`, `TeleportRotationTrackerTest`,
-  `AntiBypassEngineTest`, `TeleportBypassLayersTest`.
+  `AntiBypassEngineTest`, `TeleportBypassLayersTest`, and the in-server
+  `TeleportRotationRefusalTests` synthetic packet test.
+- **Telemetry:** `SUSPICIOUS` and coverage gaps go to `DEBUG_TELEPORT`; violations carry the
+  evidence summary and gaps.
 - **Known limitations:** detection-only (does not cancel or teleport); relative-rotation teleports
   are skipped; position-only packets carry no rotation; 26.3 uses the combined accept plus the
   following movement packet; `isAllowed` arming depends on the normal transaction flow.

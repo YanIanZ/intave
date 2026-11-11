@@ -101,8 +101,14 @@ reuse the same packet signal under two layer names: that is duplicate scoring, n
 - `TeleportBypassLayersTest`: adoption+revert, sequence, combat+history, single-signal suspicious,
   clean/observe.
 - `TeleportRotationAssessmentTest` and `TeleportRotationTrackerTest`: pure state.
+- `TeleportRotationRefusalTests` (in-server `IntegrationTests`): synthetic teleport accept, combat
+  action, server-view confirm and revert; asserts the layered decision flags.
 - Full unit suite, shaded/protocol distribution tests, bytecode/bundle guards.
 - Build 57 SourbyCraft Aurora + Folia forced suites must stay green.
+
+`SUSPICIOUS` decisions and coverage gaps are sent to players with the `DEBUG_TELEPORT` verbose
+channel; a violation includes the same evidence summary plus gaps in its details. This is the
+observation path until the live data justifies enforcement.
 
 ## 8. Rollout
 

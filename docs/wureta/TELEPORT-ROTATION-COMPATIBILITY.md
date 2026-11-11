@@ -90,9 +90,14 @@ check:
 ## 6. Verification evidence
 
 - `TeleportRotationAssessmentTest` (10 tests) and `TeleportRotationTrackerTest` (12 tests).
+- `TeleportRotationRefusalTests`: in-server synthetic packet test (accept, combat action, server-view
+  confirm, revert) asserting the layered decision.
+- `AntiBypassEngineTest` and `TeleportBypassLayersTest` for policy/layer aggregation.
 - Full unit suite, `testShadedJar`, `testProtocolResources`, `verifyJava8Bytecode`, `verifyBundledJar`.
 - Build 57 SourbyCraft: Aurora and Folia forced suites both
   `All integration tests completed successfully.`
 - Parity baseline: 12 checks / 54 active parts.
-- **Not yet covered:** a live 26.3 server, an in-server packet-level NoRotate test, and a real
-  Bedrock/inventory/camera teleport scenario.
+- Observation telemetry: `SUSPICIOUS` decisions and coverage gaps go to the `DEBUG_TELEPORT`
+  verbose channel; violations include the same evidence summary.
+- **Not yet covered:** a live 26.3 server, a real Bedrock/inventory/camera teleport scenario, and a
+  production false-positive sample.

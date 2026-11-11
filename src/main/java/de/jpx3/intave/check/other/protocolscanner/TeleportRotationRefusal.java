@@ -30,6 +30,7 @@ import de.jpx3.intave.share.PositionAndRotation;
 import de.jpx3.intave.share.PositionMoveRotation;
 import de.jpx3.intave.share.Rotation;
 import de.jpx3.intave.share.Teleport;
+import de.jpx3.intave.user.MessageChannel;
 import de.jpx3.intave.user.User;
 import de.jpx3.intave.user.meta.MovementMetadata;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -74,6 +75,7 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
   private int attacksBeforeAdoption;
   private int refusalsInWindow;
   private long lastRefusalMs;
+  private AntiBypassDecision lastDecision;
 
   public TeleportRotationRefusal(User user, ProtocolScanner parentCheck) {
     super(user, parentCheck);
@@ -227,7 +229,16 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
       refusalsInWindow
     );
     AntiBypassDecision decision = bypassEngine.evaluate(context);
+    this.lastDecision = decision;
     if (!decision.shouldFlag()) {
+      if (user.receives(MessageChannel.DEBUG_TELEPORT)) {
+        StringBuilder message = new StringBuilder("[TeleportLayers] ")
+          .append(decision.evidenceSummary());
+        if (!decision.coverageGaps().isEmpty()) {
+          message.append(" gaps=").append(decision.coverageGaps());
+        }
+        user.sendMessage(message.toString());
+      }
       return;
     }
     Violation violation = Violation.builderFor(ProtocolScanner.class)
@@ -236,10 +247,15 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
       .withDetails(
         "server delta " + tracker.lastServerDelta() + " degrees, client delta "
           + tracker.lastClientDelta() + " degrees; " + decision.evidenceSummary()
+          + (decision.coverageGaps().isEmpty() ? "" : "; gaps=" + decision.coverageGaps())
       )
       .withVL(vl)
       .build();
     Modules.violationProcessor().processViolation(violation);
+  }
+
+  AntiBypassDecision lastDecision() {
+    return lastDecision;
   }
 
   private void updateRefusalHistory() {

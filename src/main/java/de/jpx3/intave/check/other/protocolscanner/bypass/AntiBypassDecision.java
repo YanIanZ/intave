@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 public final class AntiBypassDecision {
-  enum Verdict {
+  public enum Verdict {
     CLEAN,
     OBSERVE,
     SUSPICIOUS,
@@ -38,7 +38,7 @@ public final class AntiBypassDecision {
     this.coverageGaps = Collections.unmodifiableList(new ArrayList<>(coverageGaps));
   }
 
-  Verdict verdict() {
+  public Verdict verdict() {
     return verdict;
   }
 
@@ -50,7 +50,7 @@ public final class AntiBypassDecision {
     return results;
   }
 
-  List<String> coverageGaps() {
+  public List<String> coverageGaps() {
     return coverageGaps;
   }
 

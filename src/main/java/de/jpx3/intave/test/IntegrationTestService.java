@@ -205,6 +205,7 @@ public final class IntegrationTestService implements EventProcessor {
       addTests(tests, EntitySizeTests.class);
       addTests(tests, FeedbackTests.class);
       addTests(tests, ReaderTests.class);
+      addTests(tests, de.jpx3.intave.check.other.protocolscanner.TeleportRotationRefusalTests.class);
       addTests(tests, FluidTests.class);
       addTests(tests, ReferenceExistenceTests.class);
 
