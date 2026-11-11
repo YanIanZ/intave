@@ -35,6 +35,9 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
   `TeleportRotationAssessment` helpers and layer tests cover the state.
 - `NetworkSync` + `WuretaProxy` provide optional Velocity/BungeeCord cross-server sync for storage,
   alerts, trust factors and sanctions. See `MULTISERVER.md`.
+- ProtocolLib **5.5.0-SNAPSHOT** is used for 26.2/SourbyCraft (Java 25); the 26.2 key-mapping
+  warning disappears with it. Java 17 backends (1.20.1) keep ProtocolLib 5.4.0 and 1.8.8 keeps
+  4.8.0; WuretaCore retains the Locate fallback for those older builds.
 - The remaining work is the overlap-aware P0 list in `DETECTION-BACKLOG.md`; it starts by fixing
   existing click-pattern gates and the AttackRaytrace rotation snapshot rather than adding duplicate
   checks.

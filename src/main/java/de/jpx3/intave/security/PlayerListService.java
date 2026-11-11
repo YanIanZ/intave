@@ -38,9 +38,9 @@ public final class PlayerListService implements BukkitEventSubscriber {
   private final List<String> bluelistKnowledge = new ArrayList<>();
   private final List<String> graylistKnowledge = new ArrayList<>();
   private final Set<InetAddress> blocked = ConcurrentHashMap.newKeySet();
-  private String kickMessage;
-  private boolean messageInChat;
-  private HashList blackList, grayList;
+  private volatile String kickMessage;
+  private volatile boolean messageInChat;
+  private volatile HashList blackList, grayList;
 
   public PlayerListService(IntavePlugin plugin) {
     this.plugin = plugin;

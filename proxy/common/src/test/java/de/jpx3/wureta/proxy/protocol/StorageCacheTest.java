@@ -50,6 +50,17 @@ final class StorageCacheTest {
   }
 
   @Test
+  void reportsFreshOnlyWithinMaxAge(@TempDir Path directory) {
+    UUID playerId = UUID.randomUUID();
+    StorageCache cache = new StorageCache(10, 1_000_000, 60_000, directory, 60_000);
+    long now = System.currentTimeMillis();
+    cache.put(playerId, new byte[]{1}, now);
+
+    assertArrayEquals(new byte[]{1}, cache.getFresh(playerId, now + 1_000, 5_000));
+    assertNull(cache.getFresh(playerId, now + 6_000, 5_000));
+  }
+
+  @Test
   void expiresDiskEntries(@TempDir Path directory) throws InterruptedException {
     UUID playerId = UUID.randomUUID();
     StorageCache cache = new StorageCache(10, 1_000_000, 60_000, directory, 1);

@@ -1,3 +1,7 @@
+> **Update (2026-11-11):** the 26.2 key-mapping gap described below is resolved by
+> ProtocolLib 5.5.0-SNAPSHOT. This document records the original 5.4.0 evidence; the Locate
+> fallback remains for servers that still run 5.4.0.
+>
 # SourbyCraft 26.2 Build 57 boot evidence
 
 - **Date:** 2026-11-11

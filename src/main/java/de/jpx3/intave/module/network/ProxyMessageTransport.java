@@ -70,6 +70,10 @@ public final class ProxyMessageTransport implements PluginMessageListener, Frame
       registered = true;
       return true;
     } catch (RuntimeException exception) {
+      try {
+        Bukkit.getMessenger().unregisterOutgoingPluginChannel(plugin, settings.channel());
+      } catch (RuntimeException ignored) {
+      }
       IntaveLogger.logger().error(
         "Unable to register cross-server channel " + settings.channel() + ": " + exception.getMessage()
       );

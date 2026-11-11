@@ -86,7 +86,7 @@ public final class ProxyConfig {
     }
     int maxCacheEntries = (int) parseLong(properties, "max-cache-entries", 5000L, 1L, 100_000L);
     long maxCacheBytes = parseLong(properties, "max-cache-bytes", 64L * 1024L * 1024L, 1L, 1024L * 1024L * 1024L);
-    long pendingTimeout = parseLong(properties, "pending-timeout-ms", 2500L, 100L, 30_000L);
+    long pendingTimeout = parseLong(properties, "pending-timeout-ms", 1500L, 100L, 30_000L);
     long replayTtl = parseLong(properties, "replay-ttl-seconds", 300L, 30L, 3600L);
     int maxMessages = (int) parseLong(properties, "max-messages-per-second", 500L, 10L, 100_000L);
     boolean debug = Boolean.parseBoolean(properties.getProperty("debug", "false").trim());
@@ -124,7 +124,7 @@ public final class ProxyConfig {
           "storage-directory=storage\n" +
           "max-cache-entries=5000\n" +
           "max-cache-bytes=67108864\n" +
-          "pending-timeout-ms=2500\n" +
+          "pending-timeout-ms=1500\n" +
           "replay-ttl-seconds=300\n" +
           "max-messages-per-second=500\n" +
           "debug=false\n";

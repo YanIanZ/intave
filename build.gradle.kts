@@ -90,6 +90,7 @@ repositories {
   maven("https://repo.opencollab.dev/maven-snapshots")
   maven("https://repo.opencollab.dev/maven-releases")
   maven("https://repo.codemc.io/repository/maven-releases/")
+  maven("https://repo.dmulloy2.net/repository/public/")
 }
 
 dependencies {
@@ -120,7 +121,7 @@ dependencies {
 
   // Test environment.
   testImplementation("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
-  testImplementation("net.dmulloy2:ProtocolLib:5.4.0")
+  testImplementation("net.dmulloy2:ProtocolLib:5.5.0-SNAPSHOT")
   testCompileOnly("org.jetbrains:annotations:23.1.0")
   testImplementation("io.netty:netty-all:4.2.15.Final")
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")

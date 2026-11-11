@@ -66,7 +66,7 @@ disk-ttl-seconds=604800
 storage-directory=storage
 max-cache-entries=5000
 max-cache-bytes=67108864
-pending-timeout-ms=2500
+pending-timeout-ms=1500
 replay-ttl-seconds=300
 max-messages-per-second=500
 debug=false
@@ -78,6 +78,8 @@ debug=false
 - `storage-directory` is relative to the proxy data folder. It holds the encrypted player storage
   blobs. Protect it like a database directory.
 - `disk-ttl-seconds` controls how long a logged-out player's storage is kept (default 7 days).
+- `pending-timeout-ms` should be lower than the backend `network.storage.request-timeout-ms`
+  (default 1500 vs 2500) so the proxy's stale-cache fallback arrives before the backend gives up.
 
 ### 2. Backends
 
@@ -217,6 +219,9 @@ magic "WTS1" | version | type | flags | requestId | playerId | timestamp
   wureta:sync`).
 - Build 57 SourbyCraft boots with network disabled and enabled; `/wureta diagnostics network`
   reports the active server id and channel; all integration tests pass.
+- Build 57 with ProtocolLib 5.5.0-SNAPSHOT-9404ce3 has no 26.2 key-mapping warning and passes the
+  full in-server self-test suite. The 1.20.1 suite continues on ProtocolLib 5.4.0 because the
+  Java 25 operator jar cannot load on Java 17.
 - Root unit tests, `verifyJava8Bytecode` and `verifyBundledJar` pass.
 - End-to-end on two Paper 1.20.1 backends behind BungeeCord 26.1 with two Mineflayer 1.20.1
   clients: both backends enabled storage sync; switching `SwitchBot` from lobby to survival

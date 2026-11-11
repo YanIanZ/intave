@@ -117,7 +117,7 @@ final class PlayerUser implements User {
   private CustomClientSupportConfig customClientConfig = CustomClientSupportConfig.createDefault();
   private String currentActionDisplay = "", overrideActionDisplay = "";
   private UUID actionTarget = null;
-  private TrustFactor trustFactor = TrustFactor.DARK_RED;
+  private volatile TrustFactor trustFactor = TrustFactor.DARK_RED;
   private boolean storageLoaded;
   private boolean disconnectQueued = false;
 

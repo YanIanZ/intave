@@ -61,12 +61,29 @@ public final class StorageCache {
       }
       remove(playerId);
     }
-    byte[] disk = readDisk(playerId, now);
+    Entry disk = readDisk(playerId, now);
     if (disk != null) {
-      putMemory(playerId, disk, now);
-      return disk;
+      putMemory(playerId, disk.payload, disk.storedAt);
+      return disk.payload;
     }
     return null;
+  }
+
+  /**
+   * Returns a cached payload only when it was stored within {@code maxAgeMillis}. Used by the
+   * proxy to avoid serving an old 20-minute autosave to a player who just switched servers;
+   * a stale payload is kept as a fallback while the live backend is asked for a fresh copy.
+   */
+  public synchronized byte[] getFresh(UUID playerId, long now, long maxAgeMillis) {
+    byte[] payload = get(playerId, now);
+    if (payload == null) {
+      return null;
+    }
+    Entry entry = entries.get(playerId);
+    if (entry == null || now - entry.storedAt > maxAgeMillis) {
+      return null;
+    }
+    return payload;
   }
 
   public synchronized void put(UUID playerId, byte[] payload, long now) {
@@ -113,7 +130,7 @@ public final class StorageCache {
     }
   }
 
-  private byte[] readDisk(UUID playerId, long now) {
+  private Entry readDisk(UUID playerId, long now) {
     if (directory == null) {
       return null;
     }
@@ -122,7 +139,8 @@ public final class StorageCache {
       if (!Files.isRegularFile(file)) {
         return null;
       }
-      if (now - Files.getLastModifiedTime(file).toMillis() > diskTtlMillis) {
+      long modified = Files.getLastModifiedTime(file).toMillis();
+      if (now - modified > diskTtlMillis) {
         Files.deleteIfExists(file);
         return null;
       }
@@ -131,7 +149,7 @@ public final class StorageCache {
         Files.deleteIfExists(file);
         return null;
       }
-      return payload;
+      return new Entry(payload, modified);
     } catch (IOException exception) {
       return null;
     }

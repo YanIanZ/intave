@@ -38,7 +38,10 @@ public final class HashList {
   }
 
   private String hashOf(String input) {
-    return bytesToHex(sha256Digest.digest(input.getBytes(StandardCharsets.UTF_8)));
+    // HashList is now mutated from the cross-server thread while players are hashed on join.
+    synchronized (sha256Digest) {
+      return bytesToHex(sha256Digest.digest(input.getBytes(StandardCharsets.UTF_8)));
+    }
   }
 
   private static String bytesToHex(byte[] hash) {

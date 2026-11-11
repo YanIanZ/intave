@@ -40,6 +40,9 @@ public final class PendingRequests {
     for (Pending existing : requests) {
       if (existing.requestId.equals(request.requestId)) {
         existing.deadline = request.deadline;
+        if (request.fallback != null) {
+          existing.fallback = request.fallback;
+        }
         return;
       }
     }
@@ -52,6 +55,24 @@ public final class PendingRequests {
   public synchronized List<Pending> remove(UUID playerId) {
     List<Pending> requests = pending.remove(playerId);
     return requests == null ? new ArrayList<>() : requests;
+  }
+
+  public synchronized boolean remove(UUID playerId, UUID requestId) {
+    List<Pending> requests = pending.get(playerId);
+    if (requests == null) {
+      return false;
+    }
+    Iterator<Pending> iterator = requests.iterator();
+    while (iterator.hasNext()) {
+      if (iterator.next().requestId.equals(requestId)) {
+        iterator.remove();
+        if (requests.isEmpty()) {
+          pending.remove(playerId);
+        }
+        return true;
+      }
+    }
+    return false;
   }
 
   public synchronized void expire(long now, Consumer<Pending> onExpired) {
@@ -84,13 +105,21 @@ public final class PendingRequests {
     final String server;
     final UUID requestId;
     final UUID playerId;
+    byte[] fallback;
     long deadline;
 
     public Pending(String server, UUID requestId, UUID playerId, long deadline) {
+      this(server, requestId, playerId, deadline, null);
+    }
+
+    public Pending(
+      String server, UUID requestId, UUID playerId, long deadline, byte[] fallback
+    ) {
       this.server = server;
       this.requestId = requestId;
       this.playerId = playerId;
       this.deadline = deadline;
+      this.fallback = fallback;
     }
 
     public String server() {

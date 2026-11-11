@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.UUID;
 
 public final class ProxyRouter {
+  private static final long FRESH_CACHE_MILLIS = 5000L;
+
   private final ProxyConfig config;
   private final ProxyPlatform platform;
   private final StorageCache cache;
@@ -115,9 +117,10 @@ public final class ProxyRouter {
     assembler.cleanup(now);
     replay.cleanup(now);
     rateLimiter.cleanup(now);
-    pending.expire(now, request ->
-      sendResponse(request.server, request.requestId, request.playerId, new byte[0], now)
-    );
+    pending.expire(now, request -> {
+      byte[] payload = request.fallback == null ? new byte[0] : request.fallback;
+      sendResponse(request.server, request.requestId, request.playerId, payload, now);
+    });
   }
 
   private void broadcast(String sourceServer, NetworkFrame frame, long now) {
@@ -149,19 +152,37 @@ public final class ProxyRouter {
   private void receiveRequest(String sourceServer, NetworkFrame frame, long now) {
     UUID playerId = frame.playerId();
     byte[] cached = cache.get(playerId, now);
-    if (cached != null) {
+    if (cached != null && cache.getFresh(playerId, now, FRESH_CACHE_MILLIS) != null) {
       sendResponse(sourceServer, frame.requestId(), playerId, cached, now);
-      debug("Answered storage request for " + playerId + " from cache");
+      debug("Answered storage request for " + playerId + " from fresh cache");
       return;
     }
+    // A stale autosave is only a fallback. Ask the live backend first so a server switch
+    // cannot silently discard the newest violation levels.
     pending.add(
       playerId,
       new PendingRequests.Pending(
-        sourceServer, frame.requestId(), playerId, now + config.pendingTimeoutMillis()
+        sourceServer,
+        frame.requestId(),
+        playerId,
+        now + config.pendingTimeoutMillis(),
+        cached
       )
     );
+    // A STORE can land between the first cache lookup and pending registration. Re-check before
+    // asking the backends so a fresh save is not replaced by our stale fallback at timeout.
+    byte[] arrivedFresh = cache.getFresh(playerId, now, FRESH_CACHE_MILLIS);
+    if (arrivedFresh != null) {
+      pending.remove(playerId, frame.requestId());
+      sendResponse(sourceServer, frame.requestId(), playerId, arrivedFresh, now);
+      debug("Answered storage request for " + playerId + " from cache arrived during request");
+      return;
+    }
     broadcastFrame(sourceServer, frame.withSource(sourceServer).withTimestamp(now));
-    debug("Forwarded storage request for " + playerId + " from " + sourceServer);
+    debug(
+      "Forwarded storage request for " + playerId + " from " + sourceServer +
+        (cached == null ? "" : " (stale cache fallback)")
+    );
   }
 
   private void receiveResponse(String sourceServer, NetworkFrame frame, long now) {

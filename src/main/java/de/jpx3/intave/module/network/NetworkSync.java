@@ -39,6 +39,7 @@ public final class NetworkSync extends Module {
   private Task tickTask;
   private boolean storageGatewayInstalled;
   private boolean active;
+  private long lastPublishWarning;
 
   @Override
   public void enable() {
@@ -177,7 +178,9 @@ public final class NetworkSync extends Module {
         break;
       case REQUEST:
       case RESPONSE:
-        storageGateway.handle(frame);
+        if (settings.syncStorage()) {
+          storageGateway.handle(frame);
+        }
         break;
       default:
         break;
@@ -185,32 +188,57 @@ public final class NetworkSync extends Module {
   }
 
   public void publishViolation(ViolationContext context) {
-    if (active) {
+    if (!active) {
+      return;
+    }
+    try {
       alertRelay.publish(context);
+    } catch (RuntimeException exception) {
+      warnPublish("violation alert", exception);
     }
   }
 
   public void publishTrustFactor(Player player, TrustFactor trustFactor, String reason) {
-    if (active) {
+    if (!active) {
+      return;
+    }
+    try {
       trustFactorRelay.publish(player, trustFactor, reason);
+    } catch (RuntimeException exception) {
+      warnPublish("trust factor update", exception);
     }
   }
 
   public void publishTrustFactorExact(Player player, TrustFactor trustFactor, String reason) {
-    if (active) {
+    if (!active) {
+      return;
+    }
+    try {
       trustFactorRelay.publish(player, trustFactor, reason, true);
+    } catch (RuntimeException exception) {
+      warnPublish("trust factor command", exception);
     }
   }
 
   public void publishBlock(String playerName, UUID playerId, String address, String reason) {
-    if (active) {
+    if (!active) {
+      return;
+    }
+    try {
       sanctionRelay.publishBlock(playerName, playerId, address, reason);
+    } catch (RuntimeException exception) {
+      warnPublish("block sanction", exception);
     }
   }
 
   public void publishKick(String playerName, UUID playerId, String reason) {
-    if (active) {
+    if (!active) {
+      return;
+    }
+    try {
       sanctionRelay.publishKick(playerName, playerId, reason);
+    } catch (RuntimeException exception) {
+      warnPublish("kick sanction", exception);
     }
   }
 
@@ -218,15 +246,30 @@ public final class NetworkSync extends Module {
     if (transport == null) {
       return;
     }
-    transport.send(new NetworkFrame(
-      type,
-      requestId,
-      playerId,
-      settings.serverId(),
-      "",
-      System.currentTimeMillis(),
-      payload
-    ));
+    try {
+      transport.send(new NetworkFrame(
+        type,
+        requestId,
+        playerId,
+        settings.serverId(),
+        "",
+        System.currentTimeMillis(),
+        payload
+      ));
+    } catch (RuntimeException exception) {
+      warnPublish(type.name().toLowerCase(java.util.Locale.ROOT) + " frame", exception);
+    }
+  }
+
+  private void warnPublish(String action, RuntimeException exception) {
+    long now = System.currentTimeMillis();
+    if (now - lastPublishWarning < 60_000L) {
+      return;
+    }
+    lastPublishWarning = now;
+    IntaveLogger.logger().warn(
+      "[network] Unable to publish " + action + ": " + exception.getMessage()
+    );
   }
 
   public boolean active() {
