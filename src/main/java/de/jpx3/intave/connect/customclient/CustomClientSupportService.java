@@ -35,9 +35,12 @@ public final class CustomClientSupportService implements EventProcessor {
   }
 
   public void setup() {
+    if (de.jpx3.intave.IntaveBuildConfig.BRAND_STEALTH) {
+      return;
+    }
     try {
-      Bukkit.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "intave:customclient");
-      Bukkit.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "minecraft:intave");
+      Bukkit.getServer().getMessenger().registerOutgoingPluginChannel(plugin, de.jpx3.intave.IntaveBuildConfig.BRAND_CHANNEL_NAMESPACE + ":customclient");
+      Bukkit.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "minecraft:" + de.jpx3.intave.IntaveBuildConfig.BRAND_CHANNEL_NAMESPACE);
     } catch (Exception exception) {
 //      IntaveLogger.logger().info("Failed to register output channel: " + exception.getClass().getSimpleName());
     }
@@ -51,7 +54,7 @@ public final class CustomClientSupportService implements EventProcessor {
   )
   public void receivePayloadPacket(Player player, PayloadInReader reader) {
     String tag = reader.tag();
-    if (!tag.equalsIgnoreCase("intave")) {
+    if (!tag.equalsIgnoreCase(de.jpx3.intave.IntaveBuildConfig.BRAND_CHANNEL_NAMESPACE)) {
       return;
     }
     ByteBuf bytes = reader.readBytes();
@@ -69,8 +72,8 @@ public final class CustomClientSupportService implements EventProcessor {
         JsonElement jsonElement = jsonParser.parse(messageContent);
         CustomClientSupportConfig customClientSupportConfig = CustomClientSupportConfig.createFrom(jsonElement);
         user.setCustomClientSupport(customClientSupportConfig);
-        sendCustomDataPacket(player, "clientconfig", "received", "minecraft", "intave");
-        sendCustomDataPacket(player, "clientconfig", "received", "intave", "customclient");
+        sendCustomDataPacket(player, "clientconfig", "received", "minecraft", de.jpx3.intave.IntaveBuildConfig.BRAND_CHANNEL_NAMESPACE);
+        sendCustomDataPacket(player, "clientconfig", "received", de.jpx3.intave.IntaveBuildConfig.BRAND_CHANNEL_NAMESPACE, "customclient");
       }
     } catch (RuntimeException exception) {
       exception.printStackTrace();

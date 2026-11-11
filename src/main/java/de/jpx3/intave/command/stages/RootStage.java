@@ -142,7 +142,7 @@ public final class RootStage extends CommandStage {
       if (!fullSpecifier.isEmpty() && !"ns".equals(fullSpecifier) && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
         message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
       }
-      TimingChatOutput.sendSelectableTiming(player, timing, message, "/intave root histogram ");
+      TimingChatOutput.sendSelectableTiming(player, timing, message, "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " root histogram ");
     });
   }
 
@@ -178,7 +178,7 @@ public final class RootStage extends CommandStage {
       if (!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
         message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
       }
-      TimingChatOutput.sendSelectableTiming(player, timing, message, "/intave root histogram ");
+      TimingChatOutput.sendSelectableTiming(player, timing, message, "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " root histogram ");
     });
   }
 
@@ -246,7 +246,7 @@ public final class RootStage extends CommandStage {
       if (!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
         message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
       }
-      TimingChatOutput.sendSelectableTiming(player, timing, message, "/intave root histogram ");
+      TimingChatOutput.sendSelectableTiming(player, timing, message, "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " root histogram ");
     });
   }
 
@@ -552,7 +552,7 @@ public final class RootStage extends CommandStage {
       }
     });
     user.sendMessage(ChatColor.RED + "Computing memory usage..");
-    user.sendMessage(ChatColor.YELLOW + "Intave plugin obj memtrace: " + humanReadableByteCount(MemoryWatchdog.memoryUsageOf(IntavePlugin.singletonInstance(), new HashSet<>())));
+    user.sendMessage(ChatColor.YELLOW + de.jpx3.intave.IntaveBuildConfig.BRAND_NAME + " plugin obj memtrace: " + humanReadableByteCount(MemoryWatchdog.memoryUsageOf(IntavePlugin.singletonInstance(), new HashSet<>())));
     MemoryWatchdog.memoryUsage(stringLongMapx -> {
       Map<String, Long> stringLongMap = sortHashMapByValues(stringLongMapx);
       for (Map.Entry<String, Long> stringLongEntry : stringLongMap.entrySet()) {

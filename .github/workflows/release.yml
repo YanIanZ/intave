@@ -73,8 +73,8 @@ jobs:
         if: github.event_name != 'release'
         uses: actions/upload-artifact@v7
         with:
-          name: Intave-${{ steps.vars.outputs.sha_short }}.jar
-          path: build/libs/Intave.jar
+          name: WuretaCore-${{ steps.vars.outputs.sha_short }}.jar
+          path: build/libs/WuretaCore.jar
           archive: false
           retention-days: 7
 
@@ -82,8 +82,8 @@ jobs:
         if: github.event_name != 'release'
         uses: actions/upload-artifact@v7
         with:
-          name: Intave-bundled-${{ steps.vars.outputs.sha_short }}.jar
-          path: build/libs/Intave-bundled.jar
+          name: WuretaCore-bundled-${{ steps.vars.outputs.sha_short }}.jar
+          path: build/libs/WuretaCore-bundled.jar
           archive: false
           retention-days: 7
 
@@ -95,9 +95,9 @@ jobs:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           gh release download --repo "$GITHUB_REPOSITORY" --dir build/libs \
-            --pattern Intave.jar --pattern Intave-bundled.jar -- "$RELEASE_TAG"
-          test -s build/libs/Intave.jar
-          test -s build/libs/Intave-bundled.jar
+            --pattern WuretaCore.jar --pattern WuretaCore-bundled.jar -- "$RELEASE_TAG"
+          test -s build/libs/WuretaCore.jar
+          test -s build/libs/WuretaCore-bundled.jar
 
       # 2. A release tag prepares a draft. Publishing it manually starts directory uploads.
       # Keep the moving development tags out of this path, including manual runs.
@@ -123,8 +123,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/libs/Intave.jar
-            build/libs/Intave-bundled.jar
+            build/libs/WuretaCore.jar
+            build/libs/WuretaCore-bundled.jar
           generate_release_notes: true
           draft: true
           prerelease: false
@@ -169,11 +169,11 @@ jobs:
           name: Nightly Build
           overwrite_files: true
           files: |
-            build/libs/Intave.jar
-            build/libs/Intave-bundled.jar
+            build/libs/WuretaCore.jar
+            build/libs/WuretaCore-bundled.jar
           body: |
             Latest development build from master.
-            Install one build: Intave.jar downloads and caches libraries; Intave-bundled.jar includes libraries and all supported classloader natives.
+            Install one build: WuretaCore.jar downloads and caches libraries; WuretaCore-bundled.jar includes libraries and all supported classloader natives.
             Commit: ${{ github.sha }}
             Build: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           prerelease: true
@@ -206,9 +206,9 @@ jobs:
           modrinth-featured: ${{ steps.modrinth.outputs.featured }}
           modrinth-unfeature-mode: none
           files: |
-            build/libs/Intave.jar
-            build/libs/Intave-bundled.jar
-          name: Intave ${{ steps.modrinth.outputs.version }}
+            build/libs/WuretaCore.jar
+            build/libs/WuretaCore-bundled.jar
+          name: WuretaCore ${{ steps.modrinth.outputs.version }}
           version: ${{ steps.modrinth.outputs.version }}
           version-type: ${{ steps.modrinth.outputs.version_type }}
           changelog: ${{ steps.modrinth.outputs.changelog }}

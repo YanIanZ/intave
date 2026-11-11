@@ -30,7 +30,7 @@ public final class IntaveThreadFactory implements ThreadFactory {
   }
 
   private String newThreadName() {
-    return "Intave";
+    return de.jpx3.intave.IntaveBuildConfig.BRAND_NAME;
   }
 
   private Runnable wrapTask(Runnable runnable) {

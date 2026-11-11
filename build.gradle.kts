@@ -46,7 +46,22 @@ val gitCommitHash by lazy {
   }.standardOutput.asText.get().trim()
 }
 
-val simpleName = "Intave"
+val brandName = providers.gradleProperty("brandName").getOrElse("Intave")
+val brandCommand = providers.gradleProperty("brandCommand").getOrElse("intave")
+val brandAliases = providers.gradleProperty("brandAliases").getOrElse("iac")
+  .split(",").map(String::trim).filter(String::isNotEmpty)
+val brandVersion = providers.gradleProperty("brandVersion").getOrElse("dev")
+val brandAuthors = providers.gradleProperty("brandAuthors").getOrElse("Intave")
+val brandDescription = providers.gradleProperty("brandDescription")
+  .getOrElse("Automated cheat detection and prevention")
+val brandPrefix = providers.gradleProperty("brandPrefix")
+  .getOrElse("&8[&c&lIntave&8]&7\\u0020")
+val brandStealth = providers.gradleProperty("brandStealth")
+  .map(String::toBoolean).getOrElse(false)
+val brandChannelNamespace = providers.gradleProperty("brandChannelNamespace")
+  .getOrElse("intave")
+
+val simpleName = brandName
 val githubToken = providers.environmentVariable("GITHUB_TOKEN")
   .orElse(providers.environmentVariable("GH_TOKEN"))
 val githubAuthors = providers.provider {
@@ -54,7 +69,7 @@ val githubAuthors = providers.provider {
 }
 group = "de.jpx3"
 version = "$gitTag-$gitCommitHash"
-description = "Automated cheat detection and prevention"
+description = brandDescription
 
 object IntaveTaskGroups {
   const val SERVER_RUNS = "Intave - Server Runs"
@@ -191,16 +206,16 @@ registerBenchmarkTask(
  * plugin.yml
  */
 bukkit {
-  name = simpleName
+  name = brandName
   foliaSupported = true
-  version = "${rootProject.version}"
-  description = "${rootProject.description}"
+  version = brandVersion
+  description = brandDescription
 
   main = "de.jpx3.intave.IntavePlugin"
   apiVersion = "1.13"
   softDepend = listOf("packetevents", "ProtocolLib", "ViaVersion")
 
-  commands { register("intave") { aliases = listOf("iac") } }
+  commands { register(brandCommand) { aliases = brandAliases } }
 
   defaultPermission = FALSE
 
@@ -252,9 +267,14 @@ bukkit {
 val bukkitPluginDescription = extensions.getByType<net.minecrell.pluginyml.bukkit.BukkitPluginDescription>()
 
 tasks.named("generateBukkitPluginDescription") {
-  inputs.property("githubAuthors", githubAuthors)
+  inputs.property("brandAuthors", brandAuthors)
+  inputs.property("brandStealth", brandStealth)
   doFirst {
-    bukkitPluginDescription.authors = githubAuthors.get()
+    bukkitPluginDescription.authors = if (brandStealth) {
+      listOf(brandAuthors)
+    } else {
+      githubAuthors.get()
+    }
   }
 }
 
@@ -390,7 +410,12 @@ buildConfig {
   buildConfigFieldSafe("boolean", "PRODUCTION", "false");
   buildConfigFieldSafe("boolean", "AUTHTEST", "false");
   buildConfigFieldSafe("boolean", "GOMME", "false")
-  buildConfigFieldSafe("String", "VERSION", "\"${rootProject.version}\"")
+  buildConfigFieldSafe("String", "VERSION", "\"${brandVersion}\"")
+  buildConfigFieldSafe("String", "BRAND_NAME", "\"${brandName}\"")
+  buildConfigFieldSafe("String", "BRAND_COMMAND", "\"${brandCommand}\"")
+  buildConfigFieldSafe("String", "BRAND_PREFIX", "\"${brandPrefix}\"")
+  buildConfigFieldSafe("String", "BRAND_CHANNEL_NAMESPACE", "\"${brandChannelNamespace}\"")
+  buildConfigFieldSafe("boolean", "BRAND_STEALTH", "${brandStealth}")
 }
 
 fun buildConfigFieldSafe(type: String, name: String, value: String) {

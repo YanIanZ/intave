@@ -43,7 +43,7 @@ public final class EntityIdFilter extends Filter {
       Plugin owningPlugin = null;
       for (MetadataValue metadata : player.getMetadata(RELOAD_METADATA_KEY)) {
         Map<Integer, Integer> translations = (Map<Integer, Integer>) metadata.value();
-        if (translations != null && metadata.getOwningPlugin().getName().equalsIgnoreCase("Intave")) {
+        if (translations != null && metadata.getOwningPlugin().getName().equalsIgnoreCase(de.jpx3.intave.IntaveBuildConfig.BRAND_NAME)) {
           UserRepository.userOf(player).meta().connection().insertIdTranslations(translations);
           owningPlugin = metadata.getOwningPlugin();
           break;

@@ -52,6 +52,9 @@ public final class MiscBukkitEvents extends Module {
     if (!isIntaveAdministrator) {
       return;
     }
+    if (de.jpx3.intave.IntaveBuildConfig.BRAND_STEALTH) {
+      return;
+    }
     String invalidConfigurationFile = plugin.invalidConfigurationFile();
     if (invalidConfigurationFile != null) {
       sendPrefixedMessage(ChatColor.RED + invalidConfigurationFile + " contains errors and is not loaded", player);

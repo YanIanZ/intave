@@ -18,7 +18,7 @@ final class Requirements {
   }
 
   public static Requirement intaveEnabled() {
-    return requiresPlugin("Intave");
+    return requiresPlugin(de.jpx3.intave.IntaveBuildConfig.BRAND_NAME);
   }
 
   public static Requirement requiresPlugin(String plugin) {

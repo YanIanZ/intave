@@ -145,7 +145,7 @@ public final class DiagnosticsStage extends CommandStage implements BukkitEventS
     String protocolLibVersion = ProtocolLibrary.getPlugin().getDescription().getVersion();
     sender.sendMessage(ChatColor.GRAY + "Spigot is " + ChatColor.WHITE + serverVersion);
     sender.sendMessage(ChatColor.GRAY + "ProtocolLib is " + ChatColor.WHITE + protocolLibVersion);
-    sender.sendMessage(ChatColor.GRAY + "Intave is " + ChatColor.WHITE + intaveVersion);
+    sender.sendMessage(ChatColor.GRAY + de.jpx3.intave.IntaveBuildConfig.BRAND_NAME + " is " + ChatColor.WHITE + intaveVersion);
     sender.sendMessage(
       ChatColor.GRAY + "Platform is " + ChatColor.WHITE + Tasks.platform()
         + " (" + de.jpx3.intave.platform.SourbyCraftBridge.buildNumber() + ")"
@@ -409,7 +409,7 @@ public final class DiagnosticsStage extends CommandStage implements BukkitEventS
       user.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Block Y movement cancellation disabled");
     } else {
       cancelBlockYPlayers.add(playerId);
-      user.sendMessage(IntavePlugin.prefix() + ChatColor.GREEN + "Block Y movement cancellation enabled. Run /intave diagnostics cancelblocky again or logout to disable");
+      user.sendMessage(IntavePlugin.prefix() + ChatColor.GREEN + "Block Y movement cancellation enabled. Run /" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " diagnostics cancelblocky again or logout to disable");
     }
   }
 
@@ -461,7 +461,7 @@ public final class DiagnosticsStage extends CommandStage implements BukkitEventS
       if (!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
         message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
       }
-      TimingChatOutput.sendSelectableTiming(player, timing, message, "/intave diagnostics histogram ");
+      TimingChatOutput.sendSelectableTiming(player, timing, message, "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " diagnostics histogram ");
     });
   }
 
@@ -857,7 +857,7 @@ public final class DiagnosticsStage extends CommandStage implements BukkitEventS
       printStream.println(" ");
       Thread.getAllStackTraces().forEach((thread, stackTraceElements) -> {
         String threadName = thread.getName();
-        if (threadName.contains("Netty") || threadName.contains("Intave") || threadName.contains("Server thread")) {
+        if (threadName.contains("Netty") || threadName.contains(de.jpx3.intave.IntaveBuildConfig.BRAND_NAME) || threadName.contains("Server thread")) {
           printStream.println("Thread " + threadName);
           Exception exception = new Exception();
           exception.setStackTrace(stackTraceElements);

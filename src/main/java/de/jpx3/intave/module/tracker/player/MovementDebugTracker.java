@@ -29,8 +29,13 @@ public final class MovementDebugTracker extends Module implements PluginMessageL
 
   @Override
   public void enable() {
+    if (!ENABLE_MOVEMENT_DEBUGGER_COLLECTOR) {
+      return;
+    }
     Messenger messenger = Bukkit.getMessenger();
-    messenger.registerIncomingPluginChannel(plugin, "intave:movdebug", this);
+    messenger.registerIncomingPluginChannel(
+      plugin, de.jpx3.intave.IntaveBuildConfig.BRAND_CHANNEL_NAMESPACE + ":movdebug", this
+    );
   }
 
   @Override
@@ -39,7 +44,7 @@ public final class MovementDebugTracker extends Module implements PluginMessageL
       return;
     }
     User user = UserRepository.userOf(player);
-    if (s.equals("intave:movdebug")) {
+    if (s.equals(de.jpx3.intave.IntaveBuildConfig.BRAND_CHANNEL_NAMESPACE + ":movdebug")) {
       Map<String, Double> movementDebugValues = user.meta().movement().clientMovementDebugValues;
       ByteBuf byteBuf = Unpooled.wrappedBuffer(bytes);
       int length = byteBuf.readInt();

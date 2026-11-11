@@ -73,7 +73,7 @@ public final class PerformanceStage extends CommandStage {
       if (!fullSpecifier.isEmpty() && !"ns".equals(fullSpecifier) && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
         message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
       }
-      TimingChatOutput.sendSelectableTiming(player, timing, message, "/intave performance histogram ");
+      TimingChatOutput.sendSelectableTiming(player, timing, message, "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " performance histogram ");
     });
   }
 
@@ -108,7 +108,7 @@ public final class PerformanceStage extends CommandStage {
       if (!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
         message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
       }
-      TimingChatOutput.sendSelectableTiming(player, timing, message, "/intave performance histogram ");
+      TimingChatOutput.sendSelectableTiming(player, timing, message, "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " performance histogram ");
     });
 
   }
@@ -144,7 +144,7 @@ public final class PerformanceStage extends CommandStage {
       if (!fullSpecifier.isEmpty() && !timing.name().toLowerCase(Locale.ROOT).contains(fullSpecifier)) {
         message = IntavePlugin.defaultColor() + ChatColor.stripColor(message);
       }
-      TimingChatOutput.sendSelectableTiming(player, timing, message, "/intave performance histogram ");
+      TimingChatOutput.sendSelectableTiming(player, timing, message, "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " performance histogram ");
     });
 
   }

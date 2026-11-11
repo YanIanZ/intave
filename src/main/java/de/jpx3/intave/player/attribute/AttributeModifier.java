@@ -196,7 +196,7 @@ public final class AttributeModifier {
 				throw new IllegalStateException("Key, name, and operation must be set");
 			}
 			if (key == null) {
-				key = new MinecraftKey("intave", "custom_modifier");
+				key = new MinecraftKey(de.jpx3.intave.IntaveBuildConfig.BRAND_CHANNEL_NAMESPACE, "custom_modifier");
 			}
 			return new AttributeModifier(key, uuid, name, operation, amount);
 		}

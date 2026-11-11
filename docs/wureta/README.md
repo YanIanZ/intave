@@ -11,6 +11,8 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
   work to avoid, dead-code weaknesses, and genuine gaps.
 - [`ANTI-BYPASS-LAYERS.md`](ANTI-BYPASS-LAYERS.md) — layered detection model: independent layers,
   confidence policy, coverage gaps, and the teleport layers.
+- [`BRAND-STEALTH.md`](BRAND-STEALTH.md) — `WuretaCore` brand profile, hidden client-visible
+  markers, and the limits of stealth.
 - [`DETECTION-BACKLOG.md`](DETECTION-BACKLOG.md) — non-overlapping P0/P1/P2 work with files, signals,
   tests, and acceptance criteria.
 - [`REA.md`](REA.md) — how to complete artifact-level REA/JEB analysis when the JEB provider is
@@ -18,6 +20,8 @@ This branch is the Wureta Network workspace on top of the SourbyAPI integration
 
 ## Current state
 
+- Distribution brand: **`WuretaCore`** (see `BRAND-STEALTH.md`); stealth mode is enabled in
+  `gradle.properties`.
 - Branch base: `feature/sourbyapi-parity` (`2c2142dd`), which includes:
   - SourbyAPI `AuroraScheduler` default with Folia fallback.
   - Detection parity gate (12 checks / **54 active parts** after `TeleportRotationRefusal`).

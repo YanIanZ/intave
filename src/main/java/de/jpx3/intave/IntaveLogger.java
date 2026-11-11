@@ -41,7 +41,7 @@ public final class IntaveLogger extends PluginLogger {
   public static FileLoggingState FILE_OUTPUT = UNRESOLVED;
   public static boolean DISABLE_COLOR_OUTPUT = JavaVersion.current() > 8;
 
-  private static final String LOG_PATH = "plugins" + File.separator + "Intave" + File.separator + "logs";
+  private static final String LOG_PATH = "plugins" + File.separator + de.jpx3.intave.IntaveBuildConfig.BRAND_NAME + File.separator + "logs";
   private final IntavePlugin plugin;
   private final List<PrintStream> outputStreams = new CopyOnWriteArrayList<>();
   private static IntaveLogger singletonInstance;

@@ -59,8 +59,10 @@ public final class CommandFilter extends Filter {
     }
 
     boolean permitted = BukkitPermissionCheck.permissionCheck(player, "intave.command");
-    if ((trimmedMessage.startsWith("/iac") || trimmedMessage.startsWith("/intave")) && !permitted) {
-      event.getPacket().getStrings().writeSafely(0, "/intavecommandforward");
+    if (!permitted && isManagedCommand(trimmedMessage)) {
+      event.getPacket().getStrings().writeSafely(
+        0, "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + "commandforward"
+      );
     }
   }
 
@@ -103,11 +105,21 @@ public final class CommandFilter extends Filter {
     String[] stuff = packet.getStringArrays().readSafely(0);
     if (stuff != null) {
       List<String> newTabCompletions = Lists.newArrayList();
-      Arrays.stream(stuff).filter(string -> !string.contains("/intave") && !string.contains("/iac")).forEach(newTabCompletions::add);
+      Arrays.stream(stuff)
+        .filter(string -> !isManagedCommand(string.toLowerCase()))
+        .forEach(newTabCompletions::add);
       if (newTabCompletions.size() != stuff.length) {
         packet.getStringArrays().writeSafely(0, newTabCompletions.toArray(new String[0]));
       }
     }
+  }
+
+  private static boolean isManagedCommand(String message) {
+    String normalized = message.startsWith("/") ? message.substring(1) : message;
+    return normalized.startsWith(de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND)
+      || normalized.startsWith("intave")
+      || normalized.startsWith("iac")
+      || normalized.startsWith("wcore");
   }
 
   @Override

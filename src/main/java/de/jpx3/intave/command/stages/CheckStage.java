@@ -32,7 +32,7 @@ public final class CheckStage extends CommandStage {
       return;
     }
     sender.sendMessage(IntavePlugin.prefix() + check.name() + " is now " + ChatColor.RED + "disabled");
-    sender.sendMessage(IntavePlugin.prefix() + ChatColor.YELLOW + "Warning: This deactivation is not permanent and will be reset when Intave restarts.");
+    sender.sendMessage(IntavePlugin.prefix() + ChatColor.YELLOW + "Warning: This deactivation is not permanent and will be reset when " + de.jpx3.intave.IntaveBuildConfig.BRAND_NAME + " restarts.");
   }
 
   @SubCommand(

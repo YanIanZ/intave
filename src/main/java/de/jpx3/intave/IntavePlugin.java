@@ -106,7 +106,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public final class IntavePlugin extends JavaPlugin {
   private static IntavePlugin singletonInstance;
   private static String version = "UNKNOWN";
-  private static String prefix = ChatColor.translateAlternateColorCodes('&', "&8[&c&lIntave&8]&7 ");
+  private static String prefix = ChatColor.translateAlternateColorCodes('&', IntaveBuildConfig.BRAND_PREFIX);
   private static String defaultColor = ChatColor.getLastColors(prefix);
   private static boolean offlineMode = false, successfullyBooted = false;
 
@@ -334,7 +334,7 @@ public final class IntavePlugin extends JavaPlugin {
       integrationTestService = new IntegrationTestService();
       integrationTestService.setup();
 
-      getCommand("intave").setExecutor(new CommandForwarder());
+      getCommand(IntaveBuildConfig.BRAND_COMMAND).setExecutor(new CommandForwarder());
 
       if (IntaveControl.DISABLE_BLOCK_CACHING_ENTIRELY) {
         logger().info("This version does not cache block-accesses");
@@ -398,7 +398,7 @@ public final class IntavePlugin extends JavaPlugin {
     }
 
     if (IntaveControl.USE_DEBUG_LOCATE_RESOURCE) {
-      logger.info(ChatColor.YELLOW + "This version will use the Intave/locate file for class mappings");
+      logger.info(ChatColor.YELLOW + "This version will use the " + IntaveBuildConfig.BRAND_NAME + "/locate file for class mappings");
     }
 
     if (IntaveControl.LATENCY_PING_AS_XP_LEVEL) {
@@ -423,10 +423,12 @@ public final class IntavePlugin extends JavaPlugin {
     }
 
     Modules.linker().packetEvents().refreshLinkages();
-    displayVersionInformation();
+    if (!IntaveBuildConfig.BRAND_STEALTH) {
+      displayVersionInformation();
+    }
     successfullyBooted = true;
     randomExitMessages = Resources.localServiceCacheResource("exitmessages", "exitmessages", TimeUnit.DAYS.toMillis(7)).readLines();
-    logger.info("Intave booted successfully");
+    logger.info(IntaveBuildConfig.BRAND_NAME + " booted successfully");
 
     Synchronizer.synchronize(() -> {
       // stage 11
@@ -439,12 +441,12 @@ public final class IntavePlugin extends JavaPlugin {
   public void createDataFolder() {
     File dataFolder = dataFolder();
     if (!(dataFolder.exists() || dataFolder.mkdirs())) {
-      logger.error("Failed to create Intave folder " + dataFolder.getAbsolutePath());
+      logger.error("Failed to create " + IntaveBuildConfig.BRAND_NAME + " folder " + dataFolder.getAbsolutePath());
     }
   }
 
   public File dataFolder() {
-    return new File(getServer().getUpdateFolderFile().getParentFile(), "Intave");
+    return new File(getServer().getUpdateFolderFile().getParentFile(), IntaveBuildConfig.BRAND_NAME);
   }
 
   public void redirectPluginLogger() {
@@ -453,16 +455,16 @@ public final class IntavePlugin extends JavaPlugin {
       loggerField.setAccessible(true);
       loggerField.set(this, logger());
     } catch (Exception exception) {
-      logger.error("[Intave] Failed to inject logger to bukkit");
+      logger.error("[" + IntaveBuildConfig.BRAND_NAME + "] Failed to inject logger to bukkit");
     }
   }
 
   public void checkClassLoaderAvailability() {
     if (de.jpx3.classloader.ClassLoader.usesNativeAccess() && !de.jpx3.classloader.ClassLoader.loaded()) {
       try {
-        de.jpx3.classloader.ClassLoader.setupEnvironment(Files.createTempDirectory("intave-debug").toFile());
+        de.jpx3.classloader.ClassLoader.setupEnvironment(Files.createTempDirectory(IntaveBuildConfig.BRAND_COMMAND + "-debug").toFile());
       } catch (IOException exception) {
-        logger.error("[Intave] Failed to create temporary directory for classloader");
+        logger.error("[" + IntaveBuildConfig.BRAND_NAME + "] Failed to create temporary directory for classloader");
         exception.printStackTrace();
       }
     }
@@ -614,8 +616,8 @@ public final class IntavePlugin extends JavaPlugin {
   }
 
   public void bootFailure(String reason) {
-    getCommand("intave").setExecutor((commandSender, command, s, strings) -> {
-      commandSender.sendMessage(prefix() + ChatColor.RED + "Intave couldn't boot properly: " + reason);
+    getCommand(IntaveBuildConfig.BRAND_COMMAND).setExecutor((commandSender, command, s, strings) -> {
+      commandSender.sendMessage(prefix() + ChatColor.RED + IntaveBuildConfig.BRAND_NAME + " couldn't boot properly: " + reason);
       return false;
     });
   }
@@ -630,7 +632,7 @@ public final class IntavePlugin extends JavaPlugin {
     if (!shutdownStarted.compareAndSet(false, true)) {
       return;
     }
-    logger.info("Stopping Intave");
+    logger.info("Stopping " + IntaveBuildConfig.BRAND_NAME);
     try {
       configService.shutdown();
     } catch (Exception ignored) {
@@ -641,7 +643,7 @@ public final class IntavePlugin extends JavaPlugin {
     if (successfullyBooted) {
       logger.info(randomExitMessage());
     }
-    logger.info("Intave offline");
+    logger.info(IntaveBuildConfig.BRAND_NAME + " offline");
     logger.shutdown();
   }
 

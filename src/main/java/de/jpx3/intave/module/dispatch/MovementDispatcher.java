@@ -426,7 +426,7 @@ public final class MovementDispatcher extends Module {
     movement.awaitClickMovementSkip = false;
 
     if (user.receives(MessageChannel.DEBUG_POSITION)) {
-      ActionBar.sendActionBar(player, "intave:" + formatDouble(movement.positionY, 2) + " server:" + formatDouble(player.getLocation().getY(), 2));
+      ActionBar.sendActionBar(player, de.jpx3.intave.IntaveBuildConfig.BRAND_CHANNEL_NAMESPACE + ":" + formatDouble(movement.positionY, 2) + " server:" + formatDouble(player.getLocation().getY(), 2));
     }
 
     connectionData.receiveMovement();

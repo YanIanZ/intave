@@ -61,7 +61,7 @@ public final class BaseStage extends CommandStage {
   private static BaseStage singletonInstance;
 
   private BaseStage() {
-    super(null, "/intave");
+    super(null, "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND);
   }
 /*
   @SubCommand(
@@ -133,7 +133,7 @@ public final class BaseStage extends CommandStage {
         return;
       }
     } /*else if (selectedPlayers == null && !IntavePlugin.singletonInstance().sibyl().isAuthenticated(player)) {
-      player.sendMessage(IntavePlugin.prefix() + "/intave verbose <player...>");
+      player.sendMessage(IntavePlugin.prefix() + "/" + de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " verbose <player...>");
       return;
     }*/
 
@@ -329,7 +329,7 @@ public final class BaseStage extends CommandStage {
     String protocolLibVersion = ProtocolLibrary.getPlugin().getDescription().getVersion();
     sender.sendMessage(ChatColor.GRAY + "Spigot is " + ChatColor.WHITE + serverVersion);
     sender.sendMessage(ChatColor.GRAY + "ProtocolLib is " + ChatColor.WHITE + protocolLibVersion);
-    sender.sendMessage(ChatColor.GRAY + "Intave is " + ChatColor.WHITE + intaveVersion);
+    sender.sendMessage(ChatColor.GRAY + de.jpx3.intave.IntaveBuildConfig.BRAND_NAME + " is " + ChatColor.WHITE + intaveVersion);
 
     TextComponent message = new TextComponent("[Copy report message to chat]");
     message.setColor(net.md_5.bungee.api.ChatColor.GRAY);
@@ -705,7 +705,7 @@ public final class BaseStage extends CommandStage {
 
     String prefix = IntavePlugin.prefix();
 		String[] messages = {
-      prefix + "Running Intave " + version,
+      prefix + "Running " + de.jpx3.intave.IntaveBuildConfig.BRAND_NAME + " " + version,
       prefix + "Serving as automated cheat-removal and defense tool",
       prefix + "Visit " + ChatColor.UNDERLINE + "intave.de" + IntavePlugin.defaultColor() + " for more information",
 		};
