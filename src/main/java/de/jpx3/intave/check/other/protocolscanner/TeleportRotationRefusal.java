@@ -11,6 +11,7 @@
 
 package de.jpx3.intave.check.other.protocolscanner;
 
+import de.jpx3.intave.access.player.trust.TrustFactor;
 import de.jpx3.intave.check.PlayerCheckPart;
 import de.jpx3.intave.check.other.ProtocolScanner;
 import de.jpx3.intave.module.Modules;
@@ -74,6 +75,10 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
       return;
     }
     User user = owningUser();
+    if (shouldIgnore(user)) {
+      tracker.reset();
+      return;
+    }
     arm(user, reader.teleportId());
     if (!tracker.armed() || !user.meta().protocol().teleportAcceptIncludesPositionAndRotation()) {
       return;
@@ -94,8 +99,7 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
       return;
     }
     User user = owningUser();
-    MovementMetadata movement = user.meta().movement();
-    if (movement.isInVehicle() || movement.inRespawnScreen) {
+    if (shouldIgnore(user)) {
       tracker.reset();
       return;
     }
@@ -144,6 +148,22 @@ public final class TeleportRotationRefusal extends PlayerCheckPart<ProtocolScann
     if (!armed) {
       tracker.clear();
     }
+  }
+
+  private boolean shouldIgnore(User user) {
+    if (user.justJoined() || user.trustFactor().atLeast(TrustFactor.BYPASS)) {
+      return true;
+    }
+    MovementMetadata movement = user.meta().movement();
+    if (movement.isInVehicle() || movement.inRespawnScreen) {
+      return true;
+    }
+    // Spectators and camera entities do not control the player's server rotation.
+    if (user.meta().abilities().ignoringMovementPackets()) {
+      return true;
+    }
+    // Vanilla does not rotate the camera while a container screen is open.
+    return user.meta().inventory().inventoryOpen();
   }
 
   private void observe(User user, float sentYaw, float sentPitch) {
