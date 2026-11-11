@@ -594,6 +594,49 @@ public final class BaseStage extends CommandStage {
 //  }
 
   @SubCommand(
+    selectors = {"settrust", "trustfactor"},
+    usage = "<trustfactor> [<target>]",
+    description = "Set a player's trust factor",
+    permission = "intave.command"
+  )
+  public void setTrustFactor(User user, TrustFactor trustFactor, @Optional Player target) {
+    Player targetPlayer = target == null ? user.player() : target;
+    if (targetPlayer == null) {
+      user.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Usage: /" +
+        de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " settrust <trustfactor> <player>");
+      return;
+    }
+    User targetUser = UserRepository.userOf(targetPlayer);
+    targetUser.setTrustFactor(trustFactor);
+    de.jpx3.intave.module.network.NetworkSync network = de.jpx3.intave.module.Modules.networkOrNull();
+    if (network != null) {
+      network.publishTrustFactorExact(targetPlayer, trustFactor, "command");
+    }
+    user.sendMessage(IntavePlugin.prefix() + ChatColor.GRAY + "Applied " +
+      trustFactor.chatColor() + trustFactor.name() + ChatColor.GRAY + " trustfactor to " +
+      ChatColor.RED + targetPlayer.getName());
+  }
+
+  @SubCommand(
+    selectors = "trust",
+    usage = "[<target>]",
+    description = "Show a player's trust factor",
+    permission = "intave.command"
+  )
+  public void trust(User user, @Optional Player target) {
+    Player targetPlayer = target == null ? user.player() : target;
+    if (targetPlayer == null) {
+      user.sendMessage(IntavePlugin.prefix() + ChatColor.RED + "Usage: /" +
+        de.jpx3.intave.IntaveBuildConfig.BRAND_COMMAND + " trust <player>");
+      return;
+    }
+    TrustFactor trustFactor = UserRepository.userOf(targetPlayer).trustFactor();
+    user.sendMessage(IntavePlugin.prefix() + ChatColor.RED + targetPlayer.getName() +
+      ChatColor.GRAY + " has a " + trustFactor.chatColor() + trustFactor.name() +
+      ChatColor.GRAY + " trustfactor");
+  }
+
+  @SubCommand(
     selectors = "cloud",
     usage = "",
     description = "Access cloud related features",

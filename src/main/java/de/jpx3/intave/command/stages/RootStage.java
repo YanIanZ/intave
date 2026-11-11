@@ -364,7 +364,7 @@ public final class RootStage extends CommandStage {
     selectors = "settrust",
     usage = "<trustfactor> [<target>]",
     description = "",
-    permission = "intave.command"
+    permission = "sibyl"
   )
   public void setTrustFactor(User user, TrustFactor trustFactor, @Optional Player target) {
     if (target == null) {
@@ -382,7 +382,7 @@ public final class RootStage extends CommandStage {
     selectors = "trust",
     usage = "[<target>]",
     description = "",
-    permission = "intave.command"
+    permission = "sibyl"
   )
   public void lookupTrust(User user, @Optional Player target) {
     if (target == null) {

@@ -223,10 +223,12 @@ magic "WTS1" | version | type | flags | requestId | playerId | timestamp
   produced `Forwarded storage request ... from survival` and
   `Cached storage ... from lobby (112 bytes, 1 pending)` in the proxy log, the proxy wrote the
   player UUID `.bin` file to disk, and the client respawned on survival.
+- On the same setup, `/wureta settrust GREEN TrustBot` applied the factor locally and the proxy
+  logged `Broadcast TRUST from lobby`, confirming the staff-override publish path.
 - CI `Self-tests` is green on the Wureta branch for all Paper versions.
 
-Live alert, trust and sanction delivery across two backends with real players is still worth
-repeating on staging before production; the payload codecs and relays are covered by unit tests.
+Live alert and sanction delivery across two backends with real players is still worth repeating on
+staging before production; the payload codecs and relays are covered by unit tests.
 
 ## Troubleshooting
 
