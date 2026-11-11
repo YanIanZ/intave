@@ -15,6 +15,7 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.access.player.trust.TrustFactor;
+import de.jpx3.intave.adapter.MinecraftVersions;
 import de.jpx3.intave.check.other.ProtocolScanner;
 import de.jpx3.intave.packet.Relative;
 import de.jpx3.intave.packet.reader.PacketReaders;
@@ -45,6 +46,9 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
 
   @Test(testCode = "teleport-rotation-layered-refusal", severity = Severity.ERROR)
   public void testLayeredRefusalProducesViolation() throws ReflectiveOperationException {
+    if (unsupportedVersion()) {
+      return;
+    }
     Fixture fixture = fixture(776, TrustFactor.GREEN, false);
     try {
       fixture.accept();
@@ -60,6 +64,9 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
 
   @Test(testCode = "teleport-rotation-normal-adoption", severity = Severity.ERROR)
   public void testNormalAdoptionHasNoDecision() throws ReflectiveOperationException {
+    if (unsupportedVersion()) {
+      return;
+    }
     Fixture fixture = fixture(776, TrustFactor.GREEN, false);
     try {
       fixture.accept();
@@ -72,6 +79,9 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
 
   @Test(testCode = "teleport-rotation-bypass-ignored", severity = Severity.ERROR)
   public void testBypassTrustFactorIsIgnored() throws ReflectiveOperationException {
+    if (unsupportedVersion()) {
+      return;
+    }
     Fixture fixture = fixture(776, TrustFactor.BYPASS, false);
     try {
       fixture.accept();
@@ -86,6 +96,9 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
 
   @Test(testCode = "teleport-rotation-inventory-ignored", severity = Severity.ERROR)
   public void testInventoryOpenIsIgnored() throws ReflectiveOperationException {
+    if (unsupportedVersion()) {
+      return;
+    }
     Fixture fixture = fixture(776, TrustFactor.GREEN, false);
     try {
       fixture.user.meta().inventory().updateInventoryOpenState(true);
@@ -101,6 +114,9 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
 
   @Test(testCode = "teleport-rotation-camera-ignored", severity = Severity.ERROR)
   public void testCameraEntityIsIgnored() throws ReflectiveOperationException {
+    if (unsupportedVersion()) {
+      return;
+    }
     Fixture fixture = fixture(776, TrustFactor.GREEN, false);
     try {
       fixture.user.meta().abilities().hasViewEntity = true;
@@ -116,6 +132,9 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
 
   @Test(testCode = "teleport-rotation-just-joined-ignored", severity = Severity.ERROR)
   public void testJustJoinedIsIgnored() throws ReflectiveOperationException {
+    if (unsupportedVersion()) {
+      return;
+    }
     Fixture fixture = fixture(776, TrustFactor.GREEN, true);
     try {
       fixture.accept();
@@ -130,6 +149,9 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
 
   @Test(testCode = "teleport-rotation-position-only", severity = Severity.ERROR)
   public void testPositionOnlyTeleportDoesNotFlag() throws ReflectiveOperationException {
+    if (unsupportedVersion()) {
+      return;
+    }
     Fixture fixture = fixture(776, TrustFactor.GREEN, false);
     try {
       fixture.accept();
@@ -138,6 +160,10 @@ public final class TeleportRotationRefusalTests extends IntegrationTests {
     } finally {
       fixture.close();
     }
+  }
+
+  private static boolean unsupportedVersion() {
+    return MinecraftVersions.VER1_21_2.below();
   }
 
   private static Fixture fixture(

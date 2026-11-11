@@ -136,14 +136,14 @@ public final class IntaveLogger extends PluginLogger {
   public void commandExecution(String command) {
     if (ConsoleOutput.COMMAND_EXECUTION_DEBUG) {
       command = ChatColor.stripColor(command);
-      printLine("[Intave] Issued server command /" + command);
+      printLine("[" + IntaveBuildConfig.BRAND_NAME + "] Issued server command /" + command);
       logToFile("(EXE) " + command);
     }
   }
 
   @Deprecated
   public void exception(Throwable throwable) {
-    printLine("[Intave] Caught an " + throwable.getClass().getSimpleName() + " exception");
+    printLine("[" + IntaveBuildConfig.BRAND_NAME + "] Caught an " + throwable.getClass().getSimpleName() + " exception");
     for (PrintStream outputStream : outputStreams) {
       throwable.printStackTrace(outputStream);
     }
