@@ -41,7 +41,8 @@ public final class ProxyRouter {
       config.maxCacheBytes(),
       config.cacheTtlMillis(),
       storageDirectory,
-      config.diskTtlMillis()
+      config.diskTtlMillis(),
+      config.maxDiskBytes()
     );
     this.pending = new PendingRequests();
     this.replay = new ReplayGuard(config.replayTtlMillis(), 20_000);
@@ -248,6 +249,10 @@ public final class ProxyRouter {
     for (byte[] chunk : ChunkCodec.chunk(encoded, NetworkLimits.MAX_CHUNK_BYTES)) {
       platform.broadcastExcept(sourceServer, chunk);
     }
+  }
+
+  public void close() {
+    cache.close();
   }
 
   public int cacheSize() {

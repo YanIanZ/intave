@@ -61,6 +61,9 @@ public final class WuretaBungeePlugin extends Plugin implements Listener {
     if (channel != null) {
       getProxy().unregisterChannel(channel);
     }
+    if (router != null) {
+      router.close();
+    }
   }
 
   @EventHandler

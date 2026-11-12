@@ -35,6 +35,8 @@ public final class PlayerListService implements BukkitEventSubscriber {
   private final Resource graylistResource = Resources.localServiceCacheResource("graylist", "xgl-graylist", TimeUnit.DAYS.toMillis(7));
   private final Resource graylistKnowledgeResource = Resources.fileCache("gaf-graylist-log");
   private final Resource bluelistKnowledgeResource = Resources.fileCache("rax-bluelist-log");
+  private final Resource networkSanctionsResource = Resources.fileCache("wureta-network-sanctions");
+  private static final int MAX_PERSISTED_NETWORK_SANCTIONS = 1000;
   private final List<String> bluelistKnowledge = new ArrayList<>();
   private final List<String> graylistKnowledge = new ArrayList<>();
   private final Set<InetAddress> blocked = ConcurrentHashMap.newKeySet();
@@ -137,6 +139,66 @@ public final class PlayerListService implements BukkitEventSubscriber {
   private void loadFilterList() {
     blackList = HashList.from(blacklistResource);
     grayList = HashList.from(graylistResource);
+    loadNetworkSanctions();
+  }
+
+  private synchronized void loadNetworkSanctions() {
+    if (!networkSanctionsResource.available()) {
+      return;
+    }
+    long now = System.currentTimeMillis();
+    List<String> kept = new ArrayList<String>();
+    boolean pruned = false;
+    for (String line : networkSanctionsResource.readLines()) {
+      de.jpx3.intave.module.network.NetworkSanctionStore.Sanction sanction =
+        de.jpx3.intave.module.network.NetworkSanctionStore.decode(line);
+      if (sanction == null || sanction.expired(now)) {
+        pruned = true;
+        continue;
+      }
+      InetAddress sanctionAddress = null;
+      if (!sanction.address.isEmpty()) {
+        try {
+          sanctionAddress = InetAddress.getByName(sanction.address);
+        } catch (Exception invalidAddress) {
+          pruned = true;
+          continue;
+        }
+      }
+      kept.add(line);
+      if (sanctionAddress != null) {
+        blocked.add(sanctionAddress);
+      }
+      if (blackList != null) {
+        blackList.addName(sanction.name);
+        blackList.addId(sanction.id);
+      }
+    }
+    if (pruned) {
+      networkSanctionsResource.write(kept);
+    }
+  }
+
+  private synchronized void persistNetworkSanction(String name, UUID id, String address, String reason) {
+    List<String> lines = networkSanctionsResource.available()
+      ? new ArrayList<String>(networkSanctionsResource.readLines())
+      : new ArrayList<String>();
+    String marker = "|" + id + "|";
+    Iterator<String> iterator = lines.iterator();
+    while (iterator.hasNext()) {
+      if (iterator.next().contains(marker)) {
+        iterator.remove();
+      }
+    }
+    try {
+      lines.add(de.jpx3.intave.module.network.NetworkSanctionStore.encode(name, id, address, reason, 0L));
+    } catch (IllegalArgumentException invalid) {
+      return;
+    }
+    while (lines.size() > MAX_PERSISTED_NETWORK_SANCTIONS) {
+      lines.remove(0);
+    }
+    networkSanctionsResource.write(lines);
   }
 
   private void linkEvents() {
@@ -241,6 +303,7 @@ public final class PlayerListService implements BukkitEventSubscriber {
       blackList.addName(name);
       blackList.addId(id);
     }
+    persistNetworkSanction(name, id, address == null ? "" : address.getHostAddress(), reason);
     Player online = Bukkit.getPlayer(id);
     if (online == null || !online.isOnline() || !enabled()) {
       return;

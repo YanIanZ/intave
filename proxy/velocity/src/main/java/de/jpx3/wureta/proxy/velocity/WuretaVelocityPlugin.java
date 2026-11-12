@@ -76,6 +76,9 @@ public final class WuretaVelocityPlugin {
     if (channel != null) {
       server.getChannelRegistrar().unregister(channel);
     }
+    if (router != null) {
+      router.close();
+    }
   }
 
   @Subscribe

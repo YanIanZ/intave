@@ -64,6 +64,7 @@ secret=replace-with-a-long-random-value
 cache-ttl-seconds=600
 disk-ttl-seconds=604800
 storage-directory=storage
+max-disk-bytes=268435456
 max-cache-entries=5000
 max-cache-bytes=67108864
 pending-timeout-ms=1500
@@ -78,6 +79,8 @@ debug=false
 - `storage-directory` is relative to the proxy data folder. It holds the encrypted player storage
   blobs. Protect it like a database directory.
 - `disk-ttl-seconds` controls how long a logged-out player's storage is kept (default 7 days).
+- `max-disk-bytes` caps the disk cache (default 256 MiB). When the cap is exceeded, the oldest
+  blobs are evicted first. Disk writes run on a dedicated thread, never on the proxy event loop.
 - `pending-timeout-ms` should be lower than the backend `network.storage.request-timeout-ms`
   (default 1500 vs 2500) so the proxy's stale-cache fallback arrives before the backend gives up.
 
@@ -154,7 +157,8 @@ exactly on the other backends (except when the receiving player holds `BYPASS`).
 ### Sanctions
 
 - A blacklist disconnect publishes a `BLOCK` sanction. Receiving backends add the address/name/UUID
-  to their in-memory blacklist and disconnect the player if online.
+  to their blacklist, persist it across restarts (capped at 1000 entries, expired entries pruned),
+  and disconnect the player if online.
 - `User.kick` publishes a `KICK` sanction so an anticheat kick on one backend also removes the
   player from another backend.
 - Received sanctions are applied directly with `kickPlayer`; they are not re-published, so there is
@@ -202,8 +206,8 @@ magic "WTS1" | version | type | flags | requestId | playerId | timestamp
 - Logged-out storage expires after `disk-ttl-seconds` (default 7 days).
 - Staff alerts are online-only; they are not persisted for offline staff.
 - Trust-factor upgrades and blacklist removals are not propagated.
-- Sanctions received by a backend are in-memory; a restart clears them until the source backend
-  publishes again.
+- Sanctions received by a backend persist across restarts, but sanction *removals* are not
+  propagated; clear them on every backend (or delete the `wureta-network-sanctions` cache).
 - Movement, combat and packet state are intentionally not transferred. Only the storage blob,
   trust factor, alerts and sanctions cross servers.
 - Proxy restart loses in-memory cache and pending requests; disk storage survives.
@@ -244,4 +248,4 @@ staging before production; the payload codecs and relays are covered by unit tes
 | Storage request times out | Proxy not installed, channel mismatch, no online player to carry the message, or backend not connected to the proxy |
 | Alerts arrive only locally | `network.sync.alerts`, channel/secret, proxy backend list |
 | Duplicate alerts | A backend is receiving its own broadcast; check `server-id` uniqueness |
-| Proxy cache grows | Lower `disk-ttl-seconds`; inspect `storage-directory` |
+| Proxy cache grows | Lower `disk-ttl-seconds` or `max-disk-bytes`; inspect `storage-directory` |

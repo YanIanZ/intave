@@ -25,6 +25,7 @@ public final class ProxyConfig {
   private final long cacheTtlMillis;
   private final long diskTtlMillis;
   private final String storageDirectory;
+  private final long maxDiskBytes;
   private final int maxCacheEntries;
   private final long maxCacheBytes;
   private final long pendingTimeoutMillis;
@@ -38,6 +39,7 @@ public final class ProxyConfig {
     long cacheTtlMillis,
     long diskTtlMillis,
     String storageDirectory,
+    long maxDiskBytes,
     int maxCacheEntries,
     long maxCacheBytes,
     long pendingTimeoutMillis,
@@ -50,6 +52,7 @@ public final class ProxyConfig {
     this.cacheTtlMillis = cacheTtlMillis;
     this.diskTtlMillis = diskTtlMillis;
     this.storageDirectory = storageDirectory;
+    this.maxDiskBytes = maxDiskBytes;
     this.maxCacheEntries = maxCacheEntries;
     this.maxCacheBytes = maxCacheBytes;
     this.pendingTimeoutMillis = pendingTimeoutMillis;
@@ -84,6 +87,7 @@ public final class ProxyConfig {
     if (storageDirectory.isEmpty()) {
       storageDirectory = "storage";
     }
+    long maxDiskBytes = parseLong(properties, "max-disk-bytes", 256L * 1024L * 1024L, 1024L * 1024L, 4L * 1024L * 1024L * 1024L);
     int maxCacheEntries = (int) parseLong(properties, "max-cache-entries", 5000L, 1L, 100_000L);
     long maxCacheBytes = parseLong(properties, "max-cache-bytes", 64L * 1024L * 1024L, 1L, 1024L * 1024L * 1024L);
     long pendingTimeout = parseLong(properties, "pending-timeout-ms", 1500L, 100L, 30_000L);
@@ -97,6 +101,7 @@ public final class ProxyConfig {
       cacheTtlSeconds * 1000L,
       diskTtlSeconds * 1000L,
       storageDirectory,
+      maxDiskBytes,
       maxCacheEntries,
       maxCacheBytes,
       pendingTimeout,
@@ -122,6 +127,7 @@ public final class ProxyConfig {
           "cache-ttl-seconds=600\n" +
           "disk-ttl-seconds=604800\n" +
           "storage-directory=storage\n" +
+          "max-disk-bytes=268435456\n" +
           "max-cache-entries=5000\n" +
           "max-cache-bytes=67108864\n" +
           "pending-timeout-ms=1500\n" +
@@ -170,6 +176,10 @@ public final class ProxyConfig {
 
   public String storageDirectory() {
     return storageDirectory;
+  }
+
+  public long maxDiskBytes() {
+    return maxDiskBytes;
   }
 
   public int maxCacheEntries() {

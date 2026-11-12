@@ -121,6 +121,9 @@ dependencies {
 
   // Test environment.
   testImplementation("org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT")
+  // Validated against the 26.2 operator jar libs/ProtocolLib.jar (5.5.0-SNAPSHOT-9404ce3).
+  // Do not bump without re-running the Build 57 Aurora/Folia suites: the 26.2 key mappings
+  // and self-test packet construction depend on this snapshot.
   testImplementation("net.dmulloy2:ProtocolLib:5.5.0-SNAPSHOT")
   testCompileOnly("org.jetbrains:annotations:23.1.0")
   testImplementation("io.netty:netty-all:4.2.15.Final")

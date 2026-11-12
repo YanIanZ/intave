@@ -66,6 +66,9 @@ public final class HashList {
   }
 
   public void addId(UUID id) {
+    if (id == null) {
+      return;
+    }
     hashes.add(hashOf(id.toString()));
   }
 
