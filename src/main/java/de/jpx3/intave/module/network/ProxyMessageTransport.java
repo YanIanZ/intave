@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-public final class ProxyMessageTransport implements PluginMessageListener, FrameSender {
+public final class ProxyMessageTransport implements PluginMessageListener, NetworkTransport {
   private static final int MAX_QUEUED_FRAMES = 256;
 
   private final IntavePlugin plugin;
@@ -59,6 +59,7 @@ public final class ProxyMessageTransport implements PluginMessageListener, Frame
     this.receiver = receiver;
   }
 
+  @Override
   public boolean register() {
     if (registered) {
       return true;
@@ -81,6 +82,7 @@ public final class ProxyMessageTransport implements PluginMessageListener, Frame
     }
   }
 
+  @Override
   public void close() {
     if (registered) {
       try {
@@ -118,6 +120,7 @@ public final class ProxyMessageTransport implements PluginMessageListener, Frame
     Synchronizer.synchronize(this::flushNow);
   }
 
+  @Override
   public void cleanup() {
     long now = System.currentTimeMillis();
     assembler.cleanup(now);
@@ -205,18 +208,22 @@ public final class ProxyMessageTransport implements PluginMessageListener, Frame
     }
   }
 
+  @Override
   public long sentFrames() {
     return sentFrames.get();
   }
 
+  @Override
   public long receivedFrames() {
     return receivedFrames.get();
   }
 
+  @Override
   public long droppedFrames() {
     return droppedFrames.get();
   }
 
+  @Override
   public int queuedFrames() {
     return queue.size();
   }
@@ -244,5 +251,10 @@ public final class ProxyMessageTransport implements PluginMessageListener, Frame
         logger.info("[network] " + message);
       }
     }
+  }
+
+  @Override
+  public String describe() {
+    return "proxy plugin messages on " + settings.channel();
   }
 }

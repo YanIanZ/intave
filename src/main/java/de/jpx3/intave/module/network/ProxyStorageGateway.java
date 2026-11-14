@@ -30,7 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-public final class ProxyStorageGateway implements StorageGateway {
+public final class ProxyStorageGateway implements NetworkStorageGateway {
   private final FrameSender sender;
   private final NetworkSettings settings;
   private final Consumer<Runnable> executor;
@@ -92,6 +92,7 @@ public final class ProxyStorageGateway implements StorageGateway {
     ));
   }
 
+  @Override
   public void handle(NetworkFrame frame) {
     if (frame.type() == FrameType.RESPONSE) {
       PendingRequest request = pending.remove(frame.requestId());
@@ -139,6 +140,7 @@ public final class ProxyStorageGateway implements StorageGateway {
     });
   }
 
+  @Override
   public void tick(long now) {
     for (Map.Entry<UUID, PendingRequest> entry : pending.entrySet()) {
       PendingRequest request = entry.getValue();
@@ -151,6 +153,7 @@ public final class ProxyStorageGateway implements StorageGateway {
     }
   }
 
+  @Override
   public void failAll() {
     for (Map.Entry<UUID, PendingRequest> entry : pending.entrySet()) {
       PendingRequest request = pending.remove(entry.getKey());
@@ -160,6 +163,7 @@ public final class ProxyStorageGateway implements StorageGateway {
     }
   }
 
+  @Override
   public int pendingCount() {
     return pending.size();
   }

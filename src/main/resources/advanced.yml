@@ -251,6 +251,23 @@ network:
   server-id: "server-1"
   channel: "wureta:sync"
   secret: ""
+  # proxy (default): plugin messages through the WuretaProxy companion; needs an online player on the sending
+  #   server as carrier.
+  # redis: Redis pub/sub + keys; no carrier and no proxy companion. Probed at boot (PING, SET/GET/DEL, PUBLISH);
+  #   on failure the proxy transport is used and the Redis error (e.g. NOPERM) is logged.
+  transport: proxy
+  redis:
+    # redis://user:password@host:port/db (rediss:// for TLS). The ACL user needs GET/SET/DEL on
+    # <key-prefix>:* keys and PUBLISH/SUBSCRIBE on <key-prefix>:frames.
+    uri: ""
+    key-prefix: "wureta:core"
+    timeout-ms: 2000
+    # Player storage kept in Redis (same as the proxy disk cache default: 7 days).
+    storage-ttl-seconds: 604800
+    # A stored blob younger than this answers a request without asking the other servers.
+    fresh-ms: 5000
+    # Wait for a live answer from the server holding the player before using the stored blob.
+    pending-timeout-ms: 1500
   sync:
     alerts: true
     trust-factor: true
