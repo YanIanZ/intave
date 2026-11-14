@@ -22,6 +22,13 @@ network.sync.storage -> network.sync.storage
 network.storage.request-timeout-ms -> network.storage.request-timeout-ms
 network.alert-rate-limit-ms -> network.alert-rate-limit-ms
 network.debug -> network.debug
+network.transport -> network.transport
+network.redis.uri -> network.redis.uri
+network.redis.key-prefix -> network.redis.key-prefix
+network.redis.timeout-ms -> network.redis.timeout-ms
+network.redis.storage-ttl-seconds -> network.redis.storage-ttl-seconds
+network.redis.fresh-ms -> network.redis.fresh-ms
+network.redis.pending-timeout-ms -> network.redis.pending-timeout-ms
 
 +Placeholders
 kick-commands -> $kick$
