@@ -199,7 +199,41 @@ magic "WTS1" | version | type | flags | requestId | playerId | timestamp
 - Do not expose the proxy plugin-message channel to untrusted clients; the proxy cancels client
   messages on the channel.
 
+## Redis transport (`network.transport: redis`)
+
+With `network.transport: redis` the backends talk through Redis instead of plugin messages, so no online
+player is needed as a carrier and WuretaProxy is not involved (it may stay installed; it sees no traffic).
+
+```yaml
+network:
+  transport: redis
+  redis:
+    uri: "redis://user:password@host:6379/0"   # rediss:// for TLS; never logged
+    key-prefix: "wureta:core"
+    timeout-ms: 2000
+    storage-ttl-seconds: 604800
+    fresh-ms: 5000
+    pending-timeout-ms: 1500
+```
+
+- Frames (alerts, trust, sanctions, storage REQUEST/RESPONSE/STORE) are published on `<key-prefix>:frames`,
+  signed with `network.secret` exactly like plugin-message frames, and checked for HMAC, clock window and
+  replay on receipt.
+- Player storage is a signed blob (`WSB1` + HMAC-SHA256) at `<key-prefix>:storage:<uuid>` with the TTL.
+  A blob younger than `fresh-ms` answers a request at once; otherwise the server that still holds the player
+  is asked (RESPONSE, or the STORE its quit-save publishes) and the stored blob is the fallback after
+  `pending-timeout-ms`.
+- Boot probe: PING, SET/GET/DEL of `<key-prefix>:probe:<server-id>` and PUBLISH. Any failure (address,
+  password, ACL `NOPERM`) is logged and the server falls back to the proxy transport.
+- ACL: the user needs `+get +set +del +publish +subscribe +ping`, keys `~<key-prefix>:*`, channel
+  `&<key-prefix>:frames`.
+- In `config.yml` (simple config) the keys are carried by `ctvs.mx`; the same block works there.
+
 ## Limitations
+
+- Proxy transport only: a frame needs an online player on the sending backend; the last player leaving a
+  server queues its storage until someone joins (frames older than 5 minutes are refused). The Redis
+  transport has no such limit.
 
 - The proxy disk cache is not a database cluster. A single proxy is assumed. Multiple proxies do
   not share storage.
