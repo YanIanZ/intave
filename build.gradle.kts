@@ -1032,6 +1032,15 @@ tasks {
     archiveFileName.set("$simpleName-bundled.jar")
     archiveClassifier.set("bundled")
     from("src/bundled/resources")
+    // PolyForm Perimeter 1.0.0: every copy carries the licence terms and the Required Notice, rebranded or not.
+    from("LICENSE.md") {
+      into("META-INF")
+      rename { "INTAVE-LICENSE.md" }
+    }
+    from("NOTICE") {
+      into("META-INF")
+      rename { "INTAVE-NOTICE" }
+    }
     minimize {
       // Preserve public Intave APIs and libraries with reflection or JNI entry points.
       exclude(dependency("ac.intave:.*:.*"))

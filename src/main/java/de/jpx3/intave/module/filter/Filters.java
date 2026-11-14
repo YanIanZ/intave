@@ -35,6 +35,16 @@ public final class Filters extends Module {
     }
   }
 
+  /** The set-up filter of the given type, or null (self-tests call a filter directly). */
+  public <T extends Filter> T filter(Class<T> filterClass) {
+    for (Filter filter : filters) {
+      if (filterClass.isInstance(filter)) {
+        return filterClass.cast(filter);
+      }
+    }
+    return null;
+  }
+
   private void linkEnabled() {
     for (Filter filter : filters) {
       if (filter.enabled()) {

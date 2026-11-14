@@ -131,6 +131,8 @@ public final class IntavePlugin extends JavaPlugin {
   private IntegrationTestService integrationTestService;
   // only the first shutdown pass runs, repeats are ignored quietly
   private final AtomicBoolean shutdownStarted = new AtomicBoolean(false);
+  /** Set when onEnable starts; together with isEnabled() it tells a disable apart from "not enabled yet". */
+  private volatile boolean enableEntered;
   private boolean viaBackwardsPingAcknowledgementsMisconfigured;
 
   public IntavePlugin() {
@@ -175,6 +177,7 @@ public final class IntavePlugin extends JavaPlugin {
   public void onEnable() {
     // re-arm for this enable, a reused instance may carry a finished shutdown
     shutdownStarted.set(false);
+    enableEntered = true;
     logger.info("Please stand by..");
 
     // stage 4
@@ -762,6 +765,19 @@ public final class IntavePlugin extends JavaPlugin {
 
   public static String defaultColor() {
     return defaultColor;
+  }
+
+  /**
+   * Whether new tasks may be scheduled. False once the plugin was enabled and is now disabled or shutting down:
+   * the server refuses every registration then (IllegalPluginAccessException), so periodic work still running on
+   * another thread (transaction queue, network sync, storage saves) must stop scheduling instead of throwing.
+   * Before the first enable this stays true, so boot behaves exactly as before.
+   */
+  public boolean acceptsTasks() {
+    if (shutdownStarted.get()) {
+      return false;
+    }
+    return !enableEntered || isEnabled();
   }
 
   public static IntavePlugin singletonInstance() {
