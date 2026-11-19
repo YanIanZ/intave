@@ -11,6 +11,7 @@
 
 package de.jpx3.intave.executor.task;
 
+import de.jpx3.intave.IntavePlugin;
 import de.jpx3.intave.IntaveLogger;
 import de.jpx3.intave.cleanup.ShutdownTasks;
 import de.jpx3.intave.platform.ServerPlatform;
@@ -54,19 +55,37 @@ public final class Tasks {
     ShutdownTasks.add(SCHEDULER::stopAll);
   }
 
+  /** False while the plugin is disabled or shutting down; scheduling would throw then. */
+  static boolean schedulingAllowed() {
+    IntavePlugin plugin = IntavePlugin.singletonInstance();
+    return plugin == null || plugin.acceptsTasks();
+  }
+
   static void startSync(Task task) {
+    if (!schedulingAllowed()) {
+      return;
+    }
     SCHEDULER.startSync(task);
   }
 
   static void startUserSync(Task task, User user) {
+    if (!schedulingAllowed()) {
+      return;
+    }
     SCHEDULER.startUserSync(task, user);
   }
 
   static void startRegionSync(Task task, World world, int chunkX, int chunkZ) {
+    if (!schedulingAllowed()) {
+      return;
+    }
     SCHEDULER.startRegionSync(task, world, chunkX, chunkZ);
   }
 
   static void startAsync(Task task) {
+    if (!schedulingAllowed()) {
+      return;
+    }
     SCHEDULER.startAsync(task);
   }
 

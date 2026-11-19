@@ -11,11 +11,11 @@
 
 package de.jpx3.intave.module.filter;
 
+import de.jpx3.intave.module.Modules;
 import de.jpx3.intave.test.FakePlayerFactory;
 import de.jpx3.intave.test.IntegrationTests;
 import de.jpx3.intave.test.Severity;
 import de.jpx3.intave.test.Test;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
@@ -33,7 +33,7 @@ public final class CommandFilterTests extends IntegrationTests {
     Player player = playerWithPermission(false, messages);
 
     PlayerCommandPreprocessEvent event = new PlayerCommandPreprocessEvent(player, "/plugins");
-    Bukkit.getPluginManager().callEvent(event);
+    dispatchToFilter(event);
 
     assertTrue(event.isCancelled());
     assertFalse(messages.isEmpty());
@@ -48,7 +48,7 @@ public final class CommandFilterTests extends IntegrationTests {
     Player player = playerWithPermission(true, messages);
 
     PlayerCommandPreprocessEvent event = new PlayerCommandPreprocessEvent(player, "/plugins");
-    Bukkit.getPluginManager().callEvent(event);
+    dispatchToFilter(event);
 
     assertFalse(event.isCancelled());
     assertTrue(messages.isEmpty());
@@ -60,10 +60,21 @@ public final class CommandFilterTests extends IntegrationTests {
     Player player = playerWithPermission(false, messages);
 
     PlayerCommandPreprocessEvent event = new PlayerCommandPreprocessEvent(player, "/help");
-    Bukkit.getPluginManager().callEvent(event);
+    dispatchToFilter(event);
 
     assertFalse(event.isCancelled());
     assertTrue(messages.isEmpty());
+  }
+
+  /**
+   * Hands the event to WuretaCore's own command filter only. Firing it through the plugin manager would deliver a
+   * fake player to every other plugin's listener (WorldGuard, EasyCommandBlocker, ...), which cannot handle it.
+   */
+  private void dispatchToFilter(PlayerCommandPreprocessEvent event) {
+    Filters filters = Modules.find(Filters.class);
+    CommandFilter filter = filters == null ? null : filters.filter(CommandFilter.class);
+    assertNotNull(filter);
+    filter.on(event);
   }
 
   private static Player playerWithPermission(boolean permitted, List<String> messages) {

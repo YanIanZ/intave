@@ -72,7 +72,10 @@ public final class ViolationProcessor extends Module {
     }
     Player player = playerSearch.get();
     User user = UserRepository.userOf(player);
-    if (user.trustFactor().atLeast(TrustFactor.BYPASS)) {
+    // Bedrock players carry the bypass trust-factor so that the Java checks stay off; their own check still counts.
+    boolean bedrockCheckOnBedrockPlayer = violation.check() instanceof de.jpx3.intave.check.bedrock.BedrockSentinel
+      && de.jpx3.intave.check.bedrock.BedrockPlayers.is(player);
+    if (user.trustFactor().atLeast(TrustFactor.BYPASS) && !bedrockCheckOnBedrockPlayer) {
       return violationContext.ignoreThreatBecause("Player has the bypass trust-factor").complete();
     }
     Check check = violation.check();

@@ -21,6 +21,16 @@ network:
   server-id: "server-1"
   channel: "wureta:sync"
   secret: ""
+  # proxy (default): plugin messages through WuretaProxy. redis: Redis pub/sub + keys, no carrier player needed.
+  transport: proxy
+  redis:
+    # redis://user:password@host:port/db (rediss:// for TLS)
+    uri: ""
+    key-prefix: "wureta:core"
+    timeout-ms: 2000
+    storage-ttl-seconds: 604800
+    fresh-ms: 5000
+    pending-timeout-ms: 1500
   sync:
     alerts: true
     trust-factor: true

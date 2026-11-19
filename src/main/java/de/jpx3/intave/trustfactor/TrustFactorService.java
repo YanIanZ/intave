@@ -56,7 +56,8 @@ public final class TrustFactorService implements BukkitEventSubscriber {
     if (floodgatePresent()) {
       trustFactorResolver = new GeyserTrustFactorResolver(DEFAULT_RESOLVER);
     } else {
-      trustFactorResolver = DEFAULT_RESOLVER;
+      // Geyser and Floodgate on the proxy only: recognise Bedrock players by the UUID Floodgate gives them.
+      trustFactorResolver = new BedrockUuidTrustFactorResolver(DEFAULT_RESOLVER);
     }
 
     plugin.eventLinker().registerEventsIn(this);

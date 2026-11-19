@@ -31,8 +31,8 @@ import java.util.UUID;
 
 public final class NetworkSync extends Module {
   private NetworkSettings settings;
-  private ProxyMessageTransport transport;
-  private ProxyStorageGateway storageGateway;
+  private NetworkTransport transport;
+  private NetworkStorageGateway storageGateway;
   private NetworkAlertRelay alertRelay;
   private NetworkTrustFactorRelay trustFactorRelay;
   private NetworkSanctionRelay sanctionRelay;
@@ -61,12 +61,33 @@ public final class NetworkSync extends Module {
     }
 
     try {
-      ProxyMessageTransport candidate = new ProxyMessageTransport(plugin, settings, this::handleFrame);
-      if (!candidate.register()) {
-        return;
+      NetworkTransport candidate = null;
+      NetworkStorageGateway gateway = null;
+      RedisNetworkSettings redisSettings = RedisNetworkSettings.from(plugin.settings());
+      if (redisSettings.redis()) {
+        try {
+          RedisMessageTransport redis = new RedisMessageTransport(settings, redisSettings, this::handleFrame);
+          if (redis.register()) {
+            candidate = redis;
+            gateway = new RedisStorageGateway(redis, settings, redisSettings);
+          }
+        } catch (IllegalArgumentException invalid) {
+          IntaveLogger.logger().error("Cross-server sync: " + invalid.getMessage());
+        }
+        if (candidate == null) {
+          IntaveLogger.logger().warn("Cross-server sync falls back to the proxy plugin-message transport");
+        }
+      }
+      if (candidate == null) {
+        ProxyMessageTransport proxy = new ProxyMessageTransport(plugin, settings, this::handleFrame);
+        if (!proxy.register()) {
+          return;
+        }
+        candidate = proxy;
+        gateway = new ProxyStorageGateway(proxy, settings);
       }
       transport = candidate;
-      storageGateway = new ProxyStorageGateway(transport, settings);
+      storageGateway = gateway;
       alertRelay = new NetworkAlertRelay(this, settings);
       trustFactorRelay = new NetworkTrustFactorRelay(this, settings);
       sanctionRelay = new NetworkSanctionRelay(this, settings);
@@ -93,7 +114,7 @@ public final class NetworkSync extends Module {
       active = true;
       IntaveLogger.logger().info(
         "Cross-server sync enabled as " + settings.serverId() +
-          " on " + settings.channel() +
+          " via " + transport.describe() +
           " (alerts=" + settings.syncAlerts() +
           ", trust=" + settings.syncTrustFactor() +
           ", sanctions=" + settings.syncSanctions() +
@@ -178,6 +199,7 @@ public final class NetworkSync extends Module {
         break;
       case REQUEST:
       case RESPONSE:
+      case STORE:
         if (settings.syncStorage()) {
           storageGateway.handle(frame);
         }
@@ -281,7 +303,7 @@ public final class NetworkSync extends Module {
       return "disabled";
     }
     return "server=" + settings.serverId() +
-      " channel=" + settings.channel() +
+      " transport=" + transport.describe() +
       " queued=" + transport.queuedFrames() +
       " sent=" + transport.sentFrames() +
       " received=" + transport.receivedFrames() +
