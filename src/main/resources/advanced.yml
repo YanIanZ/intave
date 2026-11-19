@@ -3,7 +3,7 @@
 # In the overwhelming majority of cases, changing stuff here will break things.
 # It is recommended not to change anything here unless you know exactly what you are doing.
 # When you experience false positives, report them to us, and we will fix them.
-# Before changing anything, please check the WuretaCore console output for any warnings or instructions.
+# Before changing anything, please check the Wonder console output for any warnings or instructions.
 # You can ban the following checks:
 #   - AttackRaytrace.reach at VL 200
 #   - Heuristics at VL 100
@@ -38,9 +38,9 @@ check:
 
     # DO NOT BAN
     thresholds:
-      100: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is moving incorrectly"
-      400: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is moving incorrectly #2"
-      500: "wureta internals storelog {player} {check} {vl}"
+      100: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is moving incorrectly"
+      400: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is moving incorrectly #2"
+      500: "wonder internals storelog {player} {check} {vl}"
       999:
         - $kick$
 
@@ -57,8 +57,8 @@ check:
     block-pulse-blink: true
 
     thresholds:
-      50: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is speeding up their game"
-      75: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is speeding up their game #2"
+      50: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is speeding up their game"
+      75: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is speeding up their game #2"
       100:
         - $ban$
 
@@ -90,15 +90,15 @@ check:
 
     thresholds:
       20:
-        - "wureta internals storelog {player} {check} {vl}"
-        - "wureta internals sendnotify &c{player}&7/{trust-color}&7 is acting computer-like #1"
+        - "wonder internals storelog {player} {check} {vl}"
+        - "wonder internals sendnotify &c{player}&7/{trust-color}&7 is acting computer-like #1"
 
       40:
-        - "wureta internals sendnotify &c{player}&7/{trust-color}&7 is acting computer-like #2"
+        - "wonder internals sendnotify &c{player}&7/{trust-color}&7 is acting computer-like #2"
 
       50:
-        - "wureta internals storelog {player} {check} {vl}"
-        - "wureta internals sendnotify &c{player}&7/{trust-color}&7 has been kicked for acting computer-like (on-premise classic heuristics)"
+        - "wonder internals storelog {player} {check} {vl}"
+        - "wonder internals sendnotify &c{player}&7/{trust-color}&7 has been kicked for acting computer-like (on-premise classic heuristics)"
         - $kick$
 
   attackraytrace:
@@ -106,52 +106,67 @@ check:
     applicable-thresholds:
       # BAN at high VL
       reach:
-        50: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously (reach)"
+        50: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously (reach)"
         150:
-          - "wureta internals storelog {player} {check} {vl}"
-          - "wureta internals sendnotify &c{player}&7/{trust-color}&7 has been removed for attacking suspiciously (reach)"
+          - "wonder internals storelog {player} {check} {vl}"
+          - "wonder internals sendnotify &c{player}&7/{trust-color}&7 has been removed for attacking suspiciously (reach)"
           - $ban$
 
       # BAN NOT NECESSARY
       hitbox:
-        50: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously (hitbox)"
-        100: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously #2 (hitbox)"
+        50: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously (hitbox)"
+        100: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously #2 (hitbox)"
 
       # BAN NOT NECESSARY
       timeout:
-        50: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously (backtrack?)"
-        100: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously #2 (backtrack?)"
+        50: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously (backtrack?)"
+        100: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is attacking suspiciously #2 (backtrack?)"
 
   interactionraytrace:
     enabled: true
     # BAN NOT NECESSARY
     thresholds:
-      50: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is interacting suspiciously"
-      100: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is interacting suspiciously #2"
+      50: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is interacting suspiciously"
+      100: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is interacting suspiciously #2"
 
   clickpatterns:
     enabled: true
     # DO NOT BAN
     thresholds:
-      50: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is clicking statistically anomalously (auto-clicker)"
+      50: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is clicking statistically anomalously (auto-clicker)"
       100:
-        - "wureta internals sendnotify &c{player}&7/{trust-color}&7 has been removed for clicking statistically anomalously (auto-clicker)"
+        - "wonder internals sendnotify &c{player}&7/{trust-color}&7 has been removed for clicking statistically anomalously (auto-clicker)"
         - $kick$
 
   clickspeedlimiter:
     enabled: true
     max-cps: 20
     thresholds:
-      50: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is attacking too quickly"
+      50: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is attacking too quickly"
       100:
-        - "wureta internals sendnotify &c{player}&7/{trust-color}&7 has been removed for attacking too quickly"
+        - "wonder internals sendnotify &c{player}&7/{trust-color}&7 has been removed for attacking too quickly"
         - $kick$
+
+  # Bedrock players (Geyser). The Java checks stay off for them; this check judges the translated result.
+  # Notifications only: add $kick$ to a threshold after the false-positive rate has been measured.
+  bedrock:
+    enabled: true
+    max-blocks-per-second: 18
+    max-air-ms: 2500
+    max-moves-per-second: 24
+    max-reach-tenths: 42
+    max-ping-allowance-tenths: 20
+    max-attacks-per-second: 22
+    violation-level: 10
+    thresholds:
+      30: "wonder internals sendnotify &c{player}&7/{trust-color}&7 (Bedrock) is behaving unlike a Bedrock client"
+      100: "wonder internals sendnotify &c{player}&7/{trust-color}&7 (Bedrock) keeps behaving unlike a Bedrock client #2"
 
   breakspeedlimiter:
     enabled: true
     # BAN NOT NECESSARY
     thresholds:
-      100: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is breaking blocks too quickly"
+      100: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is breaking blocks too quickly"
 
   protocolscanner:
     enabled: true
@@ -171,9 +186,9 @@ check:
     teleport-rotation-suspicious-confidence: 0.60
     teleport-rotation-corroborating-layers: 2
     thresholds:
-      50: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is sending invalid packets"
+      50: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is sending invalid packets"
       100:
-        - "wureta internals sendnotify &c{player}&7/{trust-color}&7 has been removed for sending invalid packets"
+        - "wonder internals sendnotify &c{player}&7/{trust-color}&7 has been removed for sending invalid packets"
         - $ban$
 
   placementanalysis:
@@ -182,14 +197,14 @@ check:
 
     # Set a limit for the cumulative rotation in a 5 second window
     # This helps to prevent very strong high-rotation scaffold cheats
-    # In certain scenarios WuretaCore will deduct up to 1250 combined degrees from this value
+    # In certain scenarios Wonder will deduct up to 1250 combined degrees from this value
     # 360 degrees = 1 full rotation
     rotation-limit: 3000
 
     thresholds:
       200:
-        - "wureta internals storelog {player} {check} {vl}"
-        - "wureta internals sendnotify &c{player}&7/{trust-color}&7 has been removed for placing blocks suspiciously (scaffold)"
+        - "wonder internals storelog {player} {check} {vl}"
+        - "wonder internals sendnotify &c{player}&7/{trust-color}&7 has been removed for placing blocks suspiciously (scaffold)"
         - $ban$
 
   inventoryclickanalysis:
@@ -197,9 +212,9 @@ check:
     high-tolerance: true
     # DO NOT BAN
     thresholds:
-      50: "wureta internals sendnotify &c{player}&7/{trust-color}&7 is performing invalid item-operations"
+      50: "wonder internals sendnotify &c{player}&7/{trust-color}&7 is performing invalid item-operations"
       100:
-        - "wureta internals sendnotify &c{player}&7/{trust-color}&7 has been removed for clicking suspiciously on items"
+        - "wonder internals sendnotify &c{player}&7/{trust-color}&7 has been removed for clicking suspiciously on items"
         - $kick$
 
   cloud:
@@ -212,8 +227,8 @@ check:
     detection:
       thresholds:
         100:
-          - "wureta internals storelog {player} {check} {vl}"
-          - "wureta internals sendnotify &c{player}&7/{trust-color}&7 has been removed for acting computer-like (cloud detection)"
+          - "wonder internals storelog {player} {check} {vl}"
+          - "wonder internals sendnotify &c{player}&7/{trust-color}&7 has been removed for acting computer-like (cloud detection)"
           - $ban$
 
     # Enable/disable in the dashboard
@@ -279,10 +294,10 @@ network:
   debug: false
 
 storage:
-  # Set to ignore the "wureta internals storelog"    and auto-store suggested violations instead
+  # Set to ignore the "wonder internals storelog"    and auto-store suggested violations instead
   auto-logs: false
 
-  # Should WuretaCore try to transfer VLs when switching between servers?
+  # Should Wonder try to transfer VLs when switching between servers?
   recover-vl: true
 
 blacklist:
@@ -303,7 +318,7 @@ compatibility:
   ignore-scoreboard-packets: false
 
   # Enabling will have no security impact, but may make
-  # WuretaCore more visible to cheaters debugging network traffic
+  # Wonder more visible to cheaters debugging network traffic
   no-transaction-obfuscation: false
 
 command:
@@ -363,4 +378,4 @@ logging:
 layout:
   verbose: "{prefix} &c{player}&7/{trust-color}&7 {message} {details} (+{vladded} -> {vl})"
   notify: "{prefix} &c&lNotify&8: &7{text}"
-  prefix: "&8[&7Wureta&8]&7 "
+  prefix: "&8[&bWonder&8]&7 "

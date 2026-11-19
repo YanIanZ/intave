@@ -31,7 +31,7 @@ public final class BedrockUuidTrustFactorResolver implements TrustFactorResolver
 
   @Override
   public void resolve(Player player, Consumer<TrustFactor> callback) {
-    if (player.getUniqueId().getMostSignificantBits() == 0L) {
+    if (de.jpx3.intave.check.bedrock.BedrockPlayers.is(player)) {
       callback.accept(TrustFactor.BYPASS);
     } else {
       parent.resolve(player, callback);

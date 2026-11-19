@@ -71,6 +71,7 @@ public final class CheckService {
     addCheck(ProtocolScanner.class);
     addCheck(PlacementAnalysis.class);
     addCheck(InventoryClickAnalysis.class);
+    addCheck(de.jpx3.intave.check.bedrock.BedrockSentinel.class);
 
     bakeQuickAccess();
     checkLinker.linkBukkitEventSubscriptions(checks);
